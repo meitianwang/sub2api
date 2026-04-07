@@ -370,6 +370,12 @@ func (_c *GroupCreate) SetNillableFallbackGroupIDOnInvalidRequest(v *int64) *Gro
 	return _c
 }
 
+// SetModelPricing sets the "model_pricing" field.
+func (_c *GroupCreate) SetModelPricing(v map[string]map[string]float64) *GroupCreate {
+	_c.mutation.SetModelPricing(v)
+	return _c
+}
+
 // SetModelRouting sets the "model_routing" field.
 func (_c *GroupCreate) SetModelRouting(v map[string][]int64) *GroupCreate {
 	_c.mutation.SetModelRouting(v)
@@ -898,6 +904,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.FallbackGroupIDOnInvalidRequest(); ok {
 		_spec.SetField(group.FieldFallbackGroupIDOnInvalidRequest, field.TypeInt64, value)
 		_node.FallbackGroupIDOnInvalidRequest = &value
+	}
+	if value, ok := _c.mutation.ModelPricing(); ok {
+		_spec.SetField(group.FieldModelPricing, field.TypeJSON, value)
+		_node.ModelPricing = value
 	}
 	if value, ok := _c.mutation.ModelRouting(); ok {
 		_spec.SetField(group.FieldModelRouting, field.TypeJSON, value)
@@ -1550,6 +1560,24 @@ func (u *GroupUpsert) AddFallbackGroupIDOnInvalidRequest(v int64) *GroupUpsert {
 // ClearFallbackGroupIDOnInvalidRequest clears the value of the "fallback_group_id_on_invalid_request" field.
 func (u *GroupUpsert) ClearFallbackGroupIDOnInvalidRequest() *GroupUpsert {
 	u.SetNull(group.FieldFallbackGroupIDOnInvalidRequest)
+	return u
+}
+
+// SetModelPricing sets the "model_pricing" field.
+func (u *GroupUpsert) SetModelPricing(v map[string]map[string]float64) *GroupUpsert {
+	u.Set(group.FieldModelPricing, v)
+	return u
+}
+
+// UpdateModelPricing sets the "model_pricing" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateModelPricing() *GroupUpsert {
+	u.SetExcluded(group.FieldModelPricing)
+	return u
+}
+
+// ClearModelPricing clears the value of the "model_pricing" field.
+func (u *GroupUpsert) ClearModelPricing() *GroupUpsert {
+	u.SetNull(group.FieldModelPricing)
 	return u
 }
 
@@ -2254,6 +2282,27 @@ func (u *GroupUpsertOne) UpdateFallbackGroupIDOnInvalidRequest() *GroupUpsertOne
 func (u *GroupUpsertOne) ClearFallbackGroupIDOnInvalidRequest() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearFallbackGroupIDOnInvalidRequest()
+	})
+}
+
+// SetModelPricing sets the "model_pricing" field.
+func (u *GroupUpsertOne) SetModelPricing(v map[string]map[string]float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetModelPricing(v)
+	})
+}
+
+// UpdateModelPricing sets the "model_pricing" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateModelPricing() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateModelPricing()
+	})
+}
+
+// ClearModelPricing clears the value of the "model_pricing" field.
+func (u *GroupUpsertOne) ClearModelPricing() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearModelPricing()
 	})
 }
 
@@ -3144,6 +3193,27 @@ func (u *GroupUpsertBulk) UpdateFallbackGroupIDOnInvalidRequest() *GroupUpsertBu
 func (u *GroupUpsertBulk) ClearFallbackGroupIDOnInvalidRequest() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearFallbackGroupIDOnInvalidRequest()
+	})
+}
+
+// SetModelPricing sets the "model_pricing" field.
+func (u *GroupUpsertBulk) SetModelPricing(v map[string]map[string]float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetModelPricing(v)
+	})
+}
+
+// UpdateModelPricing sets the "model_pricing" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateModelPricing() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateModelPricing()
+	})
+}
+
+// ClearModelPricing clears the value of the "model_pricing" field.
+func (u *GroupUpsertBulk) ClearModelPricing() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearModelPricing()
 	})
 }
 

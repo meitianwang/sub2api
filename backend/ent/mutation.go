@@ -8245,6 +8245,7 @@ type GroupMutation struct {
 	addfallback_group_id                    *int64
 	fallback_group_id_on_invalid_request    *int64
 	addfallback_group_id_on_invalid_request *int64
+	model_pricing                           *map[string]map[string]float64
 	model_routing                           *map[string][]int64
 	model_routing_enabled                   *bool
 	mcp_xml_inject                          *bool
@@ -9772,6 +9773,55 @@ func (m *GroupMutation) ResetFallbackGroupIDOnInvalidRequest() {
 	delete(m.clearedFields, group.FieldFallbackGroupIDOnInvalidRequest)
 }
 
+// SetModelPricing sets the "model_pricing" field.
+func (m *GroupMutation) SetModelPricing(value map[string]map[string]float64) {
+	m.model_pricing = &value
+}
+
+// ModelPricing returns the value of the "model_pricing" field in the mutation.
+func (m *GroupMutation) ModelPricing() (r map[string]map[string]float64, exists bool) {
+	v := m.model_pricing
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelPricing returns the old "model_pricing" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldModelPricing(ctx context.Context) (v map[string]map[string]float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelPricing is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelPricing requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelPricing: %w", err)
+	}
+	return oldValue.ModelPricing, nil
+}
+
+// ClearModelPricing clears the value of the "model_pricing" field.
+func (m *GroupMutation) ClearModelPricing() {
+	m.model_pricing = nil
+	m.clearedFields[group.FieldModelPricing] = struct{}{}
+}
+
+// ModelPricingCleared returns if the "model_pricing" field was cleared in this mutation.
+func (m *GroupMutation) ModelPricingCleared() bool {
+	_, ok := m.clearedFields[group.FieldModelPricing]
+	return ok
+}
+
+// ResetModelPricing resets all changes to the "model_pricing" field.
+func (m *GroupMutation) ResetModelPricing() {
+	m.model_pricing = nil
+	delete(m.clearedFields, group.FieldModelPricing)
+}
+
 // SetModelRouting sets the "model_routing" field.
 func (m *GroupMutation) SetModelRouting(value map[string][]int64) {
 	m.model_routing = &value
@@ -10502,7 +10552,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 34)
+	fields := make([]string, 0, 35)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -10577,6 +10627,9 @@ func (m *GroupMutation) Fields() []string {
 	}
 	if m.fallback_group_id_on_invalid_request != nil {
 		fields = append(fields, group.FieldFallbackGroupIDOnInvalidRequest)
+	}
+	if m.model_pricing != nil {
+		fields = append(fields, group.FieldModelPricing)
 	}
 	if m.model_routing != nil {
 		fields = append(fields, group.FieldModelRouting)
@@ -10663,6 +10716,8 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.FallbackGroupID()
 	case group.FieldFallbackGroupIDOnInvalidRequest:
 		return m.FallbackGroupIDOnInvalidRequest()
+	case group.FieldModelPricing:
+		return m.ModelPricing()
 	case group.FieldModelRouting:
 		return m.ModelRouting()
 	case group.FieldModelRoutingEnabled:
@@ -10740,6 +10795,8 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldFallbackGroupID(ctx)
 	case group.FieldFallbackGroupIDOnInvalidRequest:
 		return m.OldFallbackGroupIDOnInvalidRequest(ctx)
+	case group.FieldModelPricing:
+		return m.OldModelPricing(ctx)
 	case group.FieldModelRouting:
 		return m.OldModelRouting(ctx)
 	case group.FieldModelRoutingEnabled:
@@ -10941,6 +10998,13 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetFallbackGroupIDOnInvalidRequest(v)
+		return nil
+	case group.FieldModelPricing:
+		v, ok := value.(map[string]map[string]float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelPricing(v)
 		return nil
 	case group.FieldModelRouting:
 		v, ok := value.(map[string][]int64)
@@ -11272,6 +11336,9 @@ func (m *GroupMutation) ClearedFields() []string {
 	if m.FieldCleared(group.FieldFallbackGroupIDOnInvalidRequest) {
 		fields = append(fields, group.FieldFallbackGroupIDOnInvalidRequest)
 	}
+	if m.FieldCleared(group.FieldModelPricing) {
+		fields = append(fields, group.FieldModelPricing)
+	}
 	if m.FieldCleared(group.FieldModelRouting) {
 		fields = append(fields, group.FieldModelRouting)
 	}
@@ -11330,6 +11397,9 @@ func (m *GroupMutation) ClearField(name string) error {
 		return nil
 	case group.FieldFallbackGroupIDOnInvalidRequest:
 		m.ClearFallbackGroupIDOnInvalidRequest()
+		return nil
+	case group.FieldModelPricing:
+		m.ClearModelPricing()
 		return nil
 	case group.FieldModelRouting:
 		m.ClearModelRouting()
@@ -11416,6 +11486,9 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldFallbackGroupIDOnInvalidRequest:
 		m.ResetFallbackGroupIDOnInvalidRequest()
+		return nil
+	case group.FieldModelPricing:
+		m.ResetModelPricing()
 		return nil
 	case group.FieldModelRouting:
 		m.ResetModelRouting()
@@ -19753,6 +19826,8 @@ type UsageLogMutation struct {
 	addrate_multiplier          *float64
 	account_rate_multiplier     *float64
 	addaccount_rate_multiplier  *float64
+	upstream_cost               *float64
+	addupstream_cost            *float64
 	billing_type                *int8
 	addbilling_type             *int8
 	stream                      *bool
@@ -21056,6 +21131,62 @@ func (m *UsageLogMutation) ResetAccountRateMultiplier() {
 	delete(m.clearedFields, usagelog.FieldAccountRateMultiplier)
 }
 
+// SetUpstreamCost sets the "upstream_cost" field.
+func (m *UsageLogMutation) SetUpstreamCost(f float64) {
+	m.upstream_cost = &f
+	m.addupstream_cost = nil
+}
+
+// UpstreamCost returns the value of the "upstream_cost" field in the mutation.
+func (m *UsageLogMutation) UpstreamCost() (r float64, exists bool) {
+	v := m.upstream_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamCost returns the old "upstream_cost" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldUpstreamCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamCost: %w", err)
+	}
+	return oldValue.UpstreamCost, nil
+}
+
+// AddUpstreamCost adds f to the "upstream_cost" field.
+func (m *UsageLogMutation) AddUpstreamCost(f float64) {
+	if m.addupstream_cost != nil {
+		*m.addupstream_cost += f
+	} else {
+		m.addupstream_cost = &f
+	}
+}
+
+// AddedUpstreamCost returns the value that was added to the "upstream_cost" field in this mutation.
+func (m *UsageLogMutation) AddedUpstreamCost() (r float64, exists bool) {
+	v := m.addupstream_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUpstreamCost resets all changes to the "upstream_cost" field.
+func (m *UsageLogMutation) ResetUpstreamCost() {
+	m.upstream_cost = nil
+	m.addupstream_cost = nil
+}
+
 // SetBillingType sets the "billing_type" field.
 func (m *UsageLogMutation) SetBillingType(i int8) {
 	m.billing_type = &i
@@ -21781,7 +21912,7 @@ func (m *UsageLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageLogMutation) Fields() []string {
-	fields := make([]string, 0, 34)
+	fields := make([]string, 0, 35)
 	if m.user != nil {
 		fields = append(fields, usagelog.FieldUserID)
 	}
@@ -21850,6 +21981,9 @@ func (m *UsageLogMutation) Fields() []string {
 	}
 	if m.account_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
+	}
+	if m.upstream_cost != nil {
+		fields = append(fields, usagelog.FieldUpstreamCost)
 	}
 	if m.billing_type != nil {
 		fields = append(fields, usagelog.FieldBillingType)
@@ -21938,6 +22072,8 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.RateMultiplier()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AccountRateMultiplier()
+	case usagelog.FieldUpstreamCost:
+		return m.UpstreamCost()
 	case usagelog.FieldBillingType:
 		return m.BillingType()
 	case usagelog.FieldStream:
@@ -22015,6 +22151,8 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldRateMultiplier(ctx)
 	case usagelog.FieldAccountRateMultiplier:
 		return m.OldAccountRateMultiplier(ctx)
+	case usagelog.FieldUpstreamCost:
+		return m.OldUpstreamCost(ctx)
 	case usagelog.FieldBillingType:
 		return m.OldBillingType(ctx)
 	case usagelog.FieldStream:
@@ -22207,6 +22345,13 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAccountRateMultiplier(v)
 		return nil
+	case usagelog.FieldUpstreamCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamCost(v)
+		return nil
 	case usagelog.FieldBillingType:
 		v, ok := value.(int8)
 		if !ok {
@@ -22334,6 +22479,9 @@ func (m *UsageLogMutation) AddedFields() []string {
 	if m.addaccount_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
 	}
+	if m.addupstream_cost != nil {
+		fields = append(fields, usagelog.FieldUpstreamCost)
+	}
 	if m.addbilling_type != nil {
 		fields = append(fields, usagelog.FieldBillingType)
 	}
@@ -22382,6 +22530,8 @@ func (m *UsageLogMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedRateMultiplier()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AddedAccountRateMultiplier()
+	case usagelog.FieldUpstreamCost:
+		return m.AddedUpstreamCost()
 	case usagelog.FieldBillingType:
 		return m.AddedBillingType()
 	case usagelog.FieldDurationMs:
@@ -22496,6 +22646,13 @@ func (m *UsageLogMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAccountRateMultiplier(v)
+		return nil
+	case usagelog.FieldUpstreamCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamCost(v)
 		return nil
 	case usagelog.FieldBillingType:
 		v, ok := value.(int8)
@@ -22689,6 +22846,9 @@ func (m *UsageLogMutation) ResetField(name string) error {
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		m.ResetAccountRateMultiplier()
+		return nil
+	case usagelog.FieldUpstreamCost:
+		m.ResetUpstreamCost()
 		return nil
 	case usagelog.FieldBillingType:
 		m.ResetBillingType()

@@ -482,6 +482,27 @@ func (_u *UsageLogUpdate) ClearAccountRateMultiplier() *UsageLogUpdate {
 	return _u
 }
 
+// SetUpstreamCost sets the "upstream_cost" field.
+func (_u *UsageLogUpdate) SetUpstreamCost(v float64) *UsageLogUpdate {
+	_u.mutation.ResetUpstreamCost()
+	_u.mutation.SetUpstreamCost(v)
+	return _u
+}
+
+// SetNillableUpstreamCost sets the "upstream_cost" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableUpstreamCost(v *float64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetUpstreamCost(*v)
+	}
+	return _u
+}
+
+// AddUpstreamCost adds value to the "upstream_cost" field.
+func (_u *UsageLogUpdate) AddUpstreamCost(v float64) *UsageLogUpdate {
+	_u.mutation.AddUpstreamCost(v)
+	return _u
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_u *UsageLogUpdate) SetBillingType(v int8) *UsageLogUpdate {
 	_u.mutation.ResetBillingType()
@@ -943,6 +964,12 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.AccountRateMultiplierCleared() {
 		_spec.ClearField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.UpstreamCost(); ok {
+		_spec.SetField(usagelog.FieldUpstreamCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUpstreamCost(); ok {
+		_spec.AddField(usagelog.FieldUpstreamCost, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)
@@ -1619,6 +1646,27 @@ func (_u *UsageLogUpdateOne) ClearAccountRateMultiplier() *UsageLogUpdateOne {
 	return _u
 }
 
+// SetUpstreamCost sets the "upstream_cost" field.
+func (_u *UsageLogUpdateOne) SetUpstreamCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.ResetUpstreamCost()
+	_u.mutation.SetUpstreamCost(v)
+	return _u
+}
+
+// SetNillableUpstreamCost sets the "upstream_cost" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableUpstreamCost(v *float64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetUpstreamCost(*v)
+	}
+	return _u
+}
+
+// AddUpstreamCost adds value to the "upstream_cost" field.
+func (_u *UsageLogUpdateOne) AddUpstreamCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.AddUpstreamCost(v)
+	return _u
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_u *UsageLogUpdateOne) SetBillingType(v int8) *UsageLogUpdateOne {
 	_u.mutation.ResetBillingType()
@@ -2110,6 +2158,12 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if _u.mutation.AccountRateMultiplierCleared() {
 		_spec.ClearField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.UpstreamCost(); ok {
+		_spec.SetField(usagelog.FieldUpstreamCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUpstreamCost(); ok {
+		_spec.AddField(usagelog.FieldUpstreamCost, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)

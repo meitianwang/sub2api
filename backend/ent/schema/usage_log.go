@@ -103,6 +103,11 @@ func (UsageLog) Fields() []ent.Field {
 			Nillable().
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}),
 
+		// 上游成本 (added by migration 083)
+		field.Float("upstream_cost").
+			Default(0).
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,10)"}),
+
 		// 其他字段
 		field.Int8("billing_type").
 			Default(0),

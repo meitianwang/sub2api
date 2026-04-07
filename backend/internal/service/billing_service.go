@@ -104,6 +104,7 @@ type CostBreakdown struct {
 	CacheReadCost     float64
 	TotalCost         float64
 	ActualCost        float64 // 应用倍率后的实际费用
+	UpstreamCost      float64 // 上游成本（平台支付给上游的费用）
 }
 
 // BillingService 计费服务
@@ -776,4 +777,103 @@ func (s *BillingService) getDefaultImagePrice(model string, imageSize string) fl
 	}
 
 	return basePrice
+}
+
+// CalculateCostWithCustomPricing 使用自定义价格计算费用
+// 不使用官方价格和倍率，直接用分组配置的卖价和成本价
+// 缓存 token 的定价从官方价格表获取比例，与原有计费逻辑对齐
+func (s *BillingService) CalculateCostWithCustomPricing(model string, pricing *ModelPricingEntry, tokens UsageTokens) *CostBreakdown {
+	if pricing == nil {
+		return &CostBreakdown{}
+	}
+
+	// 卖价 (USD/M tokens → USD/token)
+	sellInputPerToken := pricing.SellInputPrice / 1_000_000
+	sellOutputPerToken := pricing.SellOutputPrice / 1_000_000
+
+	// 成本价 (USD/M tokens → USD/token)
+	costInputPerToken := pricing.CostInputPrice / 1_000_000
+	costOutputPerToken := pricing.CostOutputPrice / 1_000_000
+
+	// 从官方价格表获取缓存定价比例，与原有计费逻辑对齐
+	sellCacheCreationPerToken := sellInputPerToken  // 默认等于输入价
+	sellCacheReadPerToken := sellInputPerToken * 0.1 // 默认 10%
+	costCacheCreationPerToken := costInputPerToken
+	costCacheReadPerToken := costInputPerToken * 0.1
+
+	officialPricing, err := s.GetModelPricing(model)
+	if err == nil && officialPricing != nil && officialPricing.InputPricePerToken > 0 {
+		// 用官方价格表的缓存/输入比例来推算自定义定价下的缓存价格
+		officialInput := officialPricing.InputPricePerToken
+
+		if officialPricing.CacheCreationPricePerToken > 0 {
+			ratio := officialPricing.CacheCreationPricePerToken / officialInput
+			sellCacheCreationPerToken = sellInputPerToken * ratio
+			costCacheCreationPerToken = costInputPerToken * ratio
+		}
+
+		if officialPricing.CacheReadPricePerToken > 0 {
+			ratio := officialPricing.CacheReadPricePerToken / officialInput
+			sellCacheReadPerToken = sellInputPerToken * ratio
+			costCacheReadPerToken = costInputPerToken * ratio
+		}
+	}
+
+	// 计算卖价
+	inputCost := float64(tokens.InputTokens) * sellInputPerToken
+	outputCost := float64(tokens.OutputTokens) * sellOutputPerToken
+
+	// 缓存计费：对齐原有逻辑（支持 5m/1h 分类）
+	var cacheCreationCost float64
+	if officialPricing != nil && officialPricing.SupportsCacheBreakdown &&
+		(officialPricing.CacheCreation5mPrice > 0 || officialPricing.CacheCreation1hPrice > 0) &&
+		officialPricing.InputPricePerToken > 0 {
+		// 支持 5m/1h 分类的模型
+		ratio5m := officialPricing.CacheCreation5mPrice / officialPricing.InputPricePerToken
+		ratio1h := officialPricing.CacheCreation1hPrice / officialPricing.InputPricePerToken
+		if tokens.CacheCreation5mTokens == 0 && tokens.CacheCreation1hTokens == 0 && tokens.CacheCreationTokens > 0 {
+			cacheCreationCost = float64(tokens.CacheCreationTokens) * sellInputPerToken * ratio5m
+		} else {
+			cacheCreationCost = float64(tokens.CacheCreation5mTokens)*sellInputPerToken*ratio5m +
+				float64(tokens.CacheCreation1hTokens)*sellInputPerToken*ratio1h
+		}
+	} else {
+		totalCacheCreation := tokens.CacheCreationTokens + tokens.CacheCreation5mTokens + tokens.CacheCreation1hTokens
+		cacheCreationCost = float64(totalCacheCreation) * sellCacheCreationPerToken
+	}
+	cacheReadCost := float64(tokens.CacheReadTokens) * sellCacheReadPerToken
+
+	totalCost := inputCost + outputCost + cacheCreationCost + cacheReadCost
+
+	// 计算上游成本（同样的缓存比例逻辑）
+	upstreamInput := float64(tokens.InputTokens) * costInputPerToken
+	upstreamOutput := float64(tokens.OutputTokens) * costOutputPerToken
+	var upstreamCacheCreation float64
+	if officialPricing != nil && officialPricing.SupportsCacheBreakdown &&
+		(officialPricing.CacheCreation5mPrice > 0 || officialPricing.CacheCreation1hPrice > 0) &&
+		officialPricing.InputPricePerToken > 0 {
+		ratio5m := officialPricing.CacheCreation5mPrice / officialPricing.InputPricePerToken
+		ratio1h := officialPricing.CacheCreation1hPrice / officialPricing.InputPricePerToken
+		if tokens.CacheCreation5mTokens == 0 && tokens.CacheCreation1hTokens == 0 && tokens.CacheCreationTokens > 0 {
+			upstreamCacheCreation = float64(tokens.CacheCreationTokens) * costInputPerToken * ratio5m
+		} else {
+			upstreamCacheCreation = float64(tokens.CacheCreation5mTokens)*costInputPerToken*ratio5m +
+				float64(tokens.CacheCreation1hTokens)*costInputPerToken*ratio1h
+		}
+	} else {
+		totalCacheCreation := tokens.CacheCreationTokens + tokens.CacheCreation5mTokens + tokens.CacheCreation1hTokens
+		upstreamCacheCreation = float64(totalCacheCreation) * costCacheCreationPerToken
+	}
+	upstreamCacheRead := float64(tokens.CacheReadTokens) * costCacheReadPerToken
+	upstreamCost := upstreamInput + upstreamOutput + upstreamCacheCreation + upstreamCacheRead
+
+	return &CostBreakdown{
+		InputCost:         inputCost,
+		OutputCost:        outputCost,
+		CacheCreationCost: cacheCreationCost,
+		CacheReadCost:     cacheReadCost,
+		TotalCost:         totalCost,
+		ActualCost:        totalCost,
+		UpstreamCost:      upstreamCost,
+	}
 }

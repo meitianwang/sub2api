@@ -1420,6 +1420,16 @@ func FallbackGroupIDOnInvalidRequestNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldFallbackGroupIDOnInvalidRequest))
 }
 
+// ModelPricingIsNil applies the IsNil predicate on the "model_pricing" field.
+func ModelPricingIsNil() predicate.Group {
+	return predicate.Group(sql.FieldIsNull(FieldModelPricing))
+}
+
+// ModelPricingNotNil applies the NotNil predicate on the "model_pricing" field.
+func ModelPricingNotNil() predicate.Group {
+	return predicate.Group(sql.FieldNotNull(FieldModelPricing))
+}
+
 // ModelRoutingIsNil applies the IsNil predicate on the "model_routing" field.
 func ModelRoutingIsNil() predicate.Group {
 	return predicate.Group(sql.FieldIsNull(FieldModelRouting))

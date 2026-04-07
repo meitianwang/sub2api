@@ -7770,11 +7770,22 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			CacheCreation5mTokens: result.Usage.CacheCreation5mTokens,
 			CacheCreation1hTokens: result.Usage.CacheCreation1hTokens,
 		}
-		var err error
-		cost, err = s.billingService.CalculateCost(billingModel, tokens, multiplier)
-		if err != nil {
-			logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
-			cost = &CostBreakdown{ActualCost: 0}
+
+		// 优先使用自定义模型定价
+		var customPricing *ModelPricingEntry
+		if apiKey.GroupID != nil && apiKey.Group != nil && apiKey.Group.ModelPricing != nil {
+			customPricing = apiKey.Group.ModelPricing.GetPricing(billingModel)
+		}
+
+		if customPricing != nil {
+			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
+		} else {
+			var err error
+			cost, err = s.billingService.CalculateCost(billingModel, tokens, multiplier)
+			if err != nil {
+				logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
+				cost = &CostBreakdown{ActualCost: 0}
+			}
 		}
 	}
 
@@ -7822,6 +7833,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		ActualCost:            cost.ActualCost,
 		RateMultiplier:        multiplier,
 		AccountRateMultiplier: &accountRateMultiplier,
+		UpstreamCost:          cost.UpstreamCost,
 		BillingType:           billingType,
 		Stream:                result.Stream,
 		DurationMs:            &durationMs,
@@ -7958,11 +7970,22 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 			CacheCreation5mTokens: result.Usage.CacheCreation5mTokens,
 			CacheCreation1hTokens: result.Usage.CacheCreation1hTokens,
 		}
-		var err error
-		cost, err = s.billingService.CalculateCostWithLongContext(billingModel, tokens, multiplier, input.LongContextThreshold, input.LongContextMultiplier)
-		if err != nil {
-			logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
-			cost = &CostBreakdown{ActualCost: 0}
+
+		// 优先使用自定义模型定价
+		var customPricing *ModelPricingEntry
+		if apiKey.GroupID != nil && apiKey.Group != nil && apiKey.Group.ModelPricing != nil {
+			customPricing = apiKey.Group.ModelPricing.GetPricing(billingModel)
+		}
+
+		if customPricing != nil {
+			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
+		} else {
+			var err error
+			cost, err = s.billingService.CalculateCostWithLongContext(billingModel, tokens, multiplier, input.LongContextThreshold, input.LongContextMultiplier)
+			if err != nil {
+				logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
+				cost = &CostBreakdown{ActualCost: 0}
+			}
 		}
 	}
 
@@ -8006,6 +8029,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		ActualCost:            cost.ActualCost,
 		RateMultiplier:        multiplier,
 		AccountRateMultiplier: &accountRateMultiplier,
+		UpstreamCost:          cost.UpstreamCost,
 		BillingType:           billingType,
 		Stream:                result.Stream,
 		DurationMs:            &durationMs,

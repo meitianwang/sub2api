@@ -135,6 +135,8 @@ type UsageLog struct {
 	RateMultiplier    float64
 	// AccountRateMultiplier 账号计费倍率快照（nil 表示历史数据，按 1.0 处理）
 	AccountRateMultiplier *float64
+	// UpstreamCost 上游成本（平台支付给上游的费用）
+	UpstreamCost float64
 
 	BillingType  int8
 	RequestType  RequestType

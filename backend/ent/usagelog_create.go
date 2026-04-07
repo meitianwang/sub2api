@@ -309,6 +309,20 @@ func (_c *UsageLogCreate) SetNillableAccountRateMultiplier(v *float64) *UsageLog
 	return _c
 }
 
+// SetUpstreamCost sets the "upstream_cost" field.
+func (_c *UsageLogCreate) SetUpstreamCost(v float64) *UsageLogCreate {
+	_c.mutation.SetUpstreamCost(v)
+	return _c
+}
+
+// SetNillableUpstreamCost sets the "upstream_cost" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableUpstreamCost(v *float64) *UsageLogCreate {
+	if v != nil {
+		_c.SetUpstreamCost(*v)
+	}
+	return _c
+}
+
 // SetBillingType sets the "billing_type" field.
 func (_c *UsageLogCreate) SetBillingType(v int8) *UsageLogCreate {
 	_c.mutation.SetBillingType(v)
@@ -575,6 +589,10 @@ func (_c *UsageLogCreate) defaults() {
 		v := usagelog.DefaultRateMultiplier
 		_c.mutation.SetRateMultiplier(v)
 	}
+	if _, ok := _c.mutation.UpstreamCost(); !ok {
+		v := usagelog.DefaultUpstreamCost
+		_c.mutation.SetUpstreamCost(v)
+	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		v := usagelog.DefaultBillingType
 		_c.mutation.SetBillingType(v)
@@ -672,6 +690,9 @@ func (_c *UsageLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.RateMultiplier(); !ok {
 		return &ValidationError{Name: "rate_multiplier", err: errors.New(`ent: missing required field "UsageLog.rate_multiplier"`)}
+	}
+	if _, ok := _c.mutation.UpstreamCost(); !ok {
+		return &ValidationError{Name: "upstream_cost", err: errors.New(`ent: missing required field "UsageLog.upstream_cost"`)}
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		return &ValidationError{Name: "billing_type", err: errors.New(`ent: missing required field "UsageLog.billing_type"`)}
@@ -815,6 +836,10 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
 		_node.AccountRateMultiplier = &value
+	}
+	if value, ok := _c.mutation.UpstreamCost(); ok {
+		_spec.SetField(usagelog.FieldUpstreamCost, field.TypeFloat64, value)
+		_node.UpstreamCost = value
 	}
 	if value, ok := _c.mutation.BillingType(); ok {
 		_spec.SetField(usagelog.FieldBillingType, field.TypeInt8, value)
@@ -1384,6 +1409,24 @@ func (u *UsageLogUpsert) AddAccountRateMultiplier(v float64) *UsageLogUpsert {
 // ClearAccountRateMultiplier clears the value of the "account_rate_multiplier" field.
 func (u *UsageLogUpsert) ClearAccountRateMultiplier() *UsageLogUpsert {
 	u.SetNull(usagelog.FieldAccountRateMultiplier)
+	return u
+}
+
+// SetUpstreamCost sets the "upstream_cost" field.
+func (u *UsageLogUpsert) SetUpstreamCost(v float64) *UsageLogUpsert {
+	u.Set(usagelog.FieldUpstreamCost, v)
+	return u
+}
+
+// UpdateUpstreamCost sets the "upstream_cost" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateUpstreamCost() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldUpstreamCost)
+	return u
+}
+
+// AddUpstreamCost adds v to the "upstream_cost" field.
+func (u *UsageLogUpsert) AddUpstreamCost(v float64) *UsageLogUpsert {
+	u.Add(usagelog.FieldUpstreamCost, v)
 	return u
 }
 
@@ -2064,6 +2107,27 @@ func (u *UsageLogUpsertOne) UpdateAccountRateMultiplier() *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) ClearAccountRateMultiplier() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearAccountRateMultiplier()
+	})
+}
+
+// SetUpstreamCost sets the "upstream_cost" field.
+func (u *UsageLogUpsertOne) SetUpstreamCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetUpstreamCost(v)
+	})
+}
+
+// AddUpstreamCost adds v to the "upstream_cost" field.
+func (u *UsageLogUpsertOne) AddUpstreamCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddUpstreamCost(v)
+	})
+}
+
+// UpdateUpstreamCost sets the "upstream_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateUpstreamCost() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateUpstreamCost()
 	})
 }
 
@@ -2940,6 +3004,27 @@ func (u *UsageLogUpsertBulk) UpdateAccountRateMultiplier() *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) ClearAccountRateMultiplier() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearAccountRateMultiplier()
+	})
+}
+
+// SetUpstreamCost sets the "upstream_cost" field.
+func (u *UsageLogUpsertBulk) SetUpstreamCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetUpstreamCost(v)
+	})
+}
+
+// AddUpstreamCost adds v to the "upstream_cost" field.
+func (u *UsageLogUpsertBulk) AddUpstreamCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddUpstreamCost(v)
+	})
+}
+
+// UpdateUpstreamCost sets the "upstream_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateUpstreamCost() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateUpstreamCost()
 	})
 }
 
