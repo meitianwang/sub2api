@@ -28,7 +28,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 )
 
-const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, requested_model, upstream_model, group_id, subscription_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, media_type, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, created_at"
+const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, requested_model, upstream_model, group_id, subscription_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, media_type, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, upstream_cost, created_at"
 
 // usageLogInsertArgTypes must stay in the same order as:
 //  1. prepareUsageLogInsert().args
@@ -61,6 +61,7 @@ var usageLogInsertArgTypes = [...]string{
 	"numeric",     // actual_cost
 	"numeric",     // rate_multiplier
 	"numeric",     // account_rate_multiplier
+	"numeric",     // upstream_cost
 	"smallint",    // billing_type
 	"smallint",    // request_type
 	"boolean",     // stream
@@ -334,6 +335,7 @@ func (r *usageLogRepository) createSingle(ctx context.Context, sqlq sqlExecutor,
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -357,7 +359,7 @@ func (r *usageLogRepository) createSingle(ctx context.Context, sqlq sqlExecutor,
 			$10, $11, $12, $13,
 			$14, $15,
 			$16, $17, $18, $19, $20, $21,
-			$22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+			$22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
 		)
 		ON CONFLICT (request_id, api_key_id) DO NOTHING
 		RETURNING id, created_at
@@ -766,6 +768,7 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -785,7 +788,7 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 			created_at
 		) AS (VALUES `)
 
-	args := make([]any, 0, len(keys)*39)
+	args := make([]any, 0, len(keys)*41)
 	argPos := 1
 	for idx, key := range keys {
 		if idx > 0 {
@@ -837,6 +840,7 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 				actual_cost,
 				rate_multiplier,
 				account_rate_multiplier,
+				upstream_cost,
 				billing_type,
 				request_type,
 				stream,
@@ -879,6 +883,7 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 				actual_cost,
 				rate_multiplier,
 				account_rate_multiplier,
+				upstream_cost,
 				billing_type,
 				request_type,
 				stream,
@@ -961,6 +966,7 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -980,7 +986,7 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			created_at
 		) AS (VALUES `)
 
-	args := make([]any, 0, len(preparedList)*40)
+	args := make([]any, 0, len(preparedList)*41)
 	argPos := 1
 	for idx, prepared := range preparedList {
 		if idx > 0 {
@@ -1029,6 +1035,7 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -1071,6 +1078,7 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -1121,6 +1129,7 @@ func execUsageLogInsertNoResult(ctx context.Context, sqlq sqlExecutor, prepared 
 			actual_cost,
 			rate_multiplier,
 			account_rate_multiplier,
+			upstream_cost,
 			billing_type,
 			request_type,
 			stream,
@@ -1144,7 +1153,7 @@ func execUsageLogInsertNoResult(ctx context.Context, sqlq sqlExecutor, prepared 
 			$10, $11, $12, $13,
 			$14, $15,
 			$16, $17, $18, $19, $20, $21,
-			$22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+			$22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
 		)
 		ON CONFLICT (request_id, api_key_id) DO NOTHING
 	`, prepared.args...)
@@ -1216,6 +1225,7 @@ func prepareUsageLogInsert(log *service.UsageLog) usageLogInsertPrepared {
 			log.ActualCost,
 			rateMultiplier,
 			log.AccountRateMultiplier,
+			log.UpstreamCost,
 			log.BillingType,
 			requestType,
 			log.Stream,
@@ -1465,6 +1475,7 @@ func (r *usageLogRepository) fillDashboardUsageStatsAggregated(ctx context.Conte
 			COALESCE(SUM(cache_read_tokens), 0) as total_cache_read_tokens,
 			COALESCE(SUM(total_cost), 0) as total_cost,
 			COALESCE(SUM(actual_cost), 0) as total_actual_cost,
+			COALESCE(SUM(upstream_cost), 0) as total_upstream_cost,
 			COALESCE(SUM(total_duration_ms), 0) as total_duration_ms
 		FROM usage_dashboard_daily
 	`
@@ -1481,11 +1492,13 @@ func (r *usageLogRepository) fillDashboardUsageStatsAggregated(ctx context.Conte
 		&stats.TotalCacheReadTokens,
 		&stats.TotalCost,
 		&stats.TotalActualCost,
+		&stats.TotalUpstreamCost,
 		&totalDurationMs,
 	); err != nil {
 		return err
 	}
 	stats.TotalTokens = stats.TotalInputTokens + stats.TotalOutputTokens + stats.TotalCacheCreationTokens + stats.TotalCacheReadTokens
+	stats.TotalProfit = stats.TotalActualCost - stats.TotalUpstreamCost
 	if stats.TotalRequests > 0 {
 		stats.AverageDurationMs = float64(totalDurationMs) / float64(stats.TotalRequests)
 	}
@@ -1499,6 +1512,7 @@ func (r *usageLogRepository) fillDashboardUsageStatsAggregated(ctx context.Conte
 			cache_read_tokens as today_cache_read_tokens,
 			total_cost as today_cost,
 			actual_cost as today_actual_cost,
+			COALESCE(upstream_cost, 0) as today_upstream_cost,
 			active_users as active_users
 		FROM usage_dashboard_daily
 		WHERE bucket_date = $1::date
@@ -1515,6 +1529,7 @@ func (r *usageLogRepository) fillDashboardUsageStatsAggregated(ctx context.Conte
 		&stats.TodayCacheReadTokens,
 		&stats.TodayCost,
 		&stats.TodayActualCost,
+		&stats.TodayUpstreamCost,
 		&stats.ActiveUsers,
 	); err != nil {
 		if err != sql.ErrNoRows {
@@ -1522,6 +1537,7 @@ func (r *usageLogRepository) fillDashboardUsageStatsAggregated(ctx context.Conte
 		}
 	}
 	stats.TodayTokens = stats.TodayInputTokens + stats.TodayOutputTokens + stats.TodayCacheCreationTokens + stats.TodayCacheReadTokens
+	stats.TodayProfit = stats.TodayActualCost - stats.TodayUpstreamCost
 
 	hourlyActiveQuery := `
 		SELECT active_users
@@ -3959,6 +3975,7 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		inboundEndpoint       sql.NullString
 		upstreamEndpoint      sql.NullString
 		cacheTTLOverridden    bool
+		upstreamCost          float64
 		createdAt             time.Time
 	)
 
@@ -4003,6 +4020,7 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		&inboundEndpoint,
 		&upstreamEndpoint,
 		&cacheTTLOverridden,
+		&upstreamCost,
 		&createdAt,
 	); err != nil {
 		return nil, err
@@ -4033,6 +4051,7 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		RequestType:           service.RequestTypeFromInt16(requestTypeRaw),
 		ImageCount:            imageCount,
 		CacheTTLOverridden:    cacheTTLOverridden,
+		UpstreamCost:          upstreamCost,
 		CreatedAt:             createdAt,
 	}
 	// 先回填 legacy 字段，再基于 legacy + request_type 计算最终请求类型，保证历史数据兼容。

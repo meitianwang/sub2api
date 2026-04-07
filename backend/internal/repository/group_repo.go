@@ -70,6 +70,11 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 		builder = builder.SetModelRouting(groupIn.ModelRouting)
 	}
 
+	// 设置模型定价配置
+	if groupIn.ModelPricing != nil {
+		builder = builder.SetModelPricing(service.SerializeModelPricingMap(groupIn.ModelPricing))
+	}
+
 	// 设置支持的模型系列（始终设置，空数组表示不限制）
 	builder = builder.SetSupportedModelScopes(groupIn.SupportedModelScopes)
 
@@ -186,6 +191,13 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		builder = builder.SetModelRouting(groupIn.ModelRouting)
 	} else {
 		builder = builder.ClearModelRouting()
+	}
+
+	// 处理 ModelPricing
+	if groupIn.ModelPricing != nil {
+		builder = builder.SetModelPricing(service.SerializeModelPricingMap(groupIn.ModelPricing))
+	} else {
+		builder = builder.ClearModelPricing()
 	}
 
 	// 处理 SupportedModelScopes（始终设置，空数组表示不限制）

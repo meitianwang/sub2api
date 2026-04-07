@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/Wei-Shaw/sub2api/internal/service"
+)
 
 type User struct {
 	ID            int64     `json:"id"`
@@ -114,6 +118,9 @@ type Group struct {
 // 注意：普通用户接口不得返回 model_routing/account_count/account_groups 等内部信息。
 type AdminGroup struct {
 	Group
+
+	// 按模型定价配置
+	ModelPricing service.ModelPricingMap `json:"model_pricing"`
 
 	// 模型路由配置（仅 anthropic 平台使用）
 	ModelRouting        map[string][]int64 `json:"model_routing"`

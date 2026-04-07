@@ -152,6 +152,8 @@ type CreateGroupInput struct {
 	FallbackGroupID            *int64 // 降级分组 ID
 	// 无效请求兜底分组 ID（仅 anthropic 平台使用）
 	FallbackGroupIDOnInvalidRequest *int64
+	// 按模型定价配置
+	ModelPricing ModelPricingMap
 	// 模型路由配置（仅 anthropic 平台使用）
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled bool // 是否启用模型路由
@@ -193,6 +195,8 @@ type UpdateGroupInput struct {
 	FallbackGroupID            *int64 // 降级分组 ID
 	// 无效请求兜底分组 ID（仅 anthropic 平台使用）
 	FallbackGroupIDOnInvalidRequest *int64
+	// 按模型定价配置
+	ModelPricing ModelPricingMap
 	// 模型路由配置（仅 anthropic 平台使用）
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled *bool // 是否启用模型路由
@@ -882,6 +886,11 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		}
 	}
 
+	// 校验模型定价配置
+	if err := validateModelPricing(input.ModelPricing); err != nil {
+		return nil, err
+	}
+
 	// MCPXMLInject：默认为 true，仅当显式传入 false 时关闭
 	mcpXMLInject := true
 	if input.MCPXMLInject != nil {
@@ -1000,6 +1009,34 @@ func normalizePrice(price *float64) *float64 {
 		return nil
 	}
 	return price
+}
+
+// validateModelPricing 校验模型定价配置
+func validateModelPricing(pricing ModelPricingMap) error {
+	if pricing == nil {
+		return nil
+	}
+	for model, entry := range pricing {
+		if entry.SellInputPrice < 0 {
+			return fmt.Errorf("model %s: sell_input_price must be non-negative", model)
+		}
+		if entry.SellOutputPrice < 0 {
+			return fmt.Errorf("model %s: sell_output_price must be non-negative", model)
+		}
+		if entry.CostInputPrice < 0 {
+			return fmt.Errorf("model %s: cost_input_price must be non-negative", model)
+		}
+		if entry.CostOutputPrice < 0 {
+			return fmt.Errorf("model %s: cost_output_price must be non-negative", model)
+		}
+		if entry.SellInputPrice > 0 && entry.CostInputPrice > entry.SellInputPrice {
+			return fmt.Errorf("model %s: cost_input_price (%.4f) exceeds sell_input_price (%.4f), this will lose money", model, entry.CostInputPrice, entry.SellInputPrice)
+		}
+		if entry.SellOutputPrice > 0 && entry.CostOutputPrice > entry.SellOutputPrice {
+			return fmt.Errorf("model %s: cost_output_price (%.4f) exceeds sell_output_price (%.4f), this will lose money", model, entry.CostOutputPrice, entry.SellOutputPrice)
+		}
+	}
+	return nil
 }
 
 // validateFallbackGroup 校验降级分组的有效性
@@ -1161,6 +1198,12 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		}
 	}
 	group.FallbackGroupIDOnInvalidRequest = fallbackOnInvalidRequest
+
+	// 模型定价配置
+	if err := validateModelPricing(input.ModelPricing); err != nil {
+		return nil, err
+	}
+	group.ModelPricing = input.ModelPricing
 
 	// 模型路由配置
 	if input.ModelRouting != nil {

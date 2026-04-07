@@ -56,8 +56,10 @@ type DashboardStats struct {
 	TotalCacheCreationTokens int64   `json:"total_cache_creation_tokens"`
 	TotalCacheReadTokens     int64   `json:"total_cache_read_tokens"`
 	TotalTokens              int64   `json:"total_tokens"`
-	TotalCost                float64 `json:"total_cost"`        // 累计标准计费
-	TotalActualCost          float64 `json:"total_actual_cost"` // 累计实际扣除
+	TotalCost                float64 `json:"total_cost"`          // 累计标准计费
+	TotalActualCost          float64 `json:"total_actual_cost"`   // 累计实际扣除
+	TotalUpstreamCost        float64 `json:"total_upstream_cost"` // 累计上游成本
+	TotalProfit              float64 `json:"total_profit"`        // 累计利润
 
 	// 今日 Token 使用统计
 	TodayRequests            int64   `json:"today_requests"`
@@ -66,8 +68,10 @@ type DashboardStats struct {
 	TodayCacheCreationTokens int64   `json:"today_cache_creation_tokens"`
 	TodayCacheReadTokens     int64   `json:"today_cache_read_tokens"`
 	TodayTokens              int64   `json:"today_tokens"`
-	TodayCost                float64 `json:"today_cost"`        // 今日标准计费
-	TodayActualCost          float64 `json:"today_actual_cost"` // 今日实际扣除
+	TodayCost                float64 `json:"today_cost"`          // 今日标准计费
+	TodayActualCost          float64 `json:"today_actual_cost"`   // 今日实际扣除
+	TodayUpstreamCost        float64 `json:"today_upstream_cost"` // 今日上游成本
+	TodayProfit              float64 `json:"today_profit"`        // 今日利润
 
 	// 系统运行统计
 	AverageDurationMs float64 `json:"average_duration_ms"` // 平均响应时间

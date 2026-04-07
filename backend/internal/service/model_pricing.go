@@ -26,6 +26,23 @@ func (m ModelPricingMap) GetPricing(model string) *ModelPricingEntry {
 	return nil
 }
 
+// SerializeModelPricingMap 将 ModelPricingMap 序列化为 Ent JSON 字段格式
+func SerializeModelPricingMap(m ModelPricingMap) map[string]map[string]float64 {
+	if m == nil || len(m) == 0 {
+		return nil
+	}
+	raw := make(map[string]map[string]float64, len(m))
+	for model, entry := range m {
+		raw[model] = map[string]float64{
+			"sell_input_price":  entry.SellInputPrice,
+			"sell_output_price": entry.SellOutputPrice,
+			"cost_input_price":  entry.CostInputPrice,
+			"cost_output_price": entry.CostOutputPrice,
+		}
+	}
+	return raw
+}
+
 // ParseModelPricingMap 从 map[string]map[string]float64 解析为 ModelPricingMap
 // 用于从 Ent 的 JSON 字段转换
 func ParseModelPricingMap(raw map[string]map[string]float64) ModelPricingMap {
