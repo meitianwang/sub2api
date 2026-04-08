@@ -118,6 +118,12 @@ export default {
     noResults: '没有找到匹配的模型。',
     sidebar: {
       provider: '供应商',
+      group: '可用令牌分组',
+    },
+    pricing: {
+      input: '输入',
+      output: '输出',
+      contact: '联系获取价格',
     },
     banner: {
       allProviders: '全部供应商',

@@ -118,6 +118,12 @@ export default {
     noResults: 'No models found matching your search.',
     sidebar: {
       provider: 'Provider',
+      group: 'Token Group',
+    },
+    pricing: {
+      input: 'Input',
+      output: 'Output',
+      contact: 'Contact for pricing',
     },
     banner: {
       allProviders: 'All Providers',

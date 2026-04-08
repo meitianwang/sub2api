@@ -8,25 +8,19 @@
             <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
           </div>
         </router-link>
-        <!-- Center Nav -->
         <div class="hidden items-center gap-1 sm:flex">
           <router-link to="/home" class="nav-tab">{{ t('nav.home') }}</router-link>
           <router-link to="/models" class="nav-tab nav-tab-active">{{ t('nav.models') }}</router-link>
           <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="nav-tab">{{ t('nav.docs') }}</a>
           <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="nav-tab">{{ t('nav.console') }}</router-link>
         </div>
-        <!-- Right Actions -->
         <div class="flex items-center gap-2">
           <LocaleSwitcher />
           <button @click="toggleTheme" class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white">
             <Icon v-if="isDark" name="sun" size="sm" />
             <Icon v-else name="moon" size="sm" />
           </button>
-          <router-link
-            v-if="isAuthenticated"
-            :to="dashboardPath"
-            class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[11px] font-semibold text-white"
-          >{{ userInitial }}</router-link>
+          <router-link v-if="isAuthenticated" :to="dashboardPath" class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[11px] font-semibold text-white">{{ userInitial }}</router-link>
           <router-link v-else to="/login" class="rounded-full bg-primary-500 px-3.5 py-1 text-xs font-medium text-white transition-colors hover:bg-primary-600">{{ t('home.login') }}</router-link>
         </div>
       </nav>
@@ -60,10 +54,37 @@
               </button>
             </div>
           </div>
+
+          <!-- Group Filter -->
+          <div v-if="groups.length">
+            <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('models.sidebar.group') }}</h3>
+            <div class="flex flex-wrap gap-2">
+              <button
+                @click="activeGroupId = null"
+                :class="[
+                  'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                  activeGroupId === null
+                    ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300'
+                ]"
+              >{{ t('models.filters.all') }}</button>
+              <button
+                v-for="g in groups"
+                :key="g.id"
+                @click="activeGroupId = g.id"
+                :class="[
+                  'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                  activeGroupId === g.id
+                    ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300'
+                ]"
+              >{{ g.name }} <span class="opacity-50">x{{ g.rate_multiplier }}</span></button>
+            </div>
+          </div>
         </div>
       </aside>
 
-      <!-- Main Content -->
+      <!-- Main -->
       <main class="min-w-0 flex-1">
         <!-- Banner -->
         <div class="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 px-6 py-5">
@@ -83,9 +104,8 @@
           </div>
         </div>
 
-        <!-- Mobile Filter + Search -->
+        <!-- Mobile Filters + Search -->
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <!-- Mobile Provider Tabs -->
           <div class="flex flex-wrap items-center gap-1.5 lg:hidden">
             <button
               v-for="tab in providerTabs"
@@ -99,8 +119,6 @@
               ]"
             >{{ tab.label }} {{ tab.count }}</button>
           </div>
-
-          <!-- Search -->
           <div class="relative w-full sm:max-w-xs">
             <Icon name="search" size="sm" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -112,7 +130,7 @@
           </div>
         </div>
 
-        <!-- Loading Skeleton -->
+        <!-- Loading -->
         <div v-if="loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div v-for="i in 9" :key="i" class="animate-pulse rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-700 dark:bg-dark-800">
             <div class="mb-3 flex items-center gap-3">
@@ -131,41 +149,43 @@
             :key="model.id"
             class="group relative rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-dark-600"
           >
-            <!-- Top Row: Icon + Name + Actions -->
-            <div class="mb-2.5 flex items-start justify-between gap-3">
+            <!-- Top: Icon + Name + Copy -->
+            <div class="mb-2 flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
                 <div :class="['flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full', providerIconBg(model.provider)]">
                   <span class="text-xs font-bold text-white">{{ providerIcon(model.provider) }}</span>
                 </div>
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ model.display_name }}</h3>
               </div>
-              <!-- Copy Buttons -->
               <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  @click="copyModelId(model.id)"
-                  class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700 dark:hover:text-dark-200"
-                  :title="t('models.copyId')"
-                >
+                <button @click="copyModelId(model.id)" class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700 dark:hover:text-dark-200" :title="t('models.copyId')">
                   <Icon :name="copiedId === model.id ? 'check' : 'copy'" size="sm" />
                 </button>
               </div>
             </div>
 
-            <!-- Model ID -->
-            <div class="mb-3">
-              <code class="text-xs text-gray-500 dark:text-dark-400">{{ model.id }}</code>
+            <!-- Pricing -->
+            <div v-if="model.pricing" class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
+              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(model.pricing.input_price) }}/M</span></div>
+              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(model.pricing.output_price) }}/M</span></div>
             </div>
+            <div v-else class="mb-2.5 text-xs text-gray-400 dark:text-dark-500">{{ t('models.pricing.contact') }}</div>
 
-            <!-- Provider Tag -->
-            <div class="flex items-center justify-between">
+            <!-- Footer: Provider + Groups -->
+            <div class="flex flex-wrap items-center gap-1.5">
               <span :class="['rounded px-2 py-0.5 text-[11px] font-medium', providerBadgeClass(model.provider)]">
                 {{ providerLabel(model.provider) }}
               </span>
+              <span
+                v-for="gid in model.group_ids"
+                :key="gid"
+                class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-dark-700 dark:text-dark-400"
+              >{{ groupName(gid) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Empty State -->
+        <!-- Empty -->
         <div v-else class="py-20 text-center">
           <Icon name="search" size="xl" class="mx-auto mb-4 text-gray-300 dark:text-dark-600" />
           <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('models.noResults') }}</p>
@@ -187,11 +207,8 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
-// Site settings
 const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
-
-// Auth
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
 const userInitial = computed(() => {
@@ -200,7 +217,6 @@ const userInitial = computed(() => {
   return user.email.charAt(0).toUpperCase()
 })
 
-// Theme
 const isDark = ref(document.documentElement.classList.contains('dark'))
 function toggleTheme() {
   isDark.value = !isDark.value
@@ -208,18 +224,17 @@ function toggleTheme() {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// Models data
-interface PublicModel {
-  id: string
-  display_name: string
-  provider: string
-  created_at?: string
-}
+// Data
+interface ModelPricing { input_price?: number; output_price?: number }
+interface PublicModel { id: string; display_name: string; provider: string; created_at?: string; pricing?: ModelPricing; group_ids?: number[] }
+interface PublicGroup { id: number; name: string; platform: string; rate_multiplier: number }
 
 const models = ref<PublicModel[]>([])
+const groups = ref<PublicGroup[]>([])
 const loading = ref(true)
 const searchQuery = ref('')
 const activeProvider = ref('all')
+const activeGroupId = ref<number | null>(null)
 const copiedId = ref('')
 
 // Provider counts
@@ -229,7 +244,6 @@ const providerCounts = computed(() => {
   return counts
 })
 
-// Provider tabs
 const providerTabs = computed(() => [
   { value: 'all', label: t('models.filters.all'), count: models.value.length, icon: null, iconClass: '' },
   { value: 'claude', label: 'Claude', count: providerCounts.value.claude || 0, icon: 'C', iconClass: 'bg-gradient-to-br from-orange-400 to-orange-500' },
@@ -237,7 +251,6 @@ const providerTabs = computed(() => [
   { value: 'gemini', label: 'Google', count: providerCounts.value.gemini || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-blue-500 to-blue-600' },
 ])
 
-// Banner title
 const bannerTitle = computed(() => {
   const tab = providerTabs.value.find(t => t.value === activeProvider.value)
   if (activeProvider.value === 'all') return t('models.banner.allProviders')
@@ -250,6 +263,9 @@ const filteredModels = computed(() => {
   if (activeProvider.value !== 'all') {
     result = result.filter(m => m.provider === activeProvider.value)
   }
+  if (activeGroupId.value !== null) {
+    result = result.filter(m => m.group_ids?.includes(activeGroupId.value!))
+  }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(m => m.id.toLowerCase().includes(q) || m.display_name.toLowerCase().includes(q))
@@ -257,36 +273,34 @@ const filteredModels = computed(() => {
   return result
 })
 
-// Provider styling
-function providerIconBg(provider: string): string {
-  switch (provider) {
+// Helpers
+function groupName(id: number): string {
+  return groups.value.find(g => g.id === id)?.name || ''
+}
+
+function formatPrice(price?: number): string {
+  if (price == null) return '-'
+  if (price < 0.01) return price.toFixed(4)
+  if (price < 1) return price.toFixed(3)
+  return price.toFixed(2)
+}
+
+function providerIconBg(p: string): string {
+  switch (p) {
     case 'claude': return 'bg-gradient-to-br from-orange-400 to-orange-500'
     case 'openai': return 'bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-500 dark:to-gray-700'
     case 'gemini': return 'bg-gradient-to-br from-blue-500 to-blue-600'
     default: return 'bg-gradient-to-br from-gray-400 to-gray-500'
   }
 }
-
-function providerIcon(provider: string): string {
-  switch (provider) {
-    case 'claude': return 'C'
-    case 'openai': return 'G'
-    case 'gemini': return 'G'
-    default: return '?'
-  }
+function providerIcon(p: string): string {
+  return p === 'claude' ? 'C' : p === 'openai' ? 'G' : p === 'gemini' ? 'G' : '?'
 }
-
-function providerLabel(provider: string): string {
-  switch (provider) {
-    case 'claude': return 'Anthropic'
-    case 'openai': return 'OpenAI'
-    case 'gemini': return 'Google'
-    default: return provider
-  }
+function providerLabel(p: string): string {
+  return p === 'claude' ? 'Anthropic' : p === 'openai' ? 'OpenAI' : p === 'gemini' ? 'Google' : p
 }
-
-function providerBadgeClass(provider: string): string {
-  switch (provider) {
+function providerBadgeClass(p: string): string {
+  switch (p) {
     case 'claude': return 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
     case 'openai': return 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300'
     case 'gemini': return 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
@@ -294,22 +308,22 @@ function providerBadgeClass(provider: string): string {
   }
 }
 
-// Copy
 async function copyModelId(id: string) {
-  try {
-    await navigator.clipboard.writeText(id)
-  } catch {
-    return
-  }
+  try { await navigator.clipboard.writeText(id) } catch { return }
   copiedId.value = id
   setTimeout(() => { copiedId.value = '' }, 1500)
 }
 
-// Fetch
 async function fetchModels() {
   try {
     const res = await apiClient.get('/settings/models')
-    models.value = res.data || []
+    const data = res.data as { models: PublicModel[]; groups: PublicGroup[] } | PublicModel[]
+    if (Array.isArray(data)) {
+      models.value = data
+    } else {
+      models.value = data.models || []
+      groups.value = data.groups || []
+    }
   } catch {
     models.value = []
   } finally {
@@ -318,8 +332,8 @@ async function fetchModels() {
 }
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  const saved = localStorage.getItem('theme')
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
@@ -328,40 +342,16 @@ function initTheme() {
 onMounted(() => {
   initTheme()
   authStore.checkAuth()
-  if (!appStore.publicSettingsLoaded) {
-    appStore.fetchPublicSettings()
-  }
+  if (!appStore.publicSettingsLoaded) appStore.fetchPublicSettings()
   fetchModels()
 })
 </script>
 
 <style scoped>
-.nav-tab {
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  border-radius: 8px;
-  transition: all 0.2s;
-  text-decoration: none;
-}
-.nav-tab:hover {
-  color: #111827;
-  background: rgba(0, 0, 0, 0.04);
-}
-.nav-tab-active {
-  color: #14b8a6;
-  background: rgba(20, 184, 166, 0.08);
-}
-:deep(.dark) .nav-tab {
-  color: #9ca3af;
-}
-:deep(.dark) .nav-tab:hover {
-  color: #f3f4f6;
-  background: rgba(255, 255, 255, 0.06);
-}
-:deep(.dark) .nav-tab-active {
-  color: #2dd4bf;
-  background: rgba(20, 184, 166, 0.12);
-}
+.nav-tab { padding: 6px 16px; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; text-decoration: none; }
+.nav-tab:hover { color: #111827; background: rgba(0, 0, 0, 0.04); }
+.nav-tab-active { color: #14b8a6; background: rgba(20, 184, 166, 0.08); }
+:deep(.dark) .nav-tab { color: #9ca3af; }
+:deep(.dark) .nav-tab:hover { color: #f3f4f6; background: rgba(255, 255, 255, 0.06); }
+:deep(.dark) .nav-tab-active { color: #2dd4bf; background: rgba(20, 184, 166, 0.12); }
 </style>
