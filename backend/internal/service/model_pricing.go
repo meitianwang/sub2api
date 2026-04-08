@@ -4,10 +4,10 @@ import "strings"
 
 // ModelPricingEntry 单个模型的定价配置
 type ModelPricingEntry struct {
-	SellInputPrice  float64 `json:"sell_input_price"`  // 卖给用户的输入价格 (USD/M tokens)
-	SellOutputPrice float64 `json:"sell_output_price"` // 卖给用户的输出价格 (USD/M tokens)
-	CostInputPrice  float64 `json:"cost_input_price"`  // 上游进货输入价格 (USD/M tokens)
-	CostOutputPrice float64 `json:"cost_output_price"` // 上游进货输出价格 (USD/M tokens)
+	SellInputPrice  float64 `json:"sell_input_price"`  // 卖给用户的输入价格 (CNY/M tokens)
+	SellOutputPrice float64 `json:"sell_output_price"` // 卖给用户的输出价格 (CNY/M tokens)
+	CostInputPrice  float64 `json:"cost_input_price"`  // 上游进货输入价格 (CNY/M tokens)
+	CostOutputPrice float64 `json:"cost_output_price"` // 上游进货输出价格 (CNY/M tokens)
 }
 
 // ModelPricingMap 分组的模型定价映射

@@ -787,11 +787,11 @@ func (s *BillingService) CalculateCostWithCustomPricing(model string, pricing *M
 		return &CostBreakdown{}
 	}
 
-	// 卖价 (USD/M tokens → USD/token)
+	// 卖价 (CNY/M tokens → USD/token)
 	sellInputPerToken := pricing.SellInputPrice / 1_000_000
 	sellOutputPerToken := pricing.SellOutputPrice / 1_000_000
 
-	// 成本价 (USD/M tokens → USD/token)
+	// 成本价 (CNY/M tokens → USD/token)
 	costInputPerToken := pricing.CostInputPrice / 1_000_000
 	costOutputPerToken := pricing.CostOutputPrice / 1_000_000
 

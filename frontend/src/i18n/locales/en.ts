@@ -1735,7 +1735,7 @@ export default {
         accountsHint: 'Select accounts to prioritize for this model pattern'
       },
       modelPricing: {
-        title: 'Model Pricing (USD/M tokens)',
+        title: 'Model Pricing (¥/M tokens)',
         modelName: 'Model Name',
         sellInput: 'Sell (Input)',
         sellOutput: 'Sell (Output)',

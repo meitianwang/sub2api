@@ -1823,7 +1823,7 @@ export default {
         accountsHint: '选择此模型模式优先使用的账号'
       },
       modelPricing: {
-        title: '模型定价 (USD/M tokens)',
+        title: '模型定价 (¥/M tokens)',
         modelName: '模型名称',
         sellInput: '卖价(输入)',
         sellOutput: '卖价(输出)',
