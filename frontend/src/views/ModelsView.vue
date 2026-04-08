@@ -26,59 +26,34 @@
       </nav>
     </header>
 
-    <!-- Body -->
     <div class="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 py-6 lg:gap-6 lg:px-6">
       <!-- Sidebar -->
       <aside class="hidden w-56 flex-shrink-0 lg:block">
         <div class="sticky top-20 space-y-6">
-          <!-- Provider Filter -->
+          <!-- Provider -->
           <div>
             <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('models.sidebar.provider') }}</h3>
             <div class="flex flex-wrap gap-2">
-              <button
-                v-for="tab in providerTabs"
-                :key="tab.value"
-                @click="activeProvider = tab.value"
-                :class="[
-                  'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                  activeProvider === tab.value
-                    ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:border-dark-600 dark:hover:text-white'
-                ]"
-              >
+              <button v-for="tab in providerTabs" :key="tab.value" @click="activeProvider = tab.value"
+                :class="['filter-tag', activeProvider === tab.value ? 'filter-tag-active' : '']">
                 <span v-if="tab.icon" :class="['flex h-4 w-4 items-center justify-center rounded', tab.iconClass]">
                   <span class="text-[8px] font-bold text-white">{{ tab.icon }}</span>
                 </span>
-                <span>{{ tab.label }}</span>
-                <span class="text-[10px] opacity-60">{{ tab.count }}</span>
+                {{ tab.label }} <span class="opacity-50">{{ tab.count }}</span>
               </button>
             </div>
           </div>
-
-          <!-- Group Filter -->
-          <div v-if="groups.length">
+          <!-- Group -->
+          <div v-if="allGroups.length">
             <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('models.sidebar.group') }}</h3>
             <div class="flex flex-wrap gap-2">
-              <button
-                @click="activeGroupId = null"
-                :class="[
-                  'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                  activeGroupId === null
-                    ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300'
-                ]"
-              >{{ t('models.filters.all') }}</button>
-              <button
-                v-for="g in groups"
-                :key="g.id"
-                @click="activeGroupId = g.id"
-                :class="[
-                  'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                  activeGroupId === g.id
-                    ? 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300'
-                ]"
-              >{{ g.name }} <span class="opacity-50">x{{ g.rate_multiplier }}</span></button>
+              <button @click="activeGroup = ''" :class="['filter-tag', activeGroup === '' ? 'filter-tag-active' : '']">
+                {{ t('models.filters.all') }} {{ allGroups.length }}
+              </button>
+              <button v-for="g in allGroups" :key="g" @click="activeGroup = g"
+                :class="['filter-tag', activeGroup === g ? 'filter-tag-active' : '']">
+                {{ g }}
+              </button>
             </div>
           </div>
         </div>
@@ -88,16 +63,11 @@
       <main class="min-w-0 flex-1">
         <!-- Banner -->
         <div class="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 px-6 py-5">
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
-            <svg class="h-28 w-28 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5">
-              <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
           <div class="relative">
             <div class="mb-1 flex items-center gap-3">
               <h1 class="text-xl font-bold text-white">{{ bannerTitle }}</h1>
-              <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-                {{ t('models.banner.count', { count: filteredModels.length }) }}
+              <span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium text-white">
+                {{ t('models.banner.count', { count: filtered.length }) }}
               </span>
             </div>
             <p class="text-sm text-white/70">{{ t('models.banner.description') }}</p>
@@ -107,80 +77,52 @@
         <!-- Mobile Filters + Search -->
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex flex-wrap items-center gap-1.5 lg:hidden">
-            <button
-              v-for="tab in providerTabs"
-              :key="'m-' + tab.value"
-              @click="activeProvider = tab.value"
-              :class="[
-                'rounded-lg px-2.5 py-1 text-xs font-medium transition-all',
-                activeProvider === tab.value
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white text-gray-600 hover:text-gray-900 dark:bg-dark-800 dark:text-dark-300'
-              ]"
-            >{{ tab.label }} {{ tab.count }}</button>
+            <button v-for="tab in providerTabs" :key="'m-'+tab.value" @click="activeProvider = tab.value"
+              :class="['rounded-lg px-2.5 py-1 text-xs font-medium transition-all', activeProvider === tab.value ? 'bg-primary-500 text-white' : 'bg-white text-gray-600 dark:bg-dark-800 dark:text-dark-300']">
+              {{ tab.label }} {{ tab.count }}
+            </button>
           </div>
           <div class="relative w-full sm:max-w-xs">
             <Icon name="search" size="sm" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              :placeholder="t('models.searchPlaceholder')"
-              class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500"
-            />
+            <input v-model="searchQuery" type="text" :placeholder="t('models.searchPlaceholder')"
+              class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500" />
           </div>
         </div>
 
         <!-- Loading -->
         <div v-if="loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div v-for="i in 9" :key="i" class="animate-pulse rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-700 dark:bg-dark-800">
-            <div class="mb-3 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-dark-700"></div>
-              <div class="h-4 w-32 rounded bg-gray-200 dark:bg-dark-700"></div>
-            </div>
+            <div class="mb-3 flex items-center gap-3"><div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-dark-700"></div><div class="h-4 w-32 rounded bg-gray-200 dark:bg-dark-700"></div></div>
             <div class="mb-2 h-3 w-48 rounded bg-gray-100 dark:bg-dark-700/60"></div>
             <div class="h-3 w-36 rounded bg-gray-100 dark:bg-dark-700/60"></div>
           </div>
         </div>
 
-        <!-- Model Grid -->
-        <div v-else-if="filteredModels.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div
-            v-for="model in filteredModels"
-            :key="model.id"
-            class="group relative rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-dark-600"
-          >
-            <!-- Top: Icon + Name + Copy -->
+        <!-- Cards -->
+        <div v-else-if="filtered.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div v-for="item in filtered" :key="item.model_id + '-' + item.group_id"
+            class="group rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-dark-600">
+            <!-- Top -->
             <div class="mb-2 flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div :class="['flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full', providerIconBg(model.provider)]">
-                  <span class="text-xs font-bold text-white">{{ providerIcon(model.provider) }}</span>
+                <div :class="['flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full', providerIconBg(item.provider)]">
+                  <span class="text-xs font-bold text-white">{{ providerLetter(item.provider) }}</span>
                 </div>
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ model.display_name }}</h3>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.display_name }}</h3>
               </div>
-              <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button @click="copyModelId(model.id)" class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700 dark:hover:text-dark-200" :title="t('models.copyId')">
-                  <Icon :name="copiedId === model.id ? 'check' : 'copy'" size="sm" />
-                </button>
-              </div>
+              <button @click="copy(item.model_id)" class="rounded p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-dark-700" :title="t('models.copyId')">
+                <Icon :name="copiedId === item.model_id ? 'check' : 'copy'" size="sm" />
+              </button>
             </div>
-
             <!-- Pricing -->
-            <div v-if="getEffectivePricing(model)" class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
-              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(getEffectivePricing(model)?.input_price) }}/M</span></div>
-              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(getEffectivePricing(model)?.output_price) }}/M</span></div>
+            <div class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
+              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ fmtPrice(item.input_price) }}/M</span></div>
+              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ fmtPrice(item.output_price) }}/M</span></div>
             </div>
-            <div v-else class="mb-2.5 text-xs text-gray-400 dark:text-dark-500">{{ t('models.pricing.contact') }}</div>
-
-            <!-- Footer: Provider + Groups -->
+            <!-- Tags -->
             <div class="flex flex-wrap items-center gap-1.5">
-              <span :class="['rounded px-2 py-0.5 text-[11px] font-medium', providerBadgeClass(model.provider)]">
-                {{ providerLabel(model.provider) }}
-              </span>
-              <span
-                v-for="gid in model.group_ids"
-                :key="gid"
-                class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-dark-700 dark:text-dark-400"
-              >{{ groupName(gid) }}</span>
+              <span :class="['rounded px-2 py-0.5 text-[11px] font-medium', providerBadge(item.provider)]">{{ providerLabel(item.provider) }}</span>
+              <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-dark-700 dark:text-dark-400">{{ item.group_name }}</span>
             </div>
           </div>
         </div>
@@ -211,11 +153,7 @@ const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appS
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
-const userInitial = computed(() => {
-  const user = authStore.user
-  if (!user || !user.email) return ''
-  return user.email.charAt(0).toUpperCase()
-})
+const userInitial = computed(() => authStore.user?.email?.charAt(0).toUpperCase() || '')
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
 function toggleTheme() {
@@ -225,102 +163,77 @@ function toggleTheme() {
 }
 
 // Data
-interface ModelPricing { input_price?: number; output_price?: number }
-interface PublicModel { id: string; display_name: string; provider: string; created_at?: string; pricing?: ModelPricing; group_ids?: number[] }
-interface PublicGroup { id: number; name: string; platform: string; rate_multiplier: number; model_pricing?: Record<string, ModelPricing> }
+interface ModelEntry {
+  model_id: string; display_name: string; provider: string
+  group_id: number; group_name: string
+  input_price: number; output_price: number
+}
 
-const models = ref<PublicModel[]>([])
-const groups = ref<PublicGroup[]>([])
+const items = ref<ModelEntry[]>([])
 const loading = ref(true)
 const searchQuery = ref('')
 const activeProvider = ref('all')
-const activeGroupId = ref<number | null>(null)
+const activeGroup = ref('')
 const copiedId = ref('')
 
-// Provider counts
-const providerCounts = computed(() => {
-  const counts: Record<string, number> = {}
-  models.value.forEach(m => { counts[m.provider] = (counts[m.provider] || 0) + 1 })
-  return counts
-})
+// Derived
+const allGroups = computed(() => [...new Set(items.value.map(i => i.group_name))].sort())
 
-const providerTabs = computed(() => [
-  { value: 'all', label: t('models.filters.all'), count: models.value.length, icon: null, iconClass: '' },
-  { value: 'claude', label: 'Claude', count: providerCounts.value.claude || 0, icon: 'C', iconClass: 'bg-gradient-to-br from-orange-400 to-orange-500' },
-  { value: 'openai', label: 'OpenAI', count: providerCounts.value.openai || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-green-500 to-green-600' },
-  { value: 'gemini', label: 'Google', count: providerCounts.value.gemini || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-blue-500 to-blue-600' },
-])
+const providerTabs = computed(() => {
+  const counts: Record<string, number> = {}
+  // 按唯一 model_id 计数（去重）
+  const seen: Record<string, Set<string>> = {}
+  items.value.forEach(i => {
+    if (!seen[i.provider]) seen[i.provider] = new Set()
+    seen[i.provider].add(i.model_id)
+  })
+  for (const [p, s] of Object.entries(seen)) counts[p] = s.size
+  const total = new Set(items.value.map(i => i.model_id)).size
+  return [
+    { value: 'all', label: t('models.filters.all'), count: total, icon: null, iconClass: '' },
+    { value: 'claude', label: 'Claude', count: counts.claude || 0, icon: 'C', iconClass: 'bg-gradient-to-br from-orange-400 to-orange-500' },
+    { value: 'openai', label: 'OpenAI', count: counts.openai || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-green-500 to-green-600' },
+    { value: 'gemini', label: 'Google', count: counts.gemini || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+  ]
+})
 
 const bannerTitle = computed(() => {
-  const tab = providerTabs.value.find(t => t.value === activeProvider.value)
   if (activeProvider.value === 'all') return t('models.banner.allProviders')
-  return tab?.label || ''
+  return providerTabs.value.find(t => t.value === activeProvider.value)?.label || ''
 })
 
-// Filtered models
-const filteredModels = computed(() => {
-  let result = models.value
-  if (activeProvider.value !== 'all') {
-    result = result.filter(m => m.provider === activeProvider.value)
-  }
-  if (activeGroupId.value !== null) {
-    result = result.filter(m => m.group_ids?.includes(activeGroupId.value!))
-  }
+const filtered = computed(() => {
+  let r = items.value
+  if (activeProvider.value !== 'all') r = r.filter(i => i.provider === activeProvider.value)
+  if (activeGroup.value) r = r.filter(i => i.group_name === activeGroup.value)
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
-    result = result.filter(m => m.id.toLowerCase().includes(q) || m.display_name.toLowerCase().includes(q))
+    r = r.filter(i => i.model_id.includes(q) || i.display_name.toLowerCase().includes(q))
   }
-  return result
+  return r
 })
 
 // Helpers
-function groupName(id: number): string {
-  return groups.value.find(g => g.id === id)?.name || ''
+function fmtPrice(p: number): string {
+  if (p < 0.01) return p.toFixed(4)
+  if (p < 1) return p.toFixed(3)
+  return p.toFixed(2)
 }
-
-// 获取模型有效价格：选了分组 → 该分组的自定义价格，否则 → 默认官方价
-function getEffectivePricing(model: PublicModel): ModelPricing | undefined {
-  if (activeGroupId.value !== null) {
-    const group = groups.value.find(g => g.id === activeGroupId.value)
-    if (group?.model_pricing) {
-      const gp = group.model_pricing[model.id.toLowerCase()]
-      if (gp) return gp
-    }
-  }
-  return model.pricing
+function providerIconBg(p: string) {
+  return p === 'claude' ? 'bg-gradient-to-br from-orange-400 to-orange-500'
+    : p === 'openai' ? 'bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-500 dark:to-gray-700'
+    : p === 'gemini' ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+    : 'bg-gradient-to-br from-gray-400 to-gray-500'
 }
-
-function formatPrice(price?: number): string {
-  if (price == null) return '-'
-  if (price < 0.01) return price.toFixed(4)
-  if (price < 1) return price.toFixed(3)
-  return price.toFixed(2)
+function providerLetter(p: string) { return p === 'claude' ? 'C' : p === 'openai' ? 'G' : p === 'gemini' ? 'G' : '?' }
+function providerLabel(p: string) { return p === 'claude' ? 'Anthropic' : p === 'openai' ? 'OpenAI' : p === 'gemini' ? 'Google' : p }
+function providerBadge(p: string) {
+  return p === 'claude' ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+    : p === 'openai' ? 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300'
+    : p === 'gemini' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+    : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'
 }
-
-function providerIconBg(p: string): string {
-  switch (p) {
-    case 'claude': return 'bg-gradient-to-br from-orange-400 to-orange-500'
-    case 'openai': return 'bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-500 dark:to-gray-700'
-    case 'gemini': return 'bg-gradient-to-br from-blue-500 to-blue-600'
-    default: return 'bg-gradient-to-br from-gray-400 to-gray-500'
-  }
-}
-function providerIcon(p: string): string {
-  return p === 'claude' ? 'C' : p === 'openai' ? 'G' : p === 'gemini' ? 'G' : '?'
-}
-function providerLabel(p: string): string {
-  return p === 'claude' ? 'Anthropic' : p === 'openai' ? 'OpenAI' : p === 'gemini' ? 'Google' : p
-}
-function providerBadgeClass(p: string): string {
-  switch (p) {
-    case 'claude': return 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
-    case 'openai': return 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300'
-    case 'gemini': return 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-    default: return 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'
-  }
-}
-
-async function copyModelId(id: string) {
+async function copy(id: string) {
   try { await navigator.clipboard.writeText(id) } catch { return }
   copiedId.value = id
   setTimeout(() => { copiedId.value = '' }, 1500)
@@ -329,30 +242,16 @@ async function copyModelId(id: string) {
 async function fetchModels() {
   try {
     const res = await apiClient.get('/settings/models')
-    const data = res.data as { models: PublicModel[]; groups: PublicGroup[] } | PublicModel[]
-    if (Array.isArray(data)) {
-      models.value = data
-    } else {
-      models.value = data.models || []
-      groups.value = data.groups || []
-    }
-  } catch {
-    models.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-function initTheme() {
-  const saved = localStorage.getItem('theme')
-  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
-  }
+    items.value = (res.data as ModelEntry[]) || []
+  } catch { items.value = [] }
+  finally { loading.value = false }
 }
 
 onMounted(() => {
-  initTheme()
+  const saved = localStorage.getItem('theme')
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDark.value = true; document.documentElement.classList.add('dark')
+  }
   authStore.checkAuth()
   if (!appStore.publicSettingsLoaded) appStore.fetchPublicSettings()
   fetchModels()
@@ -363,6 +262,8 @@ onMounted(() => {
 .nav-tab { padding: 6px 16px; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; text-decoration: none; }
 .nav-tab:hover { color: #111827; background: rgba(0, 0, 0, 0.04); }
 .nav-tab-active { color: #14b8a6; background: rgba(20, 184, 166, 0.08); }
+.filter-tag { @apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300; }
+.filter-tag-active { @apply border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400; }
 :deep(.dark) .nav-tab { color: #9ca3af; }
 :deep(.dark) .nav-tab:hover { color: #f3f4f6; background: rgba(255, 255, 255, 0.06); }
 :deep(.dark) .nav-tab-active { color: #2dd4bf; background: rgba(20, 184, 166, 0.12); }

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"strings"
-
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
@@ -66,124 +64,86 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 	})
 }
 
-// publicModelPricing 公开模型价格信息
-type publicModelPricing struct {
-	InputPrice  *float64 `json:"input_price,omitempty"`  // USD/M tokens
-	OutputPrice *float64 `json:"output_price,omitempty"` // USD/M tokens
+// publicModelEntry 一条模型记录 = 模型 + 分组 + 价格
+type publicModelEntry struct {
+	ModelID     string  `json:"model_id"`
+	DisplayName string  `json:"display_name"`
+	Provider    string  `json:"provider"`
+	GroupID     int64   `json:"group_id"`
+	GroupName   string  `json:"group_name"`
+	InputPrice  float64 `json:"input_price"`  // USD/M tokens
+	OutputPrice float64 `json:"output_price"` // USD/M tokens
 }
 
-// publicGroup 公开分组信息
-type publicGroup struct {
-	ID             int64   `json:"id"`
-	Name           string  `json:"name"`
-	Platform       string  `json:"platform"`
-	RateMultiplier float64 `json:"rate_multiplier"`
-}
-
-// publicModelsResponse 公开模型列表响应
-type publicModelsResponse struct {
-	Models []publicModelItem            `json:"models"`
-	Groups []publicGroupWithPricing     `json:"groups"`
-}
-
-// publicGroupWithPricing 公开分组信息（含该分组的模型定价）
-type publicGroupWithPricing struct {
-	ID             int64                         `json:"id"`
-	Name           string                        `json:"name"`
-	Platform       string                        `json:"platform"`
-	RateMultiplier float64                       `json:"rate_multiplier"`
-	ModelPricing   map[string]publicModelPricing  `json:"model_pricing,omitempty"` // modelID -> pricing
-}
-
-// publicModelItem 公开模型项
-type publicModelItem struct {
-	ID          string              `json:"id"`
-	DisplayName string              `json:"display_name"`
-	Provider    string              `json:"provider"`
-	CreatedAt   string              `json:"created_at,omitempty"`
-	Pricing     *publicModelPricing `json:"pricing,omitempty"` // 默认定价（官方价）
-	GroupIDs    []int64             `json:"group_ids,omitempty"`
-}
-
-// GetPublicModels 获取公开模型列表（含分组和价格）
+// GetPublicModels 获取公开模型列表
 // GET /api/v1/settings/models
 func (h *SettingHandler) GetPublicModels(c *gin.Context) {
-	// 收集所有模型
-	type modelDef struct {
-		id, displayName, provider, createdAt string
-	}
-	var allModels []modelDef
-	for _, m := range antigravity.GetPublicClaudeModels() {
-		allModels = append(allModels, modelDef{m.ID, m.DisplayName, m.Provider, m.CreatedAt})
-	}
-	for _, m := range antigravity.GetPublicGeminiModels() {
-		allModels = append(allModels, modelDef{m.ID, m.DisplayName, m.Provider, m.CreatedAt})
-	}
-	for _, m := range openai.DefaultModels {
-		allModels = append(allModels, modelDef{m.ID, m.DisplayName, "openai", ""})
-	}
-
-	// 查询活跃分组，收集每个分组的模型定价和模型所属分组
-	var groups []publicGroupWithPricing
-	modelGroupIDs := make(map[string][]int64) // modelID(lower) -> groupIDs
+	var items []publicModelEntry
 
 	if h.groupRepo != nil {
 		activeGroups, err := h.groupRepo.ListActive(c.Request.Context())
 		if err == nil {
 			for _, g := range activeGroups {
-				if g.IsExclusive {
+				if g.IsExclusive || g.ModelPricing == nil {
 					continue
 				}
-				pg := publicGroupWithPricing{
-					ID:             g.ID,
-					Name:           g.Name,
-					Platform:       g.Platform,
-					RateMultiplier: g.RateMultiplier,
+				for modelID, entry := range g.ModelPricing {
+					provider := guessProvider(modelID)
+					items = append(items, publicModelEntry{
+						ModelID:     modelID,
+						DisplayName: modelID, // 先用 ID，下面替换
+						Provider:    provider,
+						GroupID:     g.ID,
+						GroupName:   g.Name,
+						InputPrice:  entry.SellInputPrice,
+						OutputPrice: entry.SellOutputPrice,
+					})
 				}
-				// 导出该分组的 per-model 卖价（仅 sell price）
-				if g.ModelPricing != nil {
-					for _, m := range allModels {
-						entry := g.ModelPricing.GetPricing(m.id)
-						if entry == nil {
-							continue
-						}
-						if pg.ModelPricing == nil {
-							pg.ModelPricing = make(map[string]publicModelPricing)
-						}
-						pg.ModelPricing[strings.ToLower(m.id)] = publicModelPricing{
-							InputPrice:  &entry.SellInputPrice,
-							OutputPrice: &entry.SellOutputPrice,
-						}
-						modelGroupIDs[strings.ToLower(m.id)] = append(modelGroupIDs[strings.ToLower(m.id)], g.ID)
-					}
-				}
-				groups = append(groups, pg)
 			}
 		}
 	}
 
-	// 构建响应：每个模型默认显示官方定价，分组自定义价格在 groups 里
-	result := make([]publicModelItem, 0, len(allModels))
-	for _, m := range allModels {
-		item := publicModelItem{
-			ID:          m.id,
-			DisplayName: m.displayName,
-			Provider:    m.provider,
-			CreatedAt:   m.createdAt,
-			GroupIDs:    modelGroupIDs[strings.ToLower(m.id)],
+	// 用已知模型列表补充 display_name
+	displayNames := buildDisplayNameMap()
+	for i := range items {
+		if name, ok := displayNames[items[i].ModelID]; ok {
+			items[i].DisplayName = name
 		}
-		// 默认定价（官方价）
-		if dp := service.GetDefaultPublicPricing(m.id); dp != nil {
-			item.Pricing = &publicModelPricing{
-				InputPrice:  &dp.InputPrice,
-				OutputPrice: &dp.OutputPrice,
-			}
-		}
-		result = append(result, item)
 	}
 
-	response.Success(c, publicModelsResponse{
-		Models: result,
-		Groups: groups,
-	})
+	if items == nil {
+		items = []publicModelEntry{}
+	}
+
+	response.Success(c, items)
+}
+
+func guessProvider(modelID string) string {
+	if len(modelID) >= 6 && modelID[:6] == "claude" {
+		return "claude"
+	}
+	if len(modelID) >= 3 && modelID[:3] == "gpt" {
+		return "openai"
+	}
+	if len(modelID) >= 5 && modelID[:5] == "codex" {
+		return "openai"
+	}
+	if len(modelID) >= 6 && modelID[:6] == "gemini" {
+		return "gemini"
+	}
+	return "other"
+}
+
+func buildDisplayNameMap() map[string]string {
+	m := make(map[string]string)
+	for _, mod := range antigravity.GetPublicClaudeModels() {
+		m[mod.ID] = mod.DisplayName
+	}
+	for _, mod := range antigravity.GetPublicGeminiModels() {
+		m[mod.ID] = mod.DisplayName
+	}
+	for _, mod := range openai.DefaultModels {
+		m[mod.ID] = mod.DisplayName
+	}
+	return m
 }
