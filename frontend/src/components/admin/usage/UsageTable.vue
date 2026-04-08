@@ -138,6 +138,28 @@
           </div>
         </template>
 
+        <template #cell-upstream_cost="{ row }">
+          <div class="text-sm">
+            <span class="font-medium text-orange-600 dark:text-orange-400">
+              ${{ row.upstream_cost != null ? row.upstream_cost.toFixed(6) : '-' }}
+            </span>
+          </div>
+        </template>
+
+        <template #cell-profit="{ row }">
+          <div v-if="row.upstream_cost != null" class="text-sm">
+            <span
+              class="font-medium"
+              :class="(row.actual_cost - row.upstream_cost) >= 0
+                ? 'text-teal-600 dark:text-teal-400'
+                : 'text-red-600 dark:text-red-400'"
+            >
+              ${{ (row.actual_cost - row.upstream_cost).toFixed(6) }}
+            </span>
+          </div>
+          <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
+        </template>
+
         <template #cell-first_token="{ row }">
           <span v-if="row.first_token_ms != null" class="text-sm text-gray-600 dark:text-gray-400">{{ formatDuration(row.first_token_ms) }}</span>
           <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>

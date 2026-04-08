@@ -204,6 +204,89 @@
           </div>
         </div>
 
+        <!-- Row 3: Cost & Profit Stats -->
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <!-- Today Upstream Cost -->
+          <div class="card p-4">
+            <div class="flex items-center gap-3">
+              <div class="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
+                <Icon name="cube" size="md" class="text-orange-600 dark:text-orange-400" :stroke-width="2" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.todayUpstreamCost') }}
+                </p>
+                <p class="text-xl font-bold text-orange-600 dark:text-orange-400">
+                  ${{ formatCost(stats.today_upstream_cost || 0) }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.revenue') }}: ${{ formatCost(stats.today_actual_cost) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today Profit -->
+          <div class="card p-4">
+            <div class="flex items-center gap-3">
+              <div class="rounded-lg p-2" :class="(stats.today_profit || 0) >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+                <Icon name="chart" size="md" :class="(stats.today_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.todayProfit') }}
+                </p>
+                <p class="text-xl font-bold" :class="(stats.today_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
+                  ${{ formatCost(stats.today_profit || 0) }}
+                </p>
+                <p v-if="stats.today_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.profitMargin') }}: {{ ((stats.today_profit || 0) / stats.today_actual_cost * 100).toFixed(1) }}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Upstream Cost -->
+          <div class="card p-4">
+            <div class="flex items-center gap-3">
+              <div class="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
+                <Icon name="database" size="md" class="text-orange-600 dark:text-orange-400" :stroke-width="2" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.totalUpstreamCost') }}
+                </p>
+                <p class="text-xl font-bold text-orange-600 dark:text-orange-400">
+                  ${{ formatCost(stats.total_upstream_cost || 0) }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.revenue') }}: ${{ formatCost(stats.total_actual_cost) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Profit -->
+          <div class="card p-4">
+            <div class="flex items-center gap-3">
+              <div class="rounded-lg p-2" :class="(stats.total_profit || 0) >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+                <Icon name="chart" size="md" :class="(stats.total_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.totalProfit') }}
+                </p>
+                <p class="text-xl font-bold" :class="(stats.total_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
+                  ${{ formatCost(stats.total_profit || 0) }}
+                </p>
+                <p v-if="stats.total_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.dashboard.profitMargin') }}: {{ ((stats.total_profit || 0) / stats.total_actual_cost * 100).toFixed(1) }}%
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Charts Section -->
         <div class="space-y-6">
           <!-- Date Range Filter -->

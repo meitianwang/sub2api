@@ -410,6 +410,14 @@ export interface AdminGroup extends Group {
   model_routing: Record<string, number[]> | null
   model_routing_enabled: boolean
 
+  // 模型定价配置（仅管理员可见）
+  model_pricing?: Record<string, {
+    sell_input_price: number
+    sell_output_price: number
+    cost_input_price: number
+    cost_output_price: number
+  }>
+
   // MCP XML 协议注入（仅 antigravity 平台使用）
   mcp_xml_inject: boolean
   // Claude usage 模拟开关（仅 anthropic 平台使用）
@@ -514,6 +522,13 @@ export interface CreateGroupRequest {
   supported_model_scopes?: string[]
   require_oauth_only?: boolean
   require_privacy_set?: boolean
+  // 模型定价配置
+  model_pricing?: Record<string, {
+    sell_input_price: number
+    sell_output_price: number
+    cost_input_price: number
+    cost_output_price: number
+  }>
   // 从指定分组复制账号
   copy_accounts_from_group_ids?: number[]
 }
@@ -545,6 +560,13 @@ export interface UpdateGroupRequest {
   supported_model_scopes?: string[]
   require_oauth_only?: boolean
   require_privacy_set?: boolean
+  // 模型定价配置
+  model_pricing?: Record<string, {
+    sell_input_price: number
+    sell_output_price: number
+    cost_input_price: number
+    cost_output_price: number
+  }>
   copy_accounts_from_group_ids?: number[]
 }
 
@@ -1055,6 +1077,9 @@ export interface AdminUsageLog extends UsageLog {
   // 账号计费倍率（仅管理员可见）
   account_rate_multiplier?: number | null
 
+  // 上游成本（仅管理员可见）
+  upstream_cost?: number | null
+
   // 用户请求 IP（仅管理员可见）
   ip_address?: string | null
 
@@ -1149,6 +1174,8 @@ export interface DashboardStats {
   total_tokens: number
   total_cost: number // 累计标准计费
   total_actual_cost: number // 累计实际扣除
+  total_upstream_cost: number // 累计上游成本
+  total_profit: number // 累计利润
 
   // 今日 Token 使用统计
   today_requests: number
@@ -1159,6 +1186,8 @@ export interface DashboardStats {
   today_tokens: number
   today_cost: number // 今日标准计费
   today_actual_cost: number // 今日实际扣除
+  today_upstream_cost: number // 今日上游成本
+  today_profit: number // 今日利润
 
   // 系统运行统计
   average_duration_ms: number // 平均响应时间

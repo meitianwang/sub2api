@@ -1004,6 +1004,11 @@
           </button>
         </div>
 
+        <!-- 模型定价配置 -->
+        <div class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+          <ModelPricingEditor v-model="createModelPricing" />
+        </div>
+
       </form>
 
       <template #footer>
@@ -1794,6 +1799,11 @@
           </button>
         </div>
 
+        <!-- 模型定价配置 -->
+        <div class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+          <ModelPricingEditor v-model="editModelPricing" />
+        </div>
+
       </form>
 
       <template #footer>
@@ -1961,6 +1971,7 @@ import Select from '@/components/common/Select.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
 import GroupRateMultipliersModal from '@/components/admin/group/GroupRateMultipliersModal.vue'
+import ModelPricingEditor from '@/components/admin/group/ModelPricingEditor.vue'
 import GroupCapacityBadge from '@/components/common/GroupCapacityBadge.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { createStableObjectKeyResolver } from '@/utils/stableObjectKey'
@@ -2203,6 +2214,10 @@ const createModelRoutingRules = ref<ModelRoutingRule[]>([])
 
 // 编辑表单的模型路由规则
 const editModelRoutingRules = ref<ModelRoutingRule[]>([])
+
+// 模型定价配置（类型复用 AdminGroup['model_pricing']）
+const createModelPricing = ref<AdminGroup['model_pricing']>(undefined)
+const editModelPricing = ref<AdminGroup['model_pricing']>(undefined)
 
 // 规则对象稳定 key（避免使用 index 导致状态错位）
 const resolveCreateRuleKey = createStableObjectKeyResolver<ModelRoutingRule>('create-rule')
@@ -2575,6 +2590,7 @@ const closeCreateModal = () => {
   createForm.mcp_xml_inject = true
   createForm.copy_accounts_from_group_ids = []
   createModelRoutingRules.value = []
+  createModelPricing.value = undefined
 }
 
 const normalizeOptionalLimit = (value: number | string | null | undefined): number | null => {
@@ -2609,7 +2625,8 @@ const handleCreateGroup = async () => {
       weekly_limit_usd: normalizeOptionalLimit(createForm.weekly_limit_usd as number | string | null),
       monthly_limit_usd: normalizeOptionalLimit(createForm.monthly_limit_usd as number | string | null),
       sora_storage_quota_bytes: createQuotaGb ? Math.round(createQuotaGb * 1024 * 1024 * 1024) : 0,
-      model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value)
+      model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
+      model_pricing: createModelPricing.value
     }
     // v-model.number 清空输入框时产生 ""，转为 null 让后端设为无限制
     const emptyToNull = (v: any) => v === '' ? null : v
@@ -2664,6 +2681,8 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.supported_model_scopes = group.supported_model_scopes || ['claude', 'gemini_text', 'gemini_image']
   editForm.mcp_xml_inject = group.mcp_xml_inject ?? true
   editForm.copy_accounts_from_group_ids = [] // 复制账号字段每次编辑时重置为空
+  // 加载模型定价配置
+  editModelPricing.value = group.model_pricing || undefined
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true
@@ -2677,6 +2696,7 @@ const closeEditModal = () => {
   showEditModal.value = false
   editingGroup.value = null
   editModelRoutingRules.value = []
+  editModelPricing.value = undefined
   editForm.copy_accounts_from_group_ids = []
 }
 
@@ -2702,7 +2722,8 @@ const handleUpdateGroup = async () => {
         editForm.fallback_group_id_on_invalid_request === null
           ? 0
           : editForm.fallback_group_id_on_invalid_request,
-      model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value)
+      model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value),
+      model_pricing: editModelPricing.value
     }
     // v-model.number 清空输入框时产生 ""，转为 null 让后端设为无限制
     const emptyToNull = (v: any) => v === '' ? null : v
