@@ -82,8 +82,17 @@ type publicGroup struct {
 
 // publicModelsResponse 公开模型列表响应
 type publicModelsResponse struct {
-	Models []publicModelItem `json:"models"`
-	Groups []publicGroup     `json:"groups"`
+	Models []publicModelItem            `json:"models"`
+	Groups []publicGroupWithPricing     `json:"groups"`
+}
+
+// publicGroupWithPricing 公开分组信息（含该分组的模型定价）
+type publicGroupWithPricing struct {
+	ID             int64                         `json:"id"`
+	Name           string                        `json:"name"`
+	Platform       string                        `json:"platform"`
+	RateMultiplier float64                       `json:"rate_multiplier"`
+	ModelPricing   map[string]publicModelPricing  `json:"model_pricing,omitempty"` // modelID -> pricing
 }
 
 // publicModelItem 公开模型项
@@ -92,7 +101,7 @@ type publicModelItem struct {
 	DisplayName string              `json:"display_name"`
 	Provider    string              `json:"provider"`
 	CreatedAt   string              `json:"created_at,omitempty"`
-	Pricing     *publicModelPricing `json:"pricing,omitempty"`
+	Pricing     *publicModelPricing `json:"pricing,omitempty"` // 默认定价（官方价）
 	GroupIDs    []int64             `json:"group_ids,omitempty"`
 }
 
@@ -114,15 +123,9 @@ func (h *SettingHandler) GetPublicModels(c *gin.Context) {
 		allModels = append(allModels, modelDef{m.ID, m.DisplayName, "openai", ""})
 	}
 
-	// 查询活跃分组
-	var groups []publicGroup
-	// modelID -> {groupIDs, bestPricing}
-	type modelPricingInfo struct {
-		groupIDs    []int64
-		inputPrice  *float64
-		outputPrice *float64
-	}
-	pricingMap := make(map[string]*modelPricingInfo)
+	// 查询活跃分组，收集每个分组的模型定价和模型所属分组
+	var groups []publicGroupWithPricing
+	modelGroupIDs := make(map[string][]int64) // modelID(lower) -> groupIDs
 
 	if h.groupRepo != nil {
 		activeGroups, err := h.groupRepo.ListActive(c.Request.Context())
@@ -131,43 +134,35 @@ func (h *SettingHandler) GetPublicModels(c *gin.Context) {
 				if g.IsExclusive {
 					continue
 				}
-				groups = append(groups, publicGroup{
+				pg := publicGroupWithPricing{
 					ID:             g.ID,
 					Name:           g.Name,
 					Platform:       g.Platform,
 					RateMultiplier: g.RateMultiplier,
-				})
-
-				// 遍历该分组的 model_pricing，记录每个模型的定价和所属分组
+				}
+				// 导出该分组的 per-model 卖价（仅 sell price）
 				if g.ModelPricing != nil {
 					for _, m := range allModels {
 						entry := g.ModelPricing.GetPricing(m.id)
 						if entry == nil {
 							continue
 						}
-						key := strings.ToLower(m.id)
-						info := pricingMap[key]
-						if info == nil {
-							info = &modelPricingInfo{}
-							pricingMap[key] = info
+						if pg.ModelPricing == nil {
+							pg.ModelPricing = make(map[string]publicModelPricing)
 						}
-						info.groupIDs = append(info.groupIDs, g.ID)
-						// 取最低卖价（对用户最有利）
-						sellIn := entry.SellInputPrice
-						sellOut := entry.SellOutputPrice
-						if info.inputPrice == nil || sellIn < *info.inputPrice {
-							info.inputPrice = &sellIn
+						pg.ModelPricing[strings.ToLower(m.id)] = publicModelPricing{
+							InputPrice:  &entry.SellInputPrice,
+							OutputPrice: &entry.SellOutputPrice,
 						}
-						if info.outputPrice == nil || sellOut < *info.outputPrice {
-							info.outputPrice = &sellOut
-						}
+						modelGroupIDs[strings.ToLower(m.id)] = append(modelGroupIDs[strings.ToLower(m.id)], g.ID)
 					}
 				}
+				groups = append(groups, pg)
 			}
 		}
 	}
 
-	// 构建响应
+	// 构建响应：每个模型默认显示官方定价，分组自定义价格在 groups 里
 	result := make([]publicModelItem, 0, len(allModels))
 	for _, m := range allModels {
 		item := publicModelItem{
@@ -175,24 +170,13 @@ func (h *SettingHandler) GetPublicModels(c *gin.Context) {
 			DisplayName: m.displayName,
 			Provider:    m.provider,
 			CreatedAt:   m.createdAt,
+			GroupIDs:    modelGroupIDs[strings.ToLower(m.id)],
 		}
-		info := pricingMap[strings.ToLower(m.id)]
-		if info != nil {
-			if info.inputPrice != nil || info.outputPrice != nil {
-				item.Pricing = &publicModelPricing{
-					InputPrice:  info.inputPrice,
-					OutputPrice: info.outputPrice,
-				}
-			}
-			item.GroupIDs = info.groupIDs
-		}
-		// 没有分组自定义价格时，回退到系统默认定价
-		if item.Pricing == nil {
-			if dp := service.GetDefaultPublicPricing(m.id); dp != nil {
-				item.Pricing = &publicModelPricing{
-					InputPrice:  &dp.InputPrice,
-					OutputPrice: &dp.OutputPrice,
-				}
+		// 默认定价（官方价）
+		if dp := service.GetDefaultPublicPricing(m.id); dp != nil {
+			item.Pricing = &publicModelPricing{
+				InputPrice:  &dp.InputPrice,
+				OutputPrice: &dp.OutputPrice,
 			}
 		}
 		result = append(result, item)

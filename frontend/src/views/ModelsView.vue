@@ -165,9 +165,9 @@
             </div>
 
             <!-- Pricing -->
-            <div v-if="model.pricing" class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
-              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(model.pricing.input_price) }}/M</span></div>
-              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(model.pricing.output_price) }}/M</span></div>
+            <div v-if="getEffectivePricing(model)" class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
+              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(getEffectivePricing(model)?.input_price) }}/M</span></div>
+              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ formatPrice(getEffectivePricing(model)?.output_price) }}/M</span></div>
             </div>
             <div v-else class="mb-2.5 text-xs text-gray-400 dark:text-dark-500">{{ t('models.pricing.contact') }}</div>
 
@@ -227,7 +227,7 @@ function toggleTheme() {
 // Data
 interface ModelPricing { input_price?: number; output_price?: number }
 interface PublicModel { id: string; display_name: string; provider: string; created_at?: string; pricing?: ModelPricing; group_ids?: number[] }
-interface PublicGroup { id: number; name: string; platform: string; rate_multiplier: number }
+interface PublicGroup { id: number; name: string; platform: string; rate_multiplier: number; model_pricing?: Record<string, ModelPricing> }
 
 const models = ref<PublicModel[]>([])
 const groups = ref<PublicGroup[]>([])
@@ -276,6 +276,18 @@ const filteredModels = computed(() => {
 // Helpers
 function groupName(id: number): string {
   return groups.value.find(g => g.id === id)?.name || ''
+}
+
+// 获取模型有效价格：选了分组 → 该分组的自定义价格，否则 → 默认官方价
+function getEffectivePricing(model: PublicModel): ModelPricing | undefined {
+  if (activeGroupId.value !== null) {
+    const group = groups.value.find(g => g.id === activeGroupId.value)
+    if (group?.model_pricing) {
+      const gp = group.model_pricing[model.id.toLowerCase()]
+      if (gp) return gp
+    }
+  }
+  return model.pricing
 }
 
 function formatPrice(price?: number): string {
