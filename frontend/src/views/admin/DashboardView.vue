@@ -114,13 +114,13 @@
                   <span
                     class="text-amber-600 dark:text-amber-400"
                     :title="t('admin.dashboard.actual')"
-                    >${{ formatCost(stats.today_actual_cost) }}</span
+                    >¥{{ formatCost(stats.today_actual_cost) }}</span
                   >
                   <span
                     class="text-gray-400 dark:text-gray-500"
                     :title="t('admin.dashboard.standard')"
                   >
-                    / ${{ formatCost(stats.today_cost) }}</span
+                    / ¥{{ formatCost(stats.today_cost) }}</span
                   >
                 </p>
               </div>
@@ -144,13 +144,13 @@
                   <span
                     class="text-indigo-600 dark:text-indigo-400"
                     :title="t('admin.dashboard.actual')"
-                    >${{ formatCost(stats.total_actual_cost) }}</span
+                    >¥{{ formatCost(stats.total_actual_cost) }}</span
                   >
                   <span
                     class="text-gray-400 dark:text-gray-500"
                     :title="t('admin.dashboard.standard')"
                   >
-                    / ${{ formatCost(stats.total_cost) }}</span
+                    / ¥{{ formatCost(stats.total_cost) }}</span
                   >
                 </p>
               </div>
@@ -217,10 +217,10 @@
                   {{ t('admin.dashboard.todayUpstreamCost') }}
                 </p>
                 <p class="text-xl font-bold text-orange-600 dark:text-orange-400">
-                  ${{ formatCost(stats.today_upstream_cost || 0) }}
+                  ¥{{ formatCost(stats.today_upstream_cost || 0) }}
                 </p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.revenue') }}: ${{ formatCost(stats.today_actual_cost) }}
+                  {{ t('admin.dashboard.revenue') }}: ¥{{ formatCost(stats.today_actual_cost) }}
                 </p>
               </div>
             </div>
@@ -237,7 +237,7 @@
                   {{ t('admin.dashboard.todayProfit') }}
                 </p>
                 <p class="text-xl font-bold" :class="(stats.today_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
-                  ${{ formatCost(stats.today_profit || 0) }}
+                  ¥{{ formatCost(stats.today_profit || 0) }}
                 </p>
                 <p v-if="stats.today_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
                   {{ t('admin.dashboard.profitMargin') }}: {{ ((stats.today_profit || 0) / stats.today_actual_cost * 100).toFixed(1) }}%
@@ -257,10 +257,10 @@
                   {{ t('admin.dashboard.totalUpstreamCost') }}
                 </p>
                 <p class="text-xl font-bold text-orange-600 dark:text-orange-400">
-                  ${{ formatCost(stats.total_upstream_cost || 0) }}
+                  ¥{{ formatCost(stats.total_upstream_cost || 0) }}
                 </p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.revenue') }}: ${{ formatCost(stats.total_actual_cost) }}
+                  {{ t('admin.dashboard.revenue') }}: ¥{{ formatCost(stats.total_actual_cost) }}
                 </p>
               </div>
             </div>
@@ -277,7 +277,7 @@
                   {{ t('admin.dashboard.totalProfit') }}
                 </p>
                 <p class="text-xl font-bold" :class="(stats.total_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
-                  ${{ formatCost(stats.total_profit || 0) }}
+                  ¥{{ formatCost(stats.total_profit || 0) }}
                 </p>
                 <p v-if="stats.total_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
                   {{ t('admin.dashboard.profitMargin') }}: {{ ((stats.total_profit || 0) / stats.total_actual_cost * 100).toFixed(1) }}%

@@ -123,8 +123,8 @@
             </div>
             <!-- Pricing -->
             <div class="mb-2.5 space-y-0.5 text-xs text-gray-600 dark:text-dark-400">
-              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">${{ fmtPrice(item.input_price) }}/M</span></div>
-              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">${{ fmtPrice(item.output_price) }}/M</span></div>
+              <div>{{ t('models.pricing.input') }} <span class="font-medium text-gray-900 dark:text-white">¥{{ fmtPrice(item.input_price) }}/M</span></div>
+              <div>{{ t('models.pricing.output') }} <span class="font-medium text-gray-900 dark:text-white">¥{{ fmtPrice(item.output_price) }}/M</span></div>
             </div>
             <!-- Tags -->
             <div class="flex flex-wrap items-center gap-1.5">
