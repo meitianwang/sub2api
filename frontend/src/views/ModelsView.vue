@@ -309,7 +309,7 @@ async function copyModelId(id: string) {
 async function fetchModels() {
   try {
     const res = await apiClient.get('/settings/models')
-    models.value = res.data?.data || []
+    models.value = res.data || []
   } catch {
     models.value = []
   } finally {
