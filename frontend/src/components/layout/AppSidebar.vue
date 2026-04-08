@@ -7,7 +7,7 @@
     ]"
   >
     <!-- Logo/Brand -->
-    <div class="sidebar-header">
+    <router-link to="/home" class="sidebar-header no-underline" :title="sidebarCollapsed ? t('nav.home') : undefined">
       <!-- Custom Logo or Default Logo -->
       <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-glow">
         <img v-if="settingsLoaded" :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
@@ -21,7 +21,7 @@
           <VersionBadge :version="siteVersion" />
         </div>
       </transition>
-    </div>
+    </router-link>
 
     <!-- Navigation -->
     <nav class="sidebar-nav scrollbar-hide">
