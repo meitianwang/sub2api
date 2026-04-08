@@ -125,6 +125,9 @@ export default {
       output: 'Output',
       contact: 'Contact for pricing',
     },
+    sort: {
+      price: 'Price',
+    },
     banner: {
       allProviders: 'All Providers',
       count: '{count} models',

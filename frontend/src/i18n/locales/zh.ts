@@ -125,6 +125,9 @@ export default {
       output: '输出',
       contact: '联系获取价格',
     },
+    sort: {
+      price: '价格',
+    },
     banner: {
       allProviders: '全部供应商',
       count: '共 {count} 个模型',

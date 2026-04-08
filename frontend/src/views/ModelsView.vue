@@ -82,10 +82,17 @@
               {{ tab.label }} {{ tab.count }}
             </button>
           </div>
-          <div class="relative w-full sm:max-w-xs">
-            <Icon name="search" size="sm" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input v-model="searchQuery" type="text" :placeholder="t('models.searchPlaceholder')"
-              class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500" />
+          <div class="flex items-center gap-2">
+            <div class="relative w-full sm:w-64">
+              <Icon name="search" size="sm" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input v-model="searchQuery" type="text" :placeholder="t('models.searchPlaceholder')"
+                class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 transition-all focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500" />
+            </div>
+            <button @click="toggleSort"
+              :class="['flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-all', sortBy === 'default' ? 'border-gray-200 bg-white text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-400' : 'border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400']">
+              <Icon :name="sortBy === 'price-desc' ? 'arrowDown' : 'arrowUp'" size="sm" />
+              {{ t('models.sort.price') }}
+            </button>
           </div>
         </div>
 
@@ -174,6 +181,7 @@ const loading = ref(true)
 const searchQuery = ref('')
 const activeProvider = ref('all')
 const activeGroup = ref('')
+const sortBy = ref<'default' | 'price-asc' | 'price-desc'>('default')
 const copiedId = ref('')
 
 // Derived
@@ -210,8 +218,19 @@ const filtered = computed(() => {
     const q = searchQuery.value.toLowerCase()
     r = r.filter(i => i.model_id.includes(q) || i.display_name.toLowerCase().includes(q))
   }
+  if (sortBy.value === 'price-asc') {
+    r = [...r].sort((a, b) => a.input_price - b.input_price)
+  } else if (sortBy.value === 'price-desc') {
+    r = [...r].sort((a, b) => b.input_price - a.input_price)
+  }
   return r
 })
+
+function toggleSort() {
+  if (sortBy.value === 'default') sortBy.value = 'price-asc'
+  else if (sortBy.value === 'price-asc') sortBy.value = 'price-desc'
+  else sortBy.value = 'default'
+}
 
 // Helpers
 function fmtPrice(p: number): string {
