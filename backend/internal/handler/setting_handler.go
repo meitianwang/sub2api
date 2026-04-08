@@ -176,7 +176,8 @@ func (h *SettingHandler) GetPublicModels(c *gin.Context) {
 			Provider:    m.provider,
 			CreatedAt:   m.createdAt,
 		}
-		if info := pricingMap[strings.ToLower(m.id)]; info != nil {
+		info := pricingMap[strings.ToLower(m.id)]
+		if info != nil {
 			if info.inputPrice != nil || info.outputPrice != nil {
 				item.Pricing = &publicModelPricing{
 					InputPrice:  info.inputPrice,
@@ -184,6 +185,15 @@ func (h *SettingHandler) GetPublicModels(c *gin.Context) {
 				}
 			}
 			item.GroupIDs = info.groupIDs
+		}
+		// 没有分组自定义价格时，回退到系统默认定价
+		if item.Pricing == nil {
+			if dp := service.GetDefaultPublicPricing(m.id); dp != nil {
+				item.Pricing = &publicModelPricing{
+					InputPrice:  &dp.InputPrice,
+					OutputPrice: &dp.OutputPrice,
+				}
+			}
 		}
 		result = append(result, item)
 	}
