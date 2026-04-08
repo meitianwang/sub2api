@@ -2,6 +2,8 @@ package handler
 
 import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
@@ -58,4 +60,27 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		BackendModeEnabled:               settings.BackendModeEnabled,
 		Version:                          h.version,
 	})
+}
+
+// GetPublicModels 获取公开模型列表
+// GET /api/v1/settings/models
+func (h *SettingHandler) GetPublicModels(c *gin.Context) {
+	models := make([]antigravity.PublicModelInfo, 0, 32)
+
+	// Claude models
+	models = append(models, antigravity.GetPublicClaudeModels()...)
+
+	// Gemini models
+	models = append(models, antigravity.GetPublicGeminiModels()...)
+
+	// OpenAI models
+	for _, m := range openai.DefaultModels {
+		models = append(models, antigravity.PublicModelInfo{
+			ID:          m.ID,
+			DisplayName: m.DisplayName,
+			Provider:    "openai",
+		})
+	}
+
+	response.Success(c, models)
 }

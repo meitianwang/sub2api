@@ -110,6 +110,25 @@ export default {
     }
   },
 
+  // Models Page
+  models: {
+    title: 'Models',
+    searchPlaceholder: 'Search model name...',
+    copyId: 'Copy Model ID',
+    noResults: 'No models found matching your search.',
+    sidebar: {
+      provider: 'Provider',
+    },
+    banner: {
+      allProviders: 'All Providers',
+      count: '{count} models',
+      description: 'Explore all available AI models. Access any model with a single API key.',
+    },
+    filters: {
+      all: 'All',
+    }
+  },
+
   // Key Usage Query Page
   keyUsage: {
     title: 'API Key Usage',
@@ -352,7 +371,10 @@ export default {
     mySubscriptions: 'My Subscriptions',
     buySubscription: 'Recharge / Subscription',
     docs: 'Docs',
-    sora: 'Sora Studio'
+    sora: 'Sora Studio',
+    home: 'Home',
+    models: 'Models',
+    console: 'Console'
   },
 
   // Auth

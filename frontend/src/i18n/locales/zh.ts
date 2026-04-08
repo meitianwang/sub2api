@@ -110,6 +110,25 @@ export default {
     }
   },
 
+  // 模型页面
+  models: {
+    title: '模型',
+    searchPlaceholder: '模糊搜索模型名称',
+    copyId: '复制模型 ID',
+    noResults: '没有找到匹配的模型。',
+    sidebar: {
+      provider: '供应商',
+    },
+    banner: {
+      allProviders: '全部供应商',
+      count: '共 {count} 个模型',
+      description: '查看所有可用的 AI 模型供应商，一个 API 密钥即可调用任意模型。',
+    },
+    filters: {
+      all: '全部',
+    }
+  },
+
   // Key Usage Query Page
   keyUsage: {
     title: 'API Key 用量查询',
@@ -352,7 +371,10 @@ export default {
     mySubscriptions: '我的订阅',
     buySubscription: '充值/订阅',
     docs: '文档',
-    sora: 'Sora 创作'
+    sora: 'Sora 创作',
+    home: '首页',
+    models: '模型',
+    console: '控制台'
   },
 
   // Auth

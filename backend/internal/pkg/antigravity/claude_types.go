@@ -174,6 +174,34 @@ var geminiModels = []modelDef{
 	{ID: "gemini-3-pro-image", DisplayName: "Gemini 3 Pro Image", CreatedAt: "2025-06-01T00:00:00Z"},
 }
 
+// ========== 公开模型列表 (用于前端展示) ==========
+
+// PublicModelInfo 公开模型信息（前端展示用）
+type PublicModelInfo struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	Provider    string `json:"provider"`
+	CreatedAt   string `json:"created_at,omitempty"`
+}
+
+// GetPublicClaudeModels 返回 Claude 模型列表（公开展示用）
+func GetPublicClaudeModels() []PublicModelInfo {
+	result := make([]PublicModelInfo, len(claudeModels))
+	for i, m := range claudeModels {
+		result[i] = PublicModelInfo{ID: m.ID, DisplayName: m.DisplayName, Provider: "claude", CreatedAt: m.CreatedAt}
+	}
+	return result
+}
+
+// GetPublicGeminiModels 返回 Gemini 模型列表（公开展示用）
+func GetPublicGeminiModels() []PublicModelInfo {
+	result := make([]PublicModelInfo, len(geminiModels))
+	for i, m := range geminiModels {
+		result[i] = PublicModelInfo{ID: m.ID, DisplayName: m.DisplayName, Provider: "gemini", CreatedAt: m.CreatedAt}
+	}
+	return result
+}
+
 // ========== Claude API 格式 (/v1/models) ==========
 
 // ClaudeModel Claude API 模型格式
