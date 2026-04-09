@@ -61,12 +61,13 @@
 
 推荐使用 `Authorization: Bearer` 方式，兼容性最广。
 
-## 自动路由
+## 透传模式
 
-平台会根据你调用的 API 端点格式自动路由到正确的上游服务商。你使用的 API 格式取决于客户端工具的要求，而非分组本身。例如：
+平台采用透传（Passthrough）模式，所有请求原样转发到上游服务商，响应原样返回。你可以使用同一个 API Key 发送任何格式的请求：
 
 - 使用 Claude Code 时，客户端自动发送 Anthropic 格式请求
 - 使用 Codex CLI 时，客户端自动发送 OpenAI Responses 格式请求
 - 使用 Gemini CLI 时，客户端自动发送 v1beta 格式请求
+- 使用其他 OpenAI 兼容工具时，发送 Chat Completions 格式请求
 
-你只需确保 API Key 所属的分组与目标服务商匹配即可。
+无需关心分组的平台类型，所有格式均可透明转发。

@@ -1,6 +1,6 @@
 # 发起第一次调用
 
-创建 API Key 后，可以通过以下示例验证接口是否正常工作。平台同时兼容 OpenAI 和 Anthropic 两种请求格式。
+创建 API Key 后，可以通过以下示例验证接口是否正常工作。平台同时兼容 OpenAI、Anthropic 和 Gemini 三种请求格式，所有请求透明转发到上游。
 
 ## OpenAI 兼容格式
 
@@ -19,13 +19,23 @@ curl -X POST {{BASE_URL}}/v1/chat/completions \
 
 ```bash
 curl -X POST {{BASE_URL}}/v1/messages \
-  -H "Authorization: Bearer sk-xxxx" \
+  -H "x-api-key: sk-xxxx" \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
     "model": "claude-sonnet-4-6",
     "messages": [{"role": "user", "content": "你好"}],
     "max_tokens": 1024
+  }'
+```
+
+## Gemini 原生格式
+
+```bash
+curl -X POST "{{BASE_URL}}/v1beta/models/gemini-2.5-flash:generateContent?key=sk-xxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "你好"}]}]
   }'
 ```
 

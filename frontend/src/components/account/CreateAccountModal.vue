@@ -109,28 +109,7 @@
             </svg>
             OpenAI
           </button>
-          <button
-            type="button"
-            @click="form.platform = 'sora'"
-            :class="[
-              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
-              form.platform === 'sora'
-                ? 'bg-white text-rose-600 shadow-sm dark:bg-dark-600 dark:text-rose-400'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-            ]"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Sora
-          </button>
+          <!-- Sora platform hidden (passthrough mode) -->
           <button
             type="button"
             @click="form.platform = 'gemini'"
@@ -156,19 +135,7 @@
             </svg>
             Gemini
           </button>
-          <button
-            type="button"
-            @click="form.platform = 'antigravity'"
-            :class="[
-              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
-              form.platform === 'antigravity'
-                ? 'bg-white text-purple-600 shadow-sm dark:bg-dark-600 dark:text-purple-400'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-            ]"
-          >
-            <Icon name="cloud" size="sm" />
-            Antigravity
-          </button>
+          <!-- Antigravity platform hidden (passthrough mode) -->
         </div>
       </div>
 
@@ -230,7 +197,8 @@
       </div>
 
       <!-- Account Type Selection (Anthropic) -->
-      <div v-if="form.platform === 'anthropic'">
+      <!-- Account Type Selection hidden in passthrough mode - force apikey -->
+      <div v-if="false && form.platform === 'anthropic'">
         <label class="input-label">{{ t('admin.accounts.accountType') }}</label>
         <div class="mt-2 grid grid-cols-3 gap-3" data-tour="account-form-type">
           <button
@@ -326,8 +294,8 @@
         </div>
       </div>
 
-      <!-- Account Type Selection (OpenAI) -->
-      <div v-if="form.platform === 'openai'">
+      <!-- Account Type Selection (OpenAI) - hidden in passthrough mode -->
+      <div v-if="false && form.platform === 'openai'">
         <label class="input-label">{{ t('admin.accounts.accountType') }}</label>
         <div class="mt-2 grid grid-cols-2 gap-3" data-tour="account-form-type">
           <button
@@ -384,8 +352,8 @@
         </div>
       </div>
 
-      <!-- Account Type Selection (Gemini) -->
-      <div v-if="form.platform === 'gemini'">
+      <!-- Account Type Selection (Gemini) - hidden in passthrough mode -->
+      <div v-if="false && form.platform === 'gemini'">
         <div class="flex items-center justify-between">
           <label class="input-label">{{ t('admin.accounts.accountType') }}</label>
           <button
@@ -3032,7 +3000,7 @@ interface TempUnschedRuleForm {
 // State
 const step = ref(1)
 const submitting = ref(false)
-const accountCategory = ref<'oauth-based' | 'apikey' | 'bedrock'>('oauth-based') // UI selection for account category
+const accountCategory = ref<'oauth-based' | 'apikey' | 'bedrock'>('apikey') // Default to apikey in passthrough mode
 const addMethod = ref<AddMethod>('oauth') // For oauth-based: 'oauth' or 'setup-token'
 const apiKeyBaseUrl = ref('https://api.anthropic.com')
 const apiKeyValue = ref('')
