@@ -186,4 +186,34 @@ const renderedContent = computed(() => {
 .docs-content :deep(strong) {
   @apply font-semibold text-gray-900 dark:text-white;
 }
+
+/* Nav Tabs */
+.nav-tab {
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.nav-tab:hover {
+  color: #111827;
+  background: rgba(0, 0, 0, 0.04);
+}
+.nav-tab-active {
+  color: #14b8a6;
+  background: rgba(20, 184, 166, 0.08);
+}
+:deep(.dark) .nav-tab {
+  color: #9ca3af;
+}
+:deep(.dark) .nav-tab:hover {
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.06);
+}
+:deep(.dark) .nav-tab-active {
+  color: #2dd4bf;
+  background: rgba(20, 184, 166, 0.12);
+}
 </style>
