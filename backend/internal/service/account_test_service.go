@@ -157,7 +157,7 @@ func createTestPayload(modelID string) (map[string]any, error) {
 		"system": []map[string]any{
 			{
 				"type": "text",
-				"text": claudeCodeSystemPrompt,
+				"text": "You are Claude Code, Anthropic's official CLI for Claude.",
 				"cache_control": map[string]string{
 					"type": "ephemeral",
 				},

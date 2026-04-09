@@ -600,7 +600,7 @@ func (s *OpsService) executeWithAccount(ctx context.Context, reqType opsRetryReq
 			if parseErr != nil {
 				return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "failed to parse request body"}
 			}
-			_, err = s.gatewayService.Forward(ctx, c, account, parsedReq)
+			_, err = s.gatewayService.ForwardPassthrough(ctx, c, account, "/v1/messages", body, parsedReq)
 		}
 	default:
 		return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "unsupported retry type"}

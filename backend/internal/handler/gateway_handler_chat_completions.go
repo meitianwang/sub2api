@@ -201,9 +201,9 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 		}
 		accountReleaseFunc = wrapReleaseOnDone(c.Request.Context(), accountReleaseFunc)
 
-		// 5. Forward request
+		// 5. Forward request (passthrough to upstream relay)
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, body, parsedReq)
+		result, err := h.gatewayService.ForwardPassthrough(c.Request.Context(), c, account, "/v1/chat/completions", body, parsedReq)
 
 		if accountReleaseFunc != nil {
 			accountReleaseFunc()

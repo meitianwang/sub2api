@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -136,12 +135,6 @@ func guessProvider(modelID string) string {
 
 func buildDisplayNameMap() map[string]string {
 	m := make(map[string]string)
-	for _, mod := range antigravity.GetPublicClaudeModels() {
-		m[mod.ID] = mod.DisplayName
-	}
-	for _, mod := range antigravity.GetPublicGeminiModels() {
-		m[mod.ID] = mod.DisplayName
-	}
 	for _, mod := range openai.DefaultModels {
 		m[mod.ID] = mod.DisplayName
 	}

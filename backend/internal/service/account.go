@@ -148,9 +148,9 @@ func (a *Account) IsOAuth() bool {
 func (a *Account) IsPrivacySet() bool {
 	switch a.Platform {
 	case PlatformOpenAI:
-		return a.getExtraString("privacy_mode") == PrivacyModeTrainingOff
+		return a.getExtraString("privacy_mode") == "training_off"
 	case PlatformAntigravity:
-		return a.getExtraString("privacy_mode") == AntigravityPrivacySet
+		return a.getExtraString("privacy_mode") == "set"
 	default:
 		return true
 	}

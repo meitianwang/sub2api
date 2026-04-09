@@ -208,7 +208,12 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 
 		// 5. Forward request
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := h.gatewayService.ForwardAsResponses(c.Request.Context(), c, account, body, parsedReq)
+		// Determine the full responses path (may include subpath)
+		responsesPath := "/v1/responses"
+		if subpath := c.Param("subpath"); subpath != "" {
+			responsesPath += subpath
+		}
+		result, err := h.gatewayService.ForwardPassthrough(c.Request.Context(), c, account, responsesPath, body, parsedReq)
 
 		if accountReleaseFunc != nil {
 			accountReleaseFunc()
