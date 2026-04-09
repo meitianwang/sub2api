@@ -51,6 +51,7 @@
           <router-link to="/home" class="nav-tab nav-tab-active">{{ t('nav.home') }}</router-link>
           <router-link to="/models" class="nav-tab">{{ t('nav.models') }}</router-link>
           <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="nav-tab">{{ t('nav.docs') }}</a>
+          <router-link v-else to="/docs" class="nav-tab">{{ t('nav.docs') }}</router-link>
           <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="nav-tab">{{ t('nav.console') }}</router-link>
         </div>
 
@@ -358,6 +359,13 @@
           >
             {{ t('home.docs') }}
           </a>
+          <router-link
+            v-else
+            to="/docs"
+            class="text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-white"
+          >
+            {{ t('home.docs') }}
+          </router-link>
           <a
             :href="githubUrl"
             target="_blank"

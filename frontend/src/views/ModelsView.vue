@@ -12,6 +12,7 @@
           <router-link to="/home" class="nav-tab">{{ t('nav.home') }}</router-link>
           <router-link to="/models" class="nav-tab nav-tab-active">{{ t('nav.models') }}</router-link>
           <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="nav-tab">{{ t('nav.docs') }}</a>
+          <router-link v-else to="/docs" class="nav-tab">{{ t('nav.docs') }}</router-link>
           <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="nav-tab">{{ t('nav.console') }}</router-link>
         </div>
         <div class="flex items-center gap-2">
