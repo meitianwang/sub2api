@@ -102,9 +102,15 @@ func (s *GatewayService) ForwardPassthrough(
 	}
 
 	// 4. Build upstream HTTP request
-	upstreamCtx, releaseUpstreamCtx := detachStreamUpstreamContext(ctx, parsed.Stream)
+	// For streaming: detach context so client disconnect doesn't cancel upstream read
+	// For non-streaming: use the original context directly
+	upstreamCtx := ctx
+	if parsed.Stream {
+		var cancel context.CancelFunc
+		upstreamCtx, cancel = context.WithCancel(context.Background())
+		defer cancel()
+	}
 	req, err := http.NewRequestWithContext(upstreamCtx, http.MethodPost, targetURL, bytes.NewReader(body))
-	releaseUpstreamCtx()
 	if err != nil {
 		return nil, fmt.Errorf("passthrough: build request: %w", err)
 	}
@@ -192,10 +198,8 @@ func (s *GatewayService) ForwardPassthrough(
 				account.ID, resp.StatusCode, attempt, delay)
 			time.Sleep(delay)
 
-			// Rebuild request for retry
-			upstreamCtx2, releaseCtx2 := detachStreamUpstreamContext(ctx, parsed.Stream)
-			req, err = http.NewRequestWithContext(upstreamCtx2, req.Method, targetURL, bytes.NewReader(body))
-			releaseCtx2()
+			// Rebuild request for retry (reuse same upstreamCtx)
+			req, err = http.NewRequestWithContext(upstreamCtx, req.Method, targetURL, bytes.NewReader(body))
 			if err != nil {
 				return nil, fmt.Errorf("passthrough: rebuild request for retry: %w", err)
 			}
