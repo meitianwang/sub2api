@@ -602,7 +602,8 @@ func (s *SchedulerSnapshotService) loadAccountsFromDB(ctx context.Context, bucke
 	_ = useMixed // mixed scheduling removed
 
 	if groupID > 0 {
-		return s.accountRepo.ListSchedulableByGroupIDAndPlatform(ctx, groupID, bucket.Platform)
+		// 透传模式：按分组查询全部可调度账号，不按 platform 过滤
+		return s.accountRepo.ListSchedulableByGroupID(ctx, groupID)
 	}
 	if s.isRunModeSimple() {
 		return s.accountRepo.ListSchedulableByPlatform(ctx, bucket.Platform)

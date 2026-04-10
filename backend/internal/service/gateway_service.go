@@ -1489,7 +1489,9 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
 		accounts, err = s.accountRepo.ListSchedulableByPlatform(ctx, platform)
 	} else if groupID != nil {
-		accounts, err = s.accountRepo.ListSchedulableByGroupIDAndPlatform(ctx, *groupID, platform)
+		// 透传模式：按分组查询全部可调度账号，不按 platform 过滤。
+		// 同一个上游 Key 支持多种协议，ForwardPassthrough 根据请求路径自动选择认证方式。
+		accounts, err = s.accountRepo.ListSchedulableByGroupID(ctx, *groupID)
 	} else {
 		accounts, err = s.accountRepo.ListSchedulableUngroupedByPlatform(ctx, platform)
 	}
@@ -1516,11 +1518,9 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 	return accounts, useMixed, nil
 }
 
-func (s *GatewayService) isAccountAllowedForPlatform(account *Account, platform string, _ bool) bool {
-	if account == nil {
-		return false
-	}
-	return account.Platform == platform
+func (s *GatewayService) isAccountAllowedForPlatform(account *Account, _ string, _ bool) bool {
+	// 透传模式：不按 platform 过滤，同一个上游 Key 支持多种协议。
+	return account != nil
 }
 
 func (s *GatewayService) isAccountSchedulableForSelection(account *Account) bool {
