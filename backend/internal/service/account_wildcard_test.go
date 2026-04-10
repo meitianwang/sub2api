@@ -410,9 +410,9 @@ func TestAccountResolveMappedModel(t *testing.T) {
 	}
 }
 
-func TestAccountGetModelMapping_AntigravityEnsuresGeminiDefaultPassthroughs(t *testing.T) {
+func TestAccountGetModelMapping_AnthropicEnsuresGeminiDefaultPassthroughs(t *testing.T) {
 	account := &Account{
-		Platform: PlatformAntigravity,
+		Platform: PlatformAnthropic,
 		Credentials: map[string]any{
 			"model_mapping": map[string]any{
 				"gemini-3-pro-high": "gemini-3.1-pro-high",
@@ -432,9 +432,9 @@ func TestAccountGetModelMapping_AntigravityEnsuresGeminiDefaultPassthroughs(t *t
 	}
 }
 
-func TestAccountGetModelMapping_AntigravityRespectsWildcardOverride(t *testing.T) {
+func TestAccountGetModelMapping_AnthropicRespectsWildcardOverride(t *testing.T) {
 	account := &Account{
-		Platform: PlatformAntigravity,
+		Platform: PlatformAnthropic,
 		Credentials: map[string]any{
 			"model_mapping": map[string]any{
 				"gemini-3*": "gemini-3.1-pro-high",

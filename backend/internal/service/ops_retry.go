@@ -509,20 +509,10 @@ func (s *OpsService) executeClientRetry(ctx context.Context, reqType opsRetryReq
 }
 
 func (s *OpsService) selectAccountForRetry(ctx context.Context, reqType opsRetryRequestType, groupID *int64, model string, excludedIDs map[int64]struct{}) (*AccountSelectionResult, error) {
-	switch reqType {
-	case opsRetryTypeOpenAI:
-		if s.openAIGatewayService == nil {
-			return nil, fmt.Errorf("openai gateway service not available")
-		}
-		return s.openAIGatewayService.SelectAccountWithLoadAwareness(ctx, groupID, "", model, excludedIDs)
-	case opsRetryTypeGeminiV1B, opsRetryTypeMessages:
-		if s.gatewayService == nil {
-			return nil, fmt.Errorf("gateway service not available")
-		}
-		return s.gatewayService.SelectAccountWithLoadAwareness(ctx, groupID, "", model, excludedIDs, "") // 重试不使用会话限制
-	default:
-		return nil, fmt.Errorf("unsupported retry type: %s", reqType)
+	if s.gatewayService == nil {
+		return nil, fmt.Errorf("gateway service not available")
 	}
+	return s.gatewayService.SelectAccountWithLoadAwareness(ctx, groupID, "", model, excludedIDs, "")
 }
 
 func extractRetryModelAndStream(reqType opsRetryRequestType, errorLog *OpsErrorLogDetail, body []byte) (model string, stream bool, err error) {
@@ -559,52 +549,33 @@ func (s *OpsService) executeWithAccount(ctx context.Context, reqType opsRetryReq
 
 	c, w := newOpsRetryContext(ctx, errorLog)
 
-	var err error
+	// In passthrough mode, determine the upstream path from the request type and forward directly
+	var upstreamPath string
 	switch reqType {
 	case opsRetryTypeOpenAI:
-		if s.openAIGatewayService == nil {
-			return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "openai gateway service not available"}
-		}
-		_, err = s.openAIGatewayService.Forward(ctx, c, account, body)
+		upstreamPath = "/v1/chat/completions"
 	case opsRetryTypeGeminiV1B:
-		if s.geminiCompatService == nil || s.antigravityGatewayService == nil {
-			return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "gemini services not available"}
-		}
 		modelName := strings.TrimSpace(errorLog.Model)
 		action := "generateContent"
 		if errorLog.Stream {
 			action = "streamGenerateContent"
 		}
-		if account.Platform == PlatformAntigravity {
-			_, err = s.antigravityGatewayService.ForwardGemini(ctx, c, account, modelName, action, errorLog.Stream, body, false)
-		} else {
-			_, err = s.geminiCompatService.ForwardNative(ctx, c, account, modelName, action, errorLog.Stream, body)
-		}
+		upstreamPath = fmt.Sprintf("/v1beta/models/%s:%s", modelName, action)
 	case opsRetryTypeMessages:
-		switch account.Platform {
-		case PlatformAntigravity:
-			if s.antigravityGatewayService == nil {
-				return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "antigravity gateway service not available"}
-			}
-			_, err = s.antigravityGatewayService.Forward(ctx, c, account, body, false)
-		case PlatformGemini:
-			if s.geminiCompatService == nil {
-				return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "gemini gateway service not available"}
-			}
-			_, err = s.geminiCompatService.Forward(ctx, c, account, body)
-		default:
-			if s.gatewayService == nil {
-				return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "gateway service not available"}
-			}
-			parsedReq, parseErr := ParseGatewayRequest(body, domain.PlatformAnthropic)
-			if parseErr != nil {
-				return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "failed to parse request body"}
-			}
-			_, err = s.gatewayService.ForwardPassthrough(ctx, c, account, "/v1/messages", body, parsedReq)
-		}
+		upstreamPath = "/v1/messages"
 	default:
 		return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "unsupported retry type"}
 	}
+
+	if s.gatewayService == nil {
+		return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "gateway service not available"}
+	}
+	parsedReq := &ParsedRequest{
+		Model:  strings.TrimSpace(errorLog.Model),
+		Stream: errorLog.Stream,
+		Body:   body,
+	}
+	_, err := s.gatewayService.ForwardPassthrough(ctx, c, account, upstreamPath, body, parsedReq)
 
 	statusCode := http.StatusOK
 	if c != nil && c.Writer != nil {

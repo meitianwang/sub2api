@@ -451,6 +451,8 @@ func (s *GatewayService) handlePassthroughStreamingResponse(
 			return anthropicStreamEventIsTerminal(eventName, data)
 		case protocolOpenAI:
 			return openAIStreamEventIsTerminal(data)
+		case protocolGemini:
+			return geminiStreamEventIsTerminal(data)
 		default:
 			return false
 		}
@@ -605,6 +607,8 @@ func parsePassthroughUsage(protocol passthroughProtocol, data string, usage *Cla
 		parseAnthropicSSEUsage(data, usage)
 	case protocolOpenAI:
 		parseOpenAISSEUsage(data, usage)
+	case protocolGemini:
+		parseGeminiSSEUsage(data, usage)
 	}
 }
 
@@ -696,6 +700,24 @@ func parseOpenAISSEUsage(data string, usage *ClaudeUsage) {
 	}
 }
 
+// parseGeminiSSEUsage extracts usage from a Gemini SSE data line.
+func parseGeminiSSEUsage(data string, usage *ClaudeUsage) {
+	parsed := gjson.Parse(data)
+	usageNode := parsed.Get("usageMetadata")
+	if !usageNode.Exists() {
+		return
+	}
+	if v := usageNode.Get("promptTokenCount").Int(); v > 0 {
+		usage.InputTokens = int(v)
+	}
+	if v := usageNode.Get("candidatesTokenCount").Int(); v > 0 {
+		usage.OutputTokens = int(v)
+	}
+	if cached := usageNode.Get("cachedContentTokenCount").Int(); cached > 0 {
+		usage.CacheReadInputTokens = int(cached)
+	}
+}
+
 // parsePassthroughUsageFromBody extracts usage from a complete (non-streaming) response body.
 func parsePassthroughUsageFromBody(protocol passthroughProtocol, body []byte) *ClaudeUsage {
 	usage := &ClaudeUsage{}
@@ -740,6 +762,16 @@ func parsePassthroughUsageFromBody(protocol passthroughProtocol, body []byte) *C
 	}
 
 	return usage
+}
+
+// geminiStreamEventIsTerminal detects the terminal event in a Gemini SSE stream.
+// Gemini signals completion by including "usageMetadata" in the final chunk.
+func geminiStreamEventIsTerminal(data string) bool {
+	trimmed := strings.TrimSpace(data)
+	if trimmed == "" {
+		return false
+	}
+	return gjson.Get(trimmed, "usageMetadata").Exists()
 }
 
 // writePassthroughResponseHeaders copies response headers from upstream to client.

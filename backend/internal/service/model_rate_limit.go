@@ -27,16 +27,12 @@ func (a *Account) getRateLimitRemainingForKey(key string) time.Duration {
 	return 0
 }
 
-func (a *Account) isModelRateLimitedWithContext(ctx context.Context, requestedModel string) bool {
+func (a *Account) isModelRateLimitedWithContext(_ context.Context, requestedModel string) bool {
 	if a == nil {
 		return false
 	}
 
-	modelKey := a.GetMappedModel(requestedModel)
-	if a.Platform == PlatformAntigravity {
-		modelKey = resolveFinalAntigravityModelKey(ctx, a, requestedModel)
-	}
-	modelKey = strings.TrimSpace(modelKey)
+	modelKey := strings.TrimSpace(a.GetMappedModel(requestedModel))
 	if modelKey == "" {
 		return false
 	}
@@ -49,32 +45,16 @@ func (a *Account) GetModelRateLimitRemainingTime(requestedModel string) time.Dur
 	return a.GetModelRateLimitRemainingTimeWithContext(context.Background(), requestedModel)
 }
 
-func (a *Account) GetModelRateLimitRemainingTimeWithContext(ctx context.Context, requestedModel string) time.Duration {
+func (a *Account) GetModelRateLimitRemainingTimeWithContext(_ context.Context, requestedModel string) time.Duration {
 	if a == nil {
 		return 0
 	}
 
-	modelKey := a.GetMappedModel(requestedModel)
-	if a.Platform == PlatformAntigravity {
-		modelKey = resolveFinalAntigravityModelKey(ctx, a, requestedModel)
-	}
-	modelKey = strings.TrimSpace(modelKey)
+	modelKey := strings.TrimSpace(a.GetMappedModel(requestedModel))
 	if modelKey == "" {
 		return 0
 	}
 	return a.getRateLimitRemainingForKey(modelKey)
-}
-
-func resolveFinalAntigravityModelKey(ctx context.Context, account *Account, requestedModel string) string {
-	modelKey := mapAntigravityModel(account, requestedModel)
-	if modelKey == "" {
-		return ""
-	}
-	// thinking 会影响 Antigravity 最终模型名（例如 claude-sonnet-4-5 -> claude-sonnet-4-5-thinking）
-	if enabled, ok := ThinkingEnabledFromContext(ctx); ok {
-		modelKey = applyThinkingModelSuffix(modelKey, enabled)
-	}
-	return modelKey
 }
 
 func (a *Account) modelRateLimitResetAt(scope string) *time.Time {

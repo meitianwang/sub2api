@@ -45,9 +45,7 @@ func (m *sessionWindowMockRepo) ClearRateLimit(_ context.Context, id int64) erro
 	m.clearRateLimitIDs = append(m.clearRateLimitIDs, id)
 	return nil
 }
-func (m *sessionWindowMockRepo) ClearAntigravityQuotaScopes(_ context.Context, _ int64) error {
-	return nil
-}
+
 func (m *sessionWindowMockRepo) ClearModelRateLimits(_ context.Context, _ int64) error {
 	return nil
 }

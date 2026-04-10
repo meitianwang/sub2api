@@ -31,7 +31,7 @@ func TestUpdateAccount_DisableOveragesClearsAICreditsKey(t *testing.T) {
 	repo := &updateAccountOveragesRepoStub{
 		account: &Account{
 			ID:       accountID,
-			Platform: PlatformAntigravity,
+			Platform: PlatformAnthropic,
 			Type:     AccountTypeOAuth,
 			Status:   StatusActive,
 			Extra: map[string]any{
@@ -90,7 +90,7 @@ func TestUpdateAccount_EnableOveragesClearsModelRateLimitsBeforePersist(t *testi
 	repo := &updateAccountOveragesRepoStub{
 		account: &Account{
 			ID:       accountID,
-			Platform: PlatformAntigravity,
+			Platform: PlatformAnthropic,
 			Type:     AccountTypeOAuth,
 			Status:   StatusActive,
 			Extra: map[string]any{

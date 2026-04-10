@@ -145,7 +145,7 @@ func TestAdminService_BulkUpdateAccounts_NilGroupRepoReturnsError(t *testing.T) 
 func TestAdminService_BulkUpdateAccounts_MixedChannelPreCheckBlocksOnExistingConflict(t *testing.T) {
 	repo := &accountRepoStubForBulkUpdate{
 		getByIDsAccounts: []*Account{
-			{ID: 1, Platform: PlatformAntigravity},
+			{ID: 1, Platform: PlatformAnthropic},
 		},
 		// Group 10 already contains an Anthropic account.
 		listByGroupData: map[int64][]Account{

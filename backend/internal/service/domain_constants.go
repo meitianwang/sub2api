@@ -20,11 +20,9 @@ const (
 
 // Platform constants
 const (
-	PlatformAnthropic   = domain.PlatformAnthropic
-	PlatformOpenAI      = domain.PlatformOpenAI
-	PlatformGemini      = domain.PlatformGemini
-	PlatformAntigravity = domain.PlatformAntigravity
-	PlatformSora        = domain.PlatformSora
+	PlatformAnthropic = domain.PlatformAnthropic
+	PlatformOpenAI    = domain.PlatformOpenAI
+	PlatformGemini    = domain.PlatformGemini
 )
 
 // Account type constants
@@ -33,7 +31,6 @@ const (
 	AccountTypeSetupToken = domain.AccountTypeSetupToken // Setup Token类型账号（inference only scope）
 	AccountTypeAPIKey     = domain.AccountTypeAPIKey     // API Key类型账号
 	AccountTypeUpstream   = domain.AccountTypeUpstream   // 上游透传类型账号（通过 Base URL + API Key 连接上游）
-	AccountTypeBedrock    = domain.AccountTypeBedrock    // AWS Bedrock 类型账号（通过 SigV4 签名或 API Key 连接 Bedrock，由 credentials.auth_mode 区分）
 )
 
 // Redeem type constants
@@ -107,8 +104,7 @@ const (
 	SettingKeyLinuxDoConnectRedirectURL  = "linuxdo_connect_redirect_url"
 
 	// OEM设置
-	SettingKeySoraClientEnabled           = "sora_client_enabled"           // 是否启用 Sora 客户端（管理员手动控制）
-	SettingKeySiteName                    = "site_name"                     // 网站名称
+	SettingKeySiteName = "site_name" // 网站名称
 	SettingKeySiteLogo                    = "site_logo"                     // 网站Logo (base64)
 	SettingKeySiteSubtitle                = "site_subtitle"                 // 网站副标题
 	SettingKeyAPIBaseURL                  = "api_base_url"                  // API端点地址（用于客户端配置和导入）
@@ -136,12 +132,7 @@ const (
 	SettingKeyEnableModelFallback      = "enable_model_fallback"
 	SettingKeyFallbackModelAnthropic   = "fallback_model_anthropic"
 	SettingKeyFallbackModelOpenAI      = "fallback_model_openai"
-	SettingKeyFallbackModelGemini      = "fallback_model_gemini"
-	SettingKeyFallbackModelAntigravity = "fallback_model_antigravity"
-
-	// Request identity patch (Claude -> Gemini systemInstruction injection)
-	SettingKeyEnableIdentityPatch = "enable_identity_patch"
-	SettingKeyIdentityPatchPrompt = "identity_patch_prompt"
+	SettingKeyFallbackModelGemini = "fallback_model_gemini"
 
 	// =========================
 	// Ops Monitoring (vNext)
@@ -198,27 +189,6 @@ const (
 
 	// SettingKeyBetaPolicySettings stores JSON config for beta policy rules.
 	SettingKeyBetaPolicySettings = "beta_policy_settings"
-
-	// =========================
-	// Sora S3 存储配置
-	// =========================
-
-	SettingKeySoraS3Enabled         = "sora_s3_enabled"           // 是否启用 Sora S3 存储
-	SettingKeySoraS3Endpoint        = "sora_s3_endpoint"          // S3 端点地址
-	SettingKeySoraS3Region          = "sora_s3_region"            // S3 区域
-	SettingKeySoraS3Bucket          = "sora_s3_bucket"            // S3 存储桶名称
-	SettingKeySoraS3AccessKeyID     = "sora_s3_access_key_id"     // S3 Access Key ID
-	SettingKeySoraS3SecretAccessKey = "sora_s3_secret_access_key" // S3 Secret Access Key（加密存储）
-	SettingKeySoraS3Prefix          = "sora_s3_prefix"            // S3 对象键前缀
-	SettingKeySoraS3ForcePathStyle  = "sora_s3_force_path_style"  // 是否强制 Path Style（兼容 MinIO 等）
-	SettingKeySoraS3CDNURL          = "sora_s3_cdn_url"           // CDN 加速 URL（可选）
-	SettingKeySoraS3Profiles        = "sora_s3_profiles"          // Sora S3 多配置（JSON）
-
-	// =========================
-	// Sora 用户存储配额
-	// =========================
-
-	SettingKeySoraDefaultStorageQuotaBytes = "sora_default_storage_quota_bytes" // 新用户默认 Sora 存储配额（字节）
 
 	// =========================
 	// Claude Code Version Check

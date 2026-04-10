@@ -43,12 +43,11 @@ func NewOAuthHandler(oauthService *service.OAuthService) *OAuthHandler {
 
 // AccountHandler handles admin account management
 type AccountHandler struct {
-	adminService            service.AdminService
-	oauthService            *service.OAuthService
-	openaiOAuthService      *service.OpenAIOAuthService
-	geminiOAuthService      *service.GeminiOAuthService
-	antigravityOAuthService *service.AntigravityOAuthService
-	rateLimitService        *service.RateLimitService
+	adminService       service.AdminService
+	oauthService       *service.OAuthService
+	openaiOAuthService *service.OpenAIOAuthService
+	geminiOAuthService *service.GeminiOAuthService
+	rateLimitService   *service.RateLimitService
 	accountUsageService     *service.AccountUsageService
 	accountTestService      *service.AccountTestService
 	concurrencyService      *service.ConcurrencyService
@@ -64,7 +63,6 @@ func NewAccountHandler(
 	oauthService *service.OAuthService,
 	openaiOAuthService *service.OpenAIOAuthService,
 	geminiOAuthService *service.GeminiOAuthService,
-	antigravityOAuthService *service.AntigravityOAuthService,
 	rateLimitService *service.RateLimitService,
 	accountUsageService *service.AccountUsageService,
 	accountTestService *service.AccountTestService,
@@ -75,19 +73,18 @@ func NewAccountHandler(
 	tokenCacheInvalidator service.TokenCacheInvalidator,
 ) *AccountHandler {
 	return &AccountHandler{
-		adminService:            adminService,
-		oauthService:            oauthService,
-		openaiOAuthService:      openaiOAuthService,
-		geminiOAuthService:      geminiOAuthService,
-		antigravityOAuthService: antigravityOAuthService,
-		rateLimitService:        rateLimitService,
-		accountUsageService:     accountUsageService,
-		accountTestService:      accountTestService,
-		concurrencyService:      concurrencyService,
-		crsSyncService:          crsSyncService,
-		sessionLimitCache:       sessionLimitCache,
-		rpmCache:                rpmCache,
-		tokenCacheInvalidator:   tokenCacheInvalidator,
+		adminService:       adminService,
+		oauthService:       oauthService,
+		openaiOAuthService: openaiOAuthService,
+		geminiOAuthService: geminiOAuthService,
+		rateLimitService:   rateLimitService,
+		accountUsageService: accountUsageService,
+		accountTestService: accountTestService,
+		concurrencyService: concurrencyService,
+		crsSyncService:     crsSyncService,
+		sessionLimitCache:  sessionLimitCache,
+		rpmCache:           rpmCache,
+		tokenCacheInvalidator: tokenCacheInvalidator,
 	}
 }
 
@@ -96,7 +93,7 @@ type CreateAccountRequest struct {
 	Name                    string         `json:"name" binding:"required"`
 	Notes                   *string        `json:"notes"`
 	Platform                string         `json:"platform" binding:"required"`
-	Type                    string         `json:"type" binding:"required,oneof=oauth setup-token apikey upstream bedrock"`
+	Type                    string         `json:"type" binding:"required,oneof=oauth setup-token apikey upstream"`
 	Credentials             map[string]any `json:"credentials" binding:"required"`
 	Extra                   map[string]any `json:"extra"`
 	ProxyID                 *int64         `json:"proxy_id"`
@@ -115,7 +112,7 @@ type CreateAccountRequest struct {
 type UpdateAccountRequest struct {
 	Name                    string         `json:"name"`
 	Notes                   *string        `json:"notes"`
-	Type                    string         `json:"type" binding:"omitempty,oneof=oauth setup-token apikey upstream bedrock"`
+	Type                    string         `json:"type" binding:"omitempty,oneof=oauth setup-token apikey upstream"`
 	Credentials             map[string]any `json:"credentials"`
 	Extra                   map[string]any `json:"extra"`
 	ProxyID                 *int64         `json:"proxy_id"`
@@ -535,8 +532,6 @@ func (h *AccountHandler) Create(c *gin.Context) {
 		if execErr != nil {
 			return nil, execErr
 		}
-		// Antigravity OAuth: 新账号直接设置隐私
-		h.adminService.ForceAntigravityPrivacy(ctx, account)
 		// OpenAI OAuth: 新账号直接设置隐私
 		h.adminService.ForceOpenAIPrivacy(ctx, account)
 		return h.buildAccountResponseWithRuntime(ctx, account), nil
@@ -774,7 +769,7 @@ func (h *AccountHandler) PreviewFromCRS(c *gin.Context) {
 }
 
 // refreshSingleAccount refreshes credentials for a single OAuth account.
-// Returns (updatedAccount, warning, error) where warning is used for Antigravity ProjectIDMissing scenario.
+// Returns (updatedAccount, warning, error).
 func (h *AccountHandler) refreshSingleAccount(ctx context.Context, account *service.Account) (*service.Account, string, error) {
 	if !account.IsOAuth() {
 		return nil, "", infraerrors.BadRequest("NOT_OAUTH", "cannot refresh non-OAuth account")
@@ -806,45 +801,6 @@ func (h *AccountHandler) refreshSingleAccount(ctx context.Context, account *serv
 		for k, v := range account.Credentials {
 			if _, exists := newCredentials[k]; !exists {
 				newCredentials[k] = v
-			}
-		}
-	} else if account.Platform == service.PlatformAntigravity {
-		tokenInfo, err := h.antigravityOAuthService.RefreshAccountToken(ctx, account)
-		if err != nil {
-			return nil, "", err
-		}
-
-		newCredentials = h.antigravityOAuthService.BuildAccountCredentials(tokenInfo)
-		for k, v := range account.Credentials {
-			if _, exists := newCredentials[k]; !exists {
-				newCredentials[k] = v
-			}
-		}
-
-		// 特殊处理 project_id：如果新值为空但旧值非空，保留旧值
-		// 这确保了即使 LoadCodeAssist 失败，project_id 也不会丢失
-		if newProjectID, _ := newCredentials["project_id"].(string); newProjectID == "" {
-			if oldProjectID := strings.TrimSpace(account.GetCredential("project_id")); oldProjectID != "" {
-				newCredentials["project_id"] = oldProjectID
-			}
-		}
-
-		// 如果 project_id 获取失败，更新凭证但不标记为 error
-		if tokenInfo.ProjectIDMissing {
-			updatedAccount, updateErr := h.adminService.UpdateAccount(ctx, account.ID, &service.UpdateAccountInput{
-				Credentials: newCredentials,
-			})
-			if updateErr != nil {
-				return nil, "", fmt.Errorf("failed to update credentials: %w", updateErr)
-			}
-			h.adminService.EnsureAntigravityPrivacy(ctx, updatedAccount)
-			return updatedAccount, "missing_project_id_temporary", nil
-		}
-
-		// 成功获取到 project_id，如果之前是 missing_project_id 错误则清除
-		if account.Status == service.StatusError && strings.Contains(account.ErrorMessage, "missing_project_id:") {
-			if _, clearErr := h.adminService.ClearAccountError(ctx, account.ID); clearErr != nil {
-				return nil, "", fmt.Errorf("failed to clear account error: %w", clearErr)
 			}
 		}
 	} else {
@@ -889,8 +845,6 @@ func (h *AccountHandler) refreshSingleAccount(ctx context.Context, account *serv
 
 	// OpenAI OAuth: 刷新成功后检查并设置 privacy_mode
 	h.adminService.EnsureOpenAIPrivacy(ctx, updatedAccount)
-	// Antigravity OAuth: 刷新成功后检查并设置 privacy_mode
-	h.adminService.EnsureAntigravityPrivacy(ctx, updatedAccount)
 
 	return updatedAccount, "", nil
 }
@@ -1163,7 +1117,6 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 		failed := 0
 		results := make([]gin.H, 0, len(req.Accounts))
 		// 收集需要异步设置隐私的 OAuth 账号
-		var antigravityPrivacyAccounts []*service.Account
 		var openaiPrivacyAccounts []*service.Account
 
 		for _, item := range req.Accounts {
@@ -1208,13 +1161,8 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 				continue
 			}
 			// 收集需要异步设置隐私的 OAuth 账号
-			if account.Type == service.AccountTypeOAuth {
-				switch account.Platform {
-				case service.PlatformAntigravity:
-					antigravityPrivacyAccounts = append(antigravityPrivacyAccounts, account)
-				case service.PlatformOpenAI:
-					openaiPrivacyAccounts = append(openaiPrivacyAccounts, account)
-				}
+			if account.Type == service.AccountTypeOAuth && account.Platform == service.PlatformOpenAI {
+				openaiPrivacyAccounts = append(openaiPrivacyAccounts, account)
 			}
 			success++
 			results = append(results, gin.H{
@@ -1226,20 +1174,6 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 
 		// 异步设置隐私，避免批量创建时阻塞请求
 		adminSvc := h.adminService
-		if len(antigravityPrivacyAccounts) > 0 {
-			accounts := antigravityPrivacyAccounts
-			go func() {
-				defer func() {
-					if r := recover(); r != nil {
-						slog.Error("batch_create_antigravity_privacy_panic", "recover", r)
-					}
-				}()
-				bgCtx := context.Background()
-				for _, acc := range accounts {
-					adminSvc.ForceAntigravityPrivacy(bgCtx, acc)
-				}
-			}()
-		}
 		if len(openaiPrivacyAccounts) > 0 {
 			accounts := openaiPrivacyAccounts
 			go func() {
@@ -1906,7 +1840,7 @@ func (h *AccountHandler) GetAvailableModels(c *gin.Context) {
 	response.Success(c, models)
 }
 
-// SetPrivacy handles setting privacy for a single OpenAI/Antigravity OAuth account
+// SetPrivacy handles setting privacy for a single OpenAI OAuth account
 // POST /api/v1/admin/accounts/:id/set-privacy
 func (h *AccountHandler) SetPrivacy(c *gin.Context) {
 	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -1927,10 +1861,8 @@ func (h *AccountHandler) SetPrivacy(c *gin.Context) {
 	switch account.Platform {
 	case service.PlatformOpenAI:
 		mode = h.adminService.ForceOpenAIPrivacy(c.Request.Context(), account)
-	case service.PlatformAntigravity:
-		mode = h.adminService.ForceAntigravityPrivacy(c.Request.Context(), account)
 	default:
-		response.BadRequest(c, "Only OpenAI and Antigravity OAuth accounts support privacy setting")
+		response.BadRequest(c, "Only OpenAI OAuth accounts support privacy setting")
 		return
 	}
 	if mode == "" {
@@ -2110,12 +2042,6 @@ func (h *AccountHandler) BatchRefreshTier(c *gin.Context) {
 	}
 
 	response.Success(c, results)
-}
-
-// GetAntigravityDefaultModelMapping 获取默认模型映射（已弃用，保留兼容）
-// GET /api/v1/admin/accounts/antigravity/default-model-mapping
-func (h *AccountHandler) GetAntigravityDefaultModelMapping(c *gin.Context) {
-	response.Success(c, map[string]string{})
 }
 
 // sanitizeExtraBaseRPM 对 extra map 中的 base_rpm 值进行范围校验和归一化。

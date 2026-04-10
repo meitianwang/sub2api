@@ -1577,31 +1577,6 @@
           </div>
         </div>
 
-        <!-- Sora Client Toggle -->
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.soraClient.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.soraClient.description') }}
-            </p>
-          </div>
-          <div class="space-y-6 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="font-medium text-gray-900 dark:text-white">{{
-                  t('admin.settings.soraClient.enabled')
-                }}</label>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.soraClient.enabledHint') }}
-                </p>
-              </div>
-              <Toggle v-model="form.sora_client_enabled" />
-            </div>
-          </div>
-        </div>
-
         <!-- Custom Menu Items -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -2088,7 +2063,7 @@ const betaPolicyForm = reactive({
   rules: [] as Array<{
     beta_token: string
     action: 'pass' | 'filter' | 'block'
-    scope: 'all' | 'oauth' | 'apikey' | 'bedrock'
+    scope: 'all' | 'oauth' | 'apikey'
     error_message?: string
   }>
 })
@@ -2132,7 +2107,6 @@ const form = reactive<SettingsForm>({
   hide_ccs_import_button: false,
   purchase_subscription_enabled: false,
   purchase_subscription_url: '',
-  sora_client_enabled: false,
   custom_menu_items: [] as Array<{id: string; label: string; icon_svg: string; url: string; visibility: 'user' | 'admin'; sort_order: number}>,
   custom_endpoints: [] as Array<{name: string; endpoint: string; description: string}>,
   frontend_url: '',
@@ -2160,9 +2134,8 @@ const form = reactive<SettingsForm>({
   fallback_model_anthropic: 'claude-3-5-sonnet-20241022',
   fallback_model_openai: 'gpt-4o',
   fallback_model_gemini: 'gemini-2.5-pro',
-  fallback_model_antigravity: 'gemini-2.5-pro',
-  // Identity patch (Claude -> Gemini)
-  enable_identity_patch: true,
+  // Identity patch
+  enable_identity_patch: false,
   identity_patch_prompt: '',
   // Ops monitoring (vNext)
   ops_monitoring_enabled: true,
@@ -2456,7 +2429,6 @@ async function saveSettings() {
       hide_ccs_import_button: form.hide_ccs_import_button,
       purchase_subscription_enabled: form.purchase_subscription_enabled,
       purchase_subscription_url: form.purchase_subscription_url,
-      sora_client_enabled: form.sora_client_enabled,
       custom_menu_items: form.custom_menu_items,
       custom_endpoints: form.custom_endpoints,
       frontend_url: form.frontend_url,
@@ -2478,9 +2450,6 @@ async function saveSettings() {
       fallback_model_anthropic: form.fallback_model_anthropic,
       fallback_model_openai: form.fallback_model_openai,
       fallback_model_gemini: form.fallback_model_gemini,
-      fallback_model_antigravity: form.fallback_model_antigravity,
-      enable_identity_patch: form.enable_identity_patch,
-      identity_patch_prompt: form.identity_patch_prompt,
       min_claude_code_version: form.min_claude_code_version,
       max_claude_code_version: form.max_claude_code_version,
       allow_ungrouped_key_scheduling: form.allow_ungrouped_key_scheduling,
@@ -2740,8 +2709,7 @@ const betaPolicyActionOptions = computed(() => [
 const betaPolicyScopeOptions = computed(() => [
   { value: 'all', label: t('admin.settings.betaPolicy.scopeAll') },
   { value: 'oauth', label: t('admin.settings.betaPolicy.scopeOAuth') },
-  { value: 'apikey', label: t('admin.settings.betaPolicy.scopeAPIKey') },
-  { value: 'bedrock', label: t('admin.settings.betaPolicy.scopeBedrock') }
+  { value: 'apikey', label: t('admin.settings.betaPolicy.scopeAPIKey') }
 ])
 
 // Beta Policy 方法

@@ -428,6 +428,16 @@ export async function setSchedulable(id: number, schedulable: boolean): Promise<
 }
 
 /**
+ * Set privacy for an account
+ * @param id - Account ID
+ * @returns Updated account
+ */
+export async function setPrivacy(id: number): Promise<Account> {
+  const { data } = await apiClient.post<Account>(`/admin/accounts/${id}/set-privacy`)
+  return data
+}
+
+/**
  * Get available models for an account
  * @param id - Account ID
  * @returns List of available models for this account
@@ -533,17 +543,6 @@ export async function importData(payload: {
 }
 
 /**
- * Get Antigravity default model mapping from backend
- * @returns Default model mapping (from -> to)
- */
-export async function getAntigravityDefaultModelMapping(): Promise<Record<string, string>> {
-  const { data } = await apiClient.get<Record<string, string>>(
-    '/admin/accounts/antigravity/default-model-mapping'
-  )
-  return data
-}
-
-/**
  * Refresh OpenAI token using refresh token
  * @param refreshToken - The refresh token
  * @param proxyId - Optional proxy ID
@@ -563,28 +562,6 @@ export async function refreshOpenAIToken(
   }
   if (clientId) {
     payload.client_id = clientId
-  }
-  const { data } = await apiClient.post<Record<string, unknown>>(endpoint, payload)
-  return data
-}
-
-/**
- * Validate Sora session token and exchange to access token
- * @param sessionToken - Sora session token
- * @param proxyId - Optional proxy ID
- * @param endpoint - API endpoint path
- * @returns Token information including access_token
- */
-export async function validateSoraSessionToken(
-  sessionToken: string,
-  proxyId?: number | null,
-  endpoint: string = '/admin/sora/st2at'
-): Promise<Record<string, unknown>> {
-  const payload: { session_token: string; proxy_id?: number } = {
-    session_token: sessionToken
-  }
-  if (proxyId) {
-    payload.proxy_id = proxyId
   }
   const { data } = await apiClient.post<Record<string, unknown>>(endpoint, payload)
   return data
@@ -627,16 +604,6 @@ export async function batchRefresh(accountIds: number[]): Promise<BatchOperation
   return data
 }
 
-/**
- * Set privacy for an Antigravity OAuth account
- * @param id - Account ID
- * @returns Updated account
- */
-export async function setPrivacy(id: number): Promise<Account> {
-  const { data } = await apiClient.post<Account>(`/admin/accounts/${id}/set-privacy`)
-  return data
-}
-
 export const accountsAPI = {
   list,
   listWithEtag,
@@ -659,11 +626,11 @@ export const accountsAPI = {
   getTempUnschedulableStatus,
   resetTempUnschedulable,
   setSchedulable,
+  setPrivacy,
   getAvailableModels,
   generateAuthUrl,
   exchangeCode,
   refreshOpenAIToken,
-  validateSoraSessionToken,
   batchCreate,
   batchUpdateCredentials,
   bulkUpdate,
@@ -671,10 +638,8 @@ export const accountsAPI = {
   syncFromCrs,
   exportData,
   importData,
-  getAntigravityDefaultModelMapping,
   batchClearError,
-  batchRefresh,
-  setPrivacy
+  batchRefresh
 }
 
 export default accountsAPI

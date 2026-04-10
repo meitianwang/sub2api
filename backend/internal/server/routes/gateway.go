@@ -26,6 +26,7 @@ func RegisterGatewayRoutes(
 	endpointNorm := handler.InboundEndpointMiddleware()
 
 	requireGroup := middleware.RequireGroupAssignment(settingService, middleware.AnthropicErrorWriter)
+	requireGroupGoogle := middleware.RequireGroupAssignment(settingService, middleware.GoogleErrorWriter)
 
 	// ===== Anthropic API 兼容 =====
 	gateway := r.Group("/v1")
@@ -47,10 +48,12 @@ func RegisterGatewayRoutes(
 	}
 
 	// ===== Gemini 原生 API 兼容 =====
+	// Use Google-style auth: supports ?key=xxx query param, x-goog-api-key header, and Bearer token.
+	// Returns Google-style errors for Gemini SDK compatibility.
 	gemini := r.Group("/v1beta")
 	gemini.Use(bodyLimit, clientRequestID, opsErrorLogger, endpointNorm)
-	gemini.Use(gin.HandlerFunc(apiKeyAuth))
-	gemini.Use(requireGroup)
+	gemini.Use(middleware.APIKeyAuthWithSubscriptionGoogle(apiKeyService, subscriptionService, cfg))
+	gemini.Use(requireGroupGoogle)
 	{
 		gemini.GET("/models", h.Gateway.GeminiV1BetaListModels)
 		gemini.GET("/models/:model", h.Gateway.GeminiV1BetaGetModel)

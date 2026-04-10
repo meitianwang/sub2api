@@ -21,19 +21,10 @@ type Group struct {
 	MonthlyLimitUSD     *float64
 	DefaultValidityDays int
 
-	// 图片生成计费配置（antigravity 和 gemini 平台使用）
+	// 图片生成计费配置
 	ImagePrice1K *float64
 	ImagePrice2K *float64
 	ImagePrice4K *float64
-
-	// Sora 按次计费配置（阶段 1）
-	SoraImagePrice360          *float64
-	SoraImagePrice540          *float64
-	SoraVideoPricePerRequest   *float64
-	SoraVideoPricePerRequestHD *float64
-
-	// Sora 存储配额
-	SoraStorageQuotaBytes int64
 
 	// Claude Code 客户端限制
 	ClaudeCodeOnly  bool
@@ -50,10 +41,10 @@ type Group struct {
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled bool
 
-	// MCP XML 协议注入开关（仅 antigravity 平台使用）
+	// MCP XML 协议注入开关
 	MCPXMLInject bool
 
-	// 支持的模型系列（仅 antigravity 平台使用）
+	// 支持的模型系列
 	// 可选值: claude, gemini_text, gemini_image
 	SupportedModelScopes []string
 
@@ -62,8 +53,8 @@ type Group struct {
 
 	// OpenAI Messages 调度配置（仅 openai 平台使用）
 	AllowMessagesDispatch bool
-	RequireOAuthOnly      bool // 仅允许非 apikey 类型账号关联（OpenAI/Antigravity/Anthropic/Gemini）
-	RequirePrivacySet     bool // 调度时仅允许 privacy 已成功设置的账号（OpenAI/Antigravity/Anthropic/Gemini）
+	RequireOAuthOnly      bool // 仅允许非 apikey 类型账号关联
+	RequirePrivacySet     bool // 调度时仅允许 privacy 已成功设置的账号
 	DefaultMappedModel    string
 
 	CreatedAt time.Time
@@ -112,18 +103,6 @@ func (g *Group) GetImagePrice(imageSize string) *float64 {
 	default:
 		// 未知尺寸默认按 2K 计费
 		return g.ImagePrice2K
-	}
-}
-
-// GetSoraImagePrice 根据 Sora 图片尺寸返回价格（360/540）
-func (g *Group) GetSoraImagePrice(imageSize string) *float64 {
-	switch imageSize {
-	case "360":
-		return g.SoraImagePrice360
-	case "540":
-		return g.SoraImagePrice540
-	default:
-		return g.SoraImagePrice360
 	}
 }
 

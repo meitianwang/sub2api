@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/domain"
 )
 
 type Account struct {
@@ -143,14 +142,11 @@ func (a *Account) IsOAuth() bool {
 
 // IsPrivacySet 检查账号的 privacy 是否已成功设置。
 // OpenAI: privacy_mode == "training_off"
-// Antigravity: privacy_mode == "privacy_set"
 // 其他平台: 无 privacy 概念，始终返回 true
 func (a *Account) IsPrivacySet() bool {
 	switch a.Platform {
 	case PlatformOpenAI:
 		return a.getExtraString("privacy_mode") == "training_off"
-	case PlatformAntigravity:
-		return a.getExtraString("privacy_mode") == "set"
 	default:
 		return true
 	}
@@ -424,18 +420,9 @@ func (a *Account) GetModelMapping() map[string]string {
 
 func (a *Account) resolveModelMapping(rawMapping map[string]any) map[string]string {
 	if a.Credentials == nil {
-		// Antigravity 平台使用默认映射
-		if a.Platform == domain.PlatformAntigravity {
-			return domain.DefaultAntigravityModelMapping
-		}
-		// Bedrock 默认映射由 forwardBedrock 统一处理（需配合 region prefix 调整）
 		return nil
 	}
 	if len(rawMapping) == 0 {
-		// Antigravity 平台使用默认映射
-		if a.Platform == domain.PlatformAntigravity {
-			return domain.DefaultAntigravityModelMapping
-		}
 		return nil
 	}
 
@@ -446,20 +433,9 @@ func (a *Account) resolveModelMapping(rawMapping map[string]any) map[string]stri
 		}
 	}
 	if len(result) > 0 {
-		if a.Platform == domain.PlatformAntigravity {
-			ensureAntigravityDefaultPassthroughs(result, []string{
-				"gemini-3-flash",
-				"gemini-3.1-pro-high",
-				"gemini-3.1-pro-low",
-			})
-		}
 		return result
 	}
 
-	// Antigravity 平台使用默认映射
-	if a.Platform == domain.PlatformAntigravity {
-		return domain.DefaultAntigravityModelMapping
-	}
 	return nil
 }
 
@@ -494,33 +470,12 @@ func modelMappingSignature(rawMapping map[string]any) uint64 {
 	return h.Sum64()
 }
 
-func ensureAntigravityDefaultPassthrough(mapping map[string]string, model string) {
-	if mapping == nil || model == "" {
-		return
-	}
-	if _, exists := mapping[model]; exists {
-		return
-	}
-	for pattern := range mapping {
-		if matchWildcard(pattern, model) {
-			return
-		}
-	}
-	mapping[model] = model
-}
-
-func ensureAntigravityDefaultPassthroughs(mapping map[string]string, models []string) {
-	for _, model := range models {
-		ensureAntigravityDefaultPassthrough(mapping, model)
-	}
-}
-
 func normalizeRequestedModelForLookup(platform, requestedModel string) string {
 	trimmed := strings.TrimSpace(requestedModel)
 	if trimmed == "" {
 		return ""
 	}
-	if platform != PlatformGemini && platform != PlatformAntigravity {
+	if platform != PlatformGemini {
 		return trimmed
 	}
 	if trimmed == "gemini-3.1-pro-preview-customtools" {
@@ -598,25 +553,14 @@ func (a *Account) GetBaseURL() string {
 	if a.Type != AccountTypeAPIKey {
 		return ""
 	}
-	baseURL := a.GetCredential("base_url")
-	if baseURL == "" {
-		return "https://api.anthropic.com"
-	}
-	if a.Platform == PlatformAntigravity {
-		return strings.TrimRight(baseURL, "/") + "/antigravity"
-	}
-	return baseURL
+	return a.GetCredential("base_url")
 }
 
 // GetGeminiBaseURL 返回 Gemini 兼容端点的 base URL。
-// Antigravity 平台的 APIKey 账号自动拼接 /antigravity。
 func (a *Account) GetGeminiBaseURL(defaultBaseURL string) string {
 	baseURL := strings.TrimSpace(a.GetCredential("base_url"))
 	if baseURL == "" {
 		return defaultBaseURL
-	}
-	if a.Platform == PlatformAntigravity && a.Type == AccountTypeAPIKey {
-		return strings.TrimRight(baseURL, "/") + "/antigravity"
 	}
 	return baseURL
 }
@@ -649,20 +593,13 @@ func (a *Account) GetClaudeUserID() string {
 	return ""
 }
 
-// matchAntigravityWildcard 通配符匹配（仅支持末尾 *）
-// 用于 model_mapping 的通配符匹配
-func matchAntigravityWildcard(pattern, str string) bool {
+// matchWildcard 通配符匹配（仅支持末尾 *）
+func matchWildcard(pattern, str string) bool {
 	if strings.HasSuffix(pattern, "*") {
 		prefix := pattern[:len(pattern)-1]
 		return strings.HasPrefix(str, prefix)
 	}
 	return pattern == str
-}
-
-// matchWildcard 通用通配符匹配（仅支持末尾 *）
-// 复用 Antigravity 的通配符逻辑，供其他平台使用
-func matchWildcard(pattern, str string) bool {
-	return matchAntigravityWildcard(pattern, str)
 }
 
 func matchWildcardMappingResult(mapping map[string]string, requestedModel string) (string, bool) {
@@ -709,7 +646,7 @@ func (a *Account) IsCustomErrorCodesEnabled() bool {
 // IsPoolMode 检查 API Key 账号是否启用池模式。
 // 池模式下，上游错误不标记本地账号状态，而是在同一账号上重试。
 func (a *Account) IsPoolMode() bool {
-	if !a.IsAPIKeyOrBedrock() || a.Credentials == nil {
+	if !a.IsAPIKey() || a.Credentials == nil {
 		return false
 	}
 	if v, ok := a.Credentials["pool_mode"]; ok {
@@ -823,17 +760,9 @@ func (a *Account) IsInterceptWarmupEnabled() bool {
 	return false
 }
 
-func (a *Account) IsBedrock() bool {
-	return a.Platform == PlatformAnthropic && a.Type == AccountTypeBedrock
-}
-
-func (a *Account) IsBedrockAPIKey() bool {
-	return a.IsBedrock() && a.GetCredential("auth_mode") == "apikey"
-}
-
-// IsAPIKeyOrBedrock 返回账号类型是否支持配额和池模式等特性
-func (a *Account) IsAPIKeyOrBedrock() bool {
-	return a.Type == AccountTypeAPIKey || a.Type == AccountTypeBedrock
+// IsAPIKey 返回账号类型是否为 API Key（支持配额和池模式等特性）
+func (a *Account) IsAPIKey() bool {
+	return a.Type == AccountTypeAPIKey
 }
 
 func (a *Account) IsOpenAI() bool {
@@ -934,39 +863,6 @@ func (a *Account) IsOpenAITokenExpired() bool {
 		return false
 	}
 	return time.Now().Add(60 * time.Second).After(*expiresAt)
-}
-
-// IsMixedSchedulingEnabled 检查 antigravity 账户是否启用混合调度
-// 启用后可参与 anthropic/gemini 分组的账户调度
-func (a *Account) IsMixedSchedulingEnabled() bool {
-	if a.Platform != PlatformAntigravity {
-		return false
-	}
-	if a.Extra == nil {
-		return false
-	}
-	if v, ok := a.Extra["mixed_scheduling"]; ok {
-		if enabled, ok := v.(bool); ok {
-			return enabled
-		}
-	}
-	return false
-}
-
-// IsOveragesEnabled 检查 Antigravity 账号是否启用 AI Credits 超量请求。
-func (a *Account) IsOveragesEnabled() bool {
-	if a.Platform != PlatformAntigravity {
-		return false
-	}
-	if a.Extra == nil {
-		return false
-	}
-	if v, ok := a.Extra["allow_overages"]; ok {
-		if enabled, ok := v.(bool); ok {
-			return enabled
-		}
-	}
-	return false
 }
 
 // IsOpenAIPassthroughEnabled 返回 OpenAI 账号是否启用“自动透传（仅替换认证）”。

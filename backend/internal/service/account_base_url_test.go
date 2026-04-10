@@ -38,33 +38,6 @@ func TestGetBaseURL(t *testing.T) {
 			},
 			expected: "https://custom.example.com",
 		},
-		{
-			name: "antigravity apikey auto-appends /antigravity",
-			account: Account{
-				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com"},
-			},
-			expected: "https://upstream.example.com/antigravity",
-		},
-		{
-			name: "antigravity apikey trims trailing slash before appending",
-			account: Account{
-				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com/"},
-			},
-			expected: "https://upstream.example.com/antigravity",
-		},
-		{
-			name: "antigravity non-apikey returns empty",
-			account: Account{
-				Type:        AccountTypeOAuth,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com"},
-			},
-			expected: "",
-		},
 	}
 
 	for _, tt := range tests {
@@ -104,37 +77,10 @@ func TestGetGeminiBaseURL(t *testing.T) {
 			expected: "https://custom-gemini.example.com",
 		},
 		{
-			name: "antigravity apikey auto-appends /antigravity",
-			account: Account{
-				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com"},
-			},
-			expected: "https://upstream.example.com/antigravity",
-		},
-		{
-			name: "antigravity apikey trims trailing slash",
-			account: Account{
-				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com/"},
-			},
-			expected: "https://upstream.example.com/antigravity",
-		},
-		{
-			name: "antigravity oauth does NOT append /antigravity",
-			account: Account{
-				Type:        AccountTypeOAuth,
-				Platform:    PlatformAntigravity,
-				Credentials: map[string]any{"base_url": "https://upstream.example.com"},
-			},
-			expected: "https://upstream.example.com",
-		},
-		{
 			name: "oauth without base_url returns default",
 			account: Account{
 				Type:        AccountTypeOAuth,
-				Platform:    PlatformAntigravity,
+				Platform:    PlatformGemini,
 				Credentials: map[string]any{},
 			},
 			expected: defaultGeminiURL,

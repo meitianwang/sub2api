@@ -3,7 +3,6 @@ package handler
 import (
 	"strings"
 
-	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,12 +29,10 @@ const (
 // Normalization functions
 // ──────────────────────────────────────────────────────────
 
-// NormalizeInboundEndpoint maps a raw request path (which may carry
-// prefixes like /antigravity, /openai, /sora) to its canonical form.
+// NormalizeInboundEndpoint maps a raw request path to its canonical form.
 //
-//	"/antigravity/v1/messages"   → "/v1/messages"
 //	"/v1/chat/completions"       → "/v1/chat/completions"
-//	"/openai/v1/responses/foo"   → "/v1/responses"
+//	"/v1/responses/foo"          → "/v1/responses"
 //	"/v1beta/models/gemini:gen"  → "/v1beta/models"
 func NormalizeInboundEndpoint(path string) string {
 	path = strings.TrimSpace(path)
@@ -55,45 +52,17 @@ func NormalizeInboundEndpoint(path string) string {
 
 // DeriveUpstreamEndpoint determines the upstream endpoint from the
 // account platform and the normalized inbound endpoint.
-//
-// Platform-specific rules:
-//   - OpenAI always forwards to /v1/responses (with optional subpath
-//     such as /v1/responses/compact preserved from the raw URL).
-//   - Anthropic  → /v1/messages
-//   - Gemini     → /v1beta/models
-//   - Sora       → /v1/chat/completions
-//   - Antigravity routes may target either Claude or Gemini, so the
-//     inbound endpoint is used to distinguish.
+// In passthrough mode, the upstream endpoint matches the inbound endpoint.
 func DeriveUpstreamEndpoint(inbound, rawRequestPath, platform string) string {
 	inbound = strings.TrimSpace(inbound)
 
-	switch platform {
-	case service.PlatformOpenAI:
-		// OpenAI forwards everything to the Responses API.
-		// Preserve subresource suffix (e.g. /v1/responses/compact).
+	// Preserve subresource suffix for responses (e.g. /v1/responses/compact).
+	if inbound == EndpointResponses {
 		if suffix := responsesSubpathSuffix(rawRequestPath); suffix != "" {
 			return EndpointResponses + suffix
 		}
-		return EndpointResponses
-
-	case service.PlatformAnthropic:
-		return EndpointMessages
-
-	case service.PlatformGemini:
-		return EndpointGeminiModels
-
-	case service.PlatformSora:
-		return EndpointChatCompletions
-
-	case service.PlatformAntigravity:
-		// Antigravity accounts serve both Claude and Gemini.
-		if inbound == EndpointGeminiModels {
-			return EndpointGeminiModels
-		}
-		return EndpointMessages
 	}
 
-	// Unknown platform — fall back to inbound.
 	return inbound
 }
 

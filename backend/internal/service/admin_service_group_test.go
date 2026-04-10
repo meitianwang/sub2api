@@ -132,7 +132,7 @@ func TestAdminService_CreateGroup_WithImagePricing(t *testing.T) {
 	input := &CreateGroupInput{
 		Name:           "test-group",
 		Description:    "Test group",
-		Platform:       PlatformAntigravity,
+		Platform:       PlatformAnthropic,
 		RateMultiplier: 1.0,
 		ImagePrice1K:   &price1K,
 		ImagePrice2K:   &price2K,
@@ -161,7 +161,7 @@ func TestAdminService_CreateGroup_NilImagePricing(t *testing.T) {
 	input := &CreateGroupInput{
 		Name:           "test-group",
 		Description:    "Test group",
-		Platform:       PlatformAntigravity,
+		Platform:       PlatformAnthropic,
 		RateMultiplier: 1.0,
 		// ImagePrice 字段全部为 nil
 	}
@@ -182,7 +182,7 @@ func TestAdminService_UpdateGroup_WithImagePricing(t *testing.T) {
 	existingGroup := &Group{
 		ID:       1,
 		Name:     "existing-group",
-		Platform: PlatformAntigravity,
+		Platform: PlatformAnthropic,
 		Status:   StatusActive,
 	}
 	repo := &groupRepoStubForAdmin{getByID: existingGroup}
@@ -218,7 +218,7 @@ func TestAdminService_UpdateGroup_PartialImagePricing(t *testing.T) {
 	existingGroup := &Group{
 		ID:           1,
 		Name:         "existing-group",
-		Platform:     PlatformAntigravity,
+		Platform:     PlatformAnthropic,
 		Status:       StatusActive,
 		ImagePrice2K: &oldPrice2K, // 已有 2K 价格
 	}
@@ -295,14 +295,14 @@ func TestAdminService_ListGroups_WithSearch(t *testing.T) {
 		}
 		svc := &adminServiceImpl{groupRepo: repo}
 
-		groups, total, err := svc.ListGroups(context.Background(), 3, 50, PlatformAntigravity, StatusActive, "beta", &isExclusive)
+		groups, total, err := svc.ListGroups(context.Background(), 3, 50, PlatformAnthropic, StatusActive, "beta", &isExclusive)
 		require.NoError(t, err)
 		require.Equal(t, int64(42), total)
 		require.Equal(t, []Group{{ID: 2, Name: "beta"}}, groups)
 
 		require.Equal(t, 1, repo.listWithFiltersCalls)
 		require.Equal(t, pagination.PaginationParams{Page: 3, PageSize: 50}, repo.listWithFiltersParams)
-		require.Equal(t, PlatformAntigravity, repo.listWithFiltersPlatform)
+		require.Equal(t, PlatformAnthropic, repo.listWithFiltersPlatform)
 		require.Equal(t, StatusActive, repo.listWithFiltersStatus)
 		require.Equal(t, "beta", repo.listWithFiltersSearch)
 		require.NotNil(t, repo.listWithFiltersIsExclusive)
@@ -494,7 +494,7 @@ func TestAdminService_CreateGroup_InvalidRequestFallbackRejectsUnsupportedPlatfo
 		FallbackGroupIDOnInvalidRequest: &fallbackID,
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "invalid request fallback only supported for anthropic or antigravity groups")
+	require.Contains(t, err.Error(), "invalid request fallback only supported for anthropic groups")
 	require.Nil(t, repo.created)
 }
 
@@ -530,8 +530,8 @@ func TestAdminService_CreateGroup_InvalidRequestFallbackRejectsFallbackGroup(t *
 			wantMessage: "fallback group must be anthropic platform",
 		},
 		{
-			name:        "antigravity_target",
-			fallback:    &Group{ID: 10, Platform: PlatformAntigravity, SubscriptionType: SubscriptionTypeStandard},
+			name:        "anthropic_target",
+			fallback:    &Group{ID: 10, Platform: PlatformAnthropic, SubscriptionType: SubscriptionTypeStandard},
 			wantMessage: "fallback group must be anthropic platform",
 		},
 		{
@@ -590,7 +590,7 @@ func TestAdminService_CreateGroup_InvalidRequestFallbackNotFound(t *testing.T) {
 	require.Nil(t, repo.created)
 }
 
-func TestAdminService_CreateGroup_InvalidRequestFallbackAllowsAntigravity(t *testing.T) {
+func TestAdminService_CreateGroup_InvalidRequestFallbackAllowsAnthropic(t *testing.T) {
 	fallbackID := int64(10)
 	repo := &groupRepoStubForInvalidRequestFallback{
 		groups: map[int64]*Group{
@@ -601,7 +601,7 @@ func TestAdminService_CreateGroup_InvalidRequestFallbackAllowsAntigravity(t *tes
 
 	group, err := svc.CreateGroup(context.Background(), &CreateGroupInput{
 		Name:                            "g1",
-		Platform:                        PlatformAntigravity,
+		Platform:                        PlatformAnthropic,
 		SubscriptionType:                SubscriptionTypeStandard,
 		FallbackGroupIDOnInvalidRequest: &fallbackID,
 	})
@@ -650,7 +650,7 @@ func TestAdminService_UpdateGroup_InvalidRequestFallbackPlatformMismatch(t *test
 		Platform: PlatformOpenAI,
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "invalid request fallback only supported for anthropic or antigravity groups")
+	require.Contains(t, err.Error(), "invalid request fallback only supported for anthropic groups")
 	require.Nil(t, repo.updated)
 }
 
@@ -760,12 +760,12 @@ func TestAdminService_UpdateGroup_InvalidRequestFallbackSetSuccess(t *testing.T)
 	require.Equal(t, fallbackID, *repo.updated.FallbackGroupIDOnInvalidRequest)
 }
 
-func TestAdminService_UpdateGroup_InvalidRequestFallbackAllowsAntigravity(t *testing.T) {
+func TestAdminService_UpdateGroup_InvalidRequestFallbackAllowsAnthropic(t *testing.T) {
 	fallbackID := int64(10)
 	existing := &Group{
 		ID:               1,
 		Name:             "g1",
-		Platform:         PlatformAntigravity,
+		Platform:         PlatformAnthropic,
 		SubscriptionType: SubscriptionTypeStandard,
 		Status:           StatusActive,
 	}

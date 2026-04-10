@@ -45,9 +45,6 @@ export interface AdminUser extends User {
   group_rates?: Record<number, number>
   // 当前并发数（仅管理员列表接口返回）
   current_concurrency?: number
-  // Sora 存储配额（字节）
-  sora_storage_quota_bytes: number
-  sora_storage_used_bytes: number
 }
 
 export interface LoginRequest {
@@ -112,7 +109,6 @@ export interface PublicSettings {
   custom_menu_items: CustomMenuItem[]
   custom_endpoints: CustomEndpoint[]
   linuxdo_oauth_enabled: boolean
-  sora_client_enabled: boolean
   backend_mode_enabled: boolean
   version: string
 }
@@ -366,7 +362,7 @@ export interface PaginationConfig {
 
 // ==================== API Key & Group Types ====================
 
-export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity' | 'sora'
+export type GroupPlatform = 'anthropic' | 'openai' | 'gemini'
 
 export type SubscriptionType = 'standard' | 'subscription'
 
@@ -382,17 +378,9 @@ export interface Group {
   daily_limit_usd: number | null
   weekly_limit_usd: number | null
   monthly_limit_usd: number | null
-  // 图片生成计费配置（仅 antigravity 平台使用）
   image_price_1k: number | null
   image_price_2k: number | null
   image_price_4k: number | null
-  // Sora 按次计费配置
-  sora_image_price_360: number | null
-  sora_image_price_540: number | null
-  sora_video_price_per_request: number | null
-  sora_video_price_per_request_hd: number | null
-  // Sora 存储配额（字节）
-  sora_storage_quota_bytes: number
   // Claude Code 客户端限制
   claude_code_only: boolean
   fallback_group_id: number | null
@@ -418,13 +406,10 @@ export interface AdminGroup extends Group {
     cost_output_price: number
   }>
 
-  // MCP XML 协议注入（仅 antigravity 平台使用）
+  // MCP XML 协议注入
   mcp_xml_inject: boolean
   // Claude usage 模拟开关（仅 anthropic 平台使用）
   simulate_claude_max_enabled: boolean
-
-  // 支持的模型系列（仅 antigravity 平台使用）
-  supported_model_scopes?: string[]
 
   // 分组下账号数量（仅管理员可见）
   account_count?: number
@@ -509,17 +494,11 @@ export interface CreateGroupRequest {
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
-  sora_image_price_360?: number | null
-  sora_image_price_540?: number | null
-  sora_video_price_per_request?: number | null
-  sora_video_price_per_request_hd?: number | null
-  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
   mcp_xml_inject?: boolean
   simulate_claude_max_enabled?: boolean
-  supported_model_scopes?: string[]
   require_oauth_only?: boolean
   require_privacy_set?: boolean
   // 模型定价配置
@@ -547,17 +526,11 @@ export interface UpdateGroupRequest {
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
-  sora_image_price_360?: number | null
-  sora_image_price_540?: number | null
-  sora_video_price_per_request?: number | null
-  sora_video_price_per_request_hd?: number | null
-  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
   mcp_xml_inject?: boolean
   simulate_claude_max_enabled?: boolean
-  supported_model_scopes?: string[]
   require_oauth_only?: boolean
   require_privacy_set?: boolean
   // 模型定价配置
@@ -572,8 +545,8 @@ export interface UpdateGroupRequest {
 
 // ==================== Account & Proxy Types ====================
 
-export type AccountPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity' | 'sora'
-export type AccountType = 'oauth' | 'setup-token' | 'apikey' | 'upstream' | 'bedrock'
+export type AccountPlatform = 'anthropic' | 'openai' | 'gemini'
+export type AccountType = 'oauth' | 'setup-token' | 'apikey' | 'upstream'
 export type OAuthAddMethod = 'oauth' | 'setup-token'
 export type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks5h'
 
@@ -702,10 +675,7 @@ export interface Account {
   platform: AccountPlatform
   type: AccountType
   credentials?: Record<string, unknown>
-  // Extra fields including Codex usage and model-level rate limits (Antigravity smart retry)
-  extra?: (CodexUsageSnapshot & {
-    model_rate_limits?: Record<string, { rate_limited_at: string; rate_limit_reset_at: string }>
-  } & Record<string, unknown>)
+  extra?: (CodexUsageSnapshot & Record<string, unknown>)
   proxy_id: number | null
   concurrency: number
   load_factor?: number | null
@@ -766,7 +736,7 @@ export interface Account {
   custom_base_url_enabled?: boolean | null
   custom_base_url?: string | null
 
-  // 客户端亲和调度（仅 Anthropic/Antigravity 平台有效）
+  // 客户端亲和调度
   // 启用后新会话会优先调度到客户端之前使用过的账号
   client_affinity_enabled?: boolean | null
   affinity_client_count?: number | null
@@ -814,12 +784,6 @@ export interface UsageProgress {
   limit_requests?: number
 }
 
-// Antigravity 单个模型的配额信息
-export interface AntigravityModelQuota {
-  utilization: number // 使用率 0-100
-  reset_time: string  // 重置时间 ISO8601
-}
-
 export interface AccountUsageInfo {
   source?: 'passive' | 'active'
   updated_at: string | null
@@ -832,21 +796,13 @@ export interface AccountUsageInfo {
   gemini_shared_minute?: UsageProgress | null
   gemini_pro_minute?: UsageProgress | null
   gemini_flash_minute?: UsageProgress | null
-  antigravity_quota?: Record<string, AntigravityModelQuota> | null
   ai_credits?: Array<{
     credit_type?: string
     amount?: number
     minimum_balance?: number
   }> | null
-  // Antigravity 403 forbidden 状态
-  is_forbidden?: boolean
-  forbidden_reason?: string
-  forbidden_type?: string   // "validation" | "violation" | "forbidden"
-  validation_url?: string   // 验证/申诉链接
 
   // 状态标记（后端自动推导）
-  needs_verify?: boolean    // 需要人工验证（forbidden_type=validation）
-  is_banned?: boolean       // 账号被封（forbidden_type=violation）
   needs_reauth?: boolean    // token 失效需重新授权（401）
 
   // 机器可读错误码：forbidden / unauthenticated / rate_limited / network_error

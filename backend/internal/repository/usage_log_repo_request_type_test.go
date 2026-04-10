@@ -64,6 +64,7 @@ func TestUsageLogRepositoryCreateSyncRequestTypeAndLegacyFields(t *testing.T) {
 			log.ActualCost,
 			log.RateMultiplier,
 			log.AccountRateMultiplier,
+			log.UpstreamCost,
 			log.BillingType,
 			int16(service.RequestTypeWSV2),
 			true,
@@ -137,6 +138,7 @@ func TestUsageLogRepositoryCreate_PersistsServiceTier(t *testing.T) {
 			log.ActualCost,
 			log.RateMultiplier,
 			log.AccountRateMultiplier,
+			log.UpstreamCost,
 			log.BillingType,
 			int16(service.RequestTypeSync),
 			false,
@@ -463,6 +465,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{},
 			sql.NullString{},
 			false,
+			0.0, // upstream_cost
 			now,
 		}})
 		require.NoError(t, err)
@@ -506,6 +509,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{},
 			sql.NullString{},
 			false,
+			0.0, // upstream_cost
 			now,
 		}})
 		require.NoError(t, err)
@@ -549,6 +553,7 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{},
 			sql.NullString{},
 			false,
+			0.0, // upstream_cost
 			now,
 		}})
 		require.NoError(t, err)

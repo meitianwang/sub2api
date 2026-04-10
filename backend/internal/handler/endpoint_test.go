@@ -5,7 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
@@ -27,13 +26,6 @@ func TestNormalizeInboundEndpoint(t *testing.T) {
 		{"/v1/responses", EndpointResponses},
 		{"/v1beta/models", EndpointGeminiModels},
 
-		// Prefixed paths (antigravity, openai, sora).
-		{"/antigravity/v1/messages", EndpointMessages},
-		{"/openai/v1/responses", EndpointResponses},
-		{"/openai/v1/responses/compact", EndpointResponses},
-		{"/sora/v1/chat/completions", EndpointChatCompletions},
-		{"/antigravity/v1beta/models/gemini:generateContent", EndpointGeminiModels},
-
 		// Gin route patterns with wildcards.
 		{"/v1beta/models/*modelAction", EndpointGeminiModels},
 		{"/v1/responses/*subpath", EndpointResponses},
@@ -51,7 +43,7 @@ func TestNormalizeInboundEndpoint(t *testing.T) {
 }
 
 // ──────────────────────────────────────────────────────────
-// DeriveUpstreamEndpoint
+// DeriveUpstreamEndpoint — passthrough mode returns inbound
 // ──────────────────────────────────────────────────────────
 
 func TestDeriveUpstreamEndpoint(t *testing.T) {
@@ -62,28 +54,13 @@ func TestDeriveUpstreamEndpoint(t *testing.T) {
 		platform string
 		want     string
 	}{
-		// Anthropic.
-		{"anthropic messages", EndpointMessages, "/v1/messages", service.PlatformAnthropic, EndpointMessages},
-
-		// Gemini.
-		{"gemini models", EndpointGeminiModels, "/v1beta/models/gemini:gen", service.PlatformGemini, EndpointGeminiModels},
-
-		// Sora.
-		{"sora completions", EndpointChatCompletions, "/sora/v1/chat/completions", service.PlatformSora, EndpointChatCompletions},
-
-		// OpenAI — always /v1/responses.
-		{"openai responses root", EndpointResponses, "/v1/responses", service.PlatformOpenAI, EndpointResponses},
-		{"openai responses compact", EndpointResponses, "/openai/v1/responses/compact", service.PlatformOpenAI, "/v1/responses/compact"},
-		{"openai responses nested", EndpointResponses, "/openai/v1/responses/compact/detail", service.PlatformOpenAI, "/v1/responses/compact/detail"},
-		{"openai from messages", EndpointMessages, "/v1/messages", service.PlatformOpenAI, EndpointResponses},
-		{"openai from completions", EndpointChatCompletions, "/v1/chat/completions", service.PlatformOpenAI, EndpointResponses},
-
-		// Antigravity — uses inbound to pick Claude vs Gemini upstream.
-		{"antigravity claude", EndpointMessages, "/antigravity/v1/messages", service.PlatformAntigravity, EndpointMessages},
-		{"antigravity gemini", EndpointGeminiModels, "/antigravity/v1beta/models", service.PlatformAntigravity, EndpointGeminiModels},
-
-		// Unknown platform — passthrough.
-		{"unknown platform", "/v1/embeddings", "/v1/embeddings", "unknown", "/v1/embeddings"},
+		{"messages passthrough", EndpointMessages, "/v1/messages", "anthropic", EndpointMessages},
+		{"chat completions passthrough", EndpointChatCompletions, "/v1/chat/completions", "anthropic", EndpointChatCompletions},
+		{"gemini models passthrough", EndpointGeminiModels, "/v1beta/models/gemini:gen", "gemini", EndpointGeminiModels},
+		{"responses root", EndpointResponses, "/v1/responses", "anthropic", EndpointResponses},
+		{"responses compact subpath", EndpointResponses, "/v1/responses/compact", "anthropic", "/v1/responses/compact"},
+		{"responses nested subpath", EndpointResponses, "/v1/responses/compact/detail", "anthropic", "/v1/responses/compact/detail"},
+		{"unknown platform passthrough", "/v1/embeddings", "/v1/embeddings", "unknown", "/v1/embeddings"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -104,7 +81,7 @@ func TestResponsesSubpathSuffix(t *testing.T) {
 		{"/v1/responses", ""},
 		{"/v1/responses/", ""},
 		{"/v1/responses/compact", "/compact"},
-		{"/openai/v1/responses/compact/detail", "/compact/detail"},
+		{"/v1/responses/compact/detail", "/compact/detail"},
 		{"/v1/messages", ""},
 		{"", ""},
 	}
@@ -139,9 +116,8 @@ func TestInboundEndpointMiddleware(t *testing.T) {
 func TestGetInboundEndpoint_FallbackWithoutMiddleware(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
-	c.Request = httptest.NewRequest(http.MethodPost, "/antigravity/v1/messages", nil)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/messages", nil)
 
-	// Middleware did not run — fallback to normalizing c.Request.URL.Path.
 	got := GetInboundEndpoint(c)
 	require.Equal(t, EndpointMessages, got)
 }
@@ -149,11 +125,10 @@ func TestGetInboundEndpoint_FallbackWithoutMiddleware(t *testing.T) {
 func TestGetUpstreamEndpoint_FullFlow(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
-	c.Request = httptest.NewRequest(http.MethodPost, "/openai/v1/responses/compact", nil)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses/compact", nil)
 
-	// Simulate middleware.
 	c.Set(ctxKeyInboundEndpoint, NormalizeInboundEndpoint(c.Request.URL.Path))
 
-	got := GetUpstreamEndpoint(c, service.PlatformOpenAI)
+	got := GetUpstreamEndpoint(c, "anthropic")
 	require.Equal(t, "/v1/responses/compact", got)
 }

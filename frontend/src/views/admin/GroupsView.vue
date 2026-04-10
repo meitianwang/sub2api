@@ -86,9 +86,7 @@
                   ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                   : value === 'openai'
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                    : value === 'antigravity'
-                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
               ]"
             >
               <PlatformIcon :platform="value" size="xs" />
@@ -477,8 +475,8 @@
           </div>
         </div>
 
-        <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
-        <div v-if="createForm.platform === 'antigravity' || createForm.platform === 'gemini'" class="border-t pt-4">
+        <!-- 图片生成计费配置（gemini 平台） -->
+        <div v-if="createForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
             {{ t('admin.groups.imagePricing.title') }}
           </label>
@@ -522,181 +520,6 @@
           </div>
         </div>
 
-        <!-- Sora 按次计费配置 -->
-        <div v-if="createForm.platform === 'sora'" class="border-t pt-4">
-          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-            {{ t('admin.groups.soraPricing.title') }}
-          </label>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t('admin.groups.soraPricing.description') }}
-          </p>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image360') }}</label>
-              <input
-                v-model.number="createForm.sora_image_price_360"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.05"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image540') }}</label>
-              <input
-                v-model.number="createForm.sora_image_price_540"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.08"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.video') }}</label>
-              <input
-                v-model.number="createForm.sora_video_price_per_request"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.5"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.videoHd') }}</label>
-              <input
-                v-model.number="createForm.sora_video_price_per_request_hd"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.8"
-              />
-            </div>
-          </div>
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.soraPricing.storageQuota') }}</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model.number="createForm.sora_storage_quota_gb"
-                type="number"
-                step="0.1"
-                min="0"
-                class="input"
-                placeholder="10"
-              />
-              <span class="shrink-0 text-sm text-gray-500">GB</span>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.groups.soraPricing.storageQuotaHint') }}
-            </p>
-          </div>
-        </div>
-
-        <!-- 支持的模型系列（仅 antigravity 平台） -->
-        <div v-if="createForm.platform === 'antigravity'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.supportedScopes.title') }}
-            </label>
-            <!-- Help Tooltip -->
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.supportedScopes.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="createForm.supported_model_scopes.includes('claude')"
-                @change="toggleCreateScope('claude')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.claude') }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="createForm.supported_model_scopes.includes('gemini_text')"
-                @change="toggleCreateScope('gemini_text')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.geminiText') }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="createForm.supported_model_scopes.includes('gemini_image')"
-                @change="toggleCreateScope('gemini_image')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.geminiImage') }}</span>
-            </label>
-          </div>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.supportedScopes.hint') }}</p>
-        </div>
-
-        <!-- MCP XML 协议注入（仅 antigravity 平台） -->
-        <div v-if="createForm.platform === 'antigravity'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.mcpXml.title') }}
-            </label>
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.mcpXml.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="createForm.mcp_xml_inject = !createForm.mcp_xml_inject"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.mcp_xml_inject ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
-                  createForm.mcp_xml_inject ? 'translate-x-6' : 'translate-x-1'
-                ]"
-              />
-            </button>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ createForm.mcp_xml_inject ? t('admin.groups.mcpXml.enabled') : t('admin.groups.mcpXml.disabled') }}
-            </span>
-          </div>
-        </div>
 
         <!-- Claude Code 客户端限制（仅 anthropic 平台） -->
         <div v-if="createForm.platform === 'anthropic'" class="border-t pt-4">
@@ -792,8 +615,8 @@
           </div>
         </div>
 
-        <!-- 账号过滤控制 (OpenAI/Antigravity/Anthropic/Gemini) -->
-        <div v-if="['openai', 'antigravity', 'anthropic', 'gemini'].includes(createForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
+        <!-- 账号过滤控制 (OpenAI/Anthropic/Gemini) -->
+        <div v-if="['openai', 'anthropic', 'gemini'].includes(createForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">账号过滤控制</h4>
 
           <!-- require_oauth_only toggle -->
@@ -847,9 +670,9 @@
           </div>
         </div>
 
-        <!-- 无效请求兜底（仅 anthropic/antigravity 平台，且非订阅分组） -->
+        <!-- 无效请求兜底（仅 anthropic 平台，且非订阅分组） -->
         <div
-          v-if="['anthropic', 'antigravity'].includes(createForm.platform) && createForm.subscription_type !== 'subscription'"
+          v-if="createForm.platform === 'anthropic' && createForm.subscription_type !== 'subscription'"
           class="border-t pt-4"
         >
           <label class="input-label">{{ t('admin.groups.invalidRequestFallback.title') }}</label>
@@ -1272,8 +1095,8 @@
           </div>
         </div>
 
-        <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
-        <div v-if="editForm.platform === 'antigravity' || editForm.platform === 'gemini'" class="border-t pt-4">
+        <!-- 图片生成计费配置（gemini 平台） -->
+        <div v-if="editForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
             {{ t('admin.groups.imagePricing.title') }}
           </label>
@@ -1314,182 +1137,6 @@
                 placeholder="0.268"
               />
             </div>
-          </div>
-        </div>
-
-        <!-- Sora 按次计费配置 -->
-        <div v-if="editForm.platform === 'sora'" class="border-t pt-4">
-          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-            {{ t('admin.groups.soraPricing.title') }}
-          </label>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t('admin.groups.soraPricing.description') }}
-          </p>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image360') }}</label>
-              <input
-                v-model.number="editForm.sora_image_price_360"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.05"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image540') }}</label>
-              <input
-                v-model.number="editForm.sora_image_price_540"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.08"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.video') }}</label>
-              <input
-                v-model.number="editForm.sora_video_price_per_request"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.5"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.videoHd') }}</label>
-              <input
-                v-model.number="editForm.sora_video_price_per_request_hd"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.8"
-              />
-            </div>
-          </div>
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.soraPricing.storageQuota') }}</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model.number="editForm.sora_storage_quota_gb"
-                type="number"
-                step="0.1"
-                min="0"
-                class="input"
-                placeholder="10"
-              />
-              <span class="shrink-0 text-sm text-gray-500">GB</span>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.groups.soraPricing.storageQuotaHint') }}
-            </p>
-          </div>
-        </div>
-
-        <!-- 支持的模型系列（仅 antigravity 平台） -->
-        <div v-if="editForm.platform === 'antigravity'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.supportedScopes.title') }}
-            </label>
-            <!-- Help Tooltip -->
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.supportedScopes.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="editForm.supported_model_scopes.includes('claude')"
-                @change="toggleEditScope('claude')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.claude') }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="editForm.supported_model_scopes.includes('gemini_text')"
-                @change="toggleEditScope('gemini_text')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.geminiText') }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                :checked="editForm.supported_model_scopes.includes('gemini_image')"
-                @change="toggleEditScope('gemini_image')"
-                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.groups.supportedScopes.geminiImage') }}</span>
-            </label>
-          </div>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.supportedScopes.hint') }}</p>
-        </div>
-
-        <!-- MCP XML 协议注入（仅 antigravity 平台） -->
-        <div v-if="editForm.platform === 'antigravity'" class="border-t pt-4">
-          <div class="mb-1.5 flex items-center gap-1">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('admin.groups.mcpXml.title') }}
-            </label>
-            <div class="group relative inline-flex">
-              <Icon
-                name="questionCircle"
-                size="sm"
-                :stroke-width="2"
-                class="cursor-help text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500 dark:hover:text-primary-400"
-              />
-              <div class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-                <div class="rounded-lg bg-gray-900 p-3 text-white shadow-lg dark:bg-gray-800">
-                  <p class="text-xs leading-relaxed text-gray-300">
-                    {{ t('admin.groups.mcpXml.tooltip') }}
-                  </p>
-                  <div class="absolute -bottom-1.5 left-3 h-3 w-3 rotate-45 bg-gray-900 dark:bg-gray-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="editForm.mcp_xml_inject = !editForm.mcp_xml_inject"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.mcp_xml_inject ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
-                  editForm.mcp_xml_inject ? 'translate-x-6' : 'translate-x-1'
-                ]"
-              />
-            </button>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ editForm.mcp_xml_inject ? t('admin.groups.mcpXml.enabled') : t('admin.groups.mcpXml.disabled') }}
-            </span>
           </div>
         </div>
 
@@ -1587,8 +1234,8 @@
           </div>
         </div>
 
-        <!-- 账号过滤控制 (OpenAI/Antigravity/Anthropic/Gemini) -->
-        <div v-if="['openai', 'antigravity', 'anthropic', 'gemini'].includes(editForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
+        <!-- 账号过滤控制 (OpenAI/Anthropic/Gemini) -->
+        <div v-if="['openai', 'anthropic', 'gemini'].includes(editForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">账号过滤控制</h4>
 
           <!-- require_oauth_only toggle -->
@@ -1642,9 +1289,9 @@
           </div>
         </div>
 
-        <!-- 无效请求兜底（仅 anthropic/antigravity 平台，且非订阅分组） -->
+        <!-- 无效请求兜底（仅 anthropic 平台，且非订阅分组） -->
         <div
-          v-if="['anthropic', 'antigravity'].includes(editForm.platform) && editForm.subscription_type !== 'subscription'"
+          v-if="editForm.platform === 'anthropic' && editForm.subscription_type !== 'subscription'"
           class="border-t pt-4"
         >
           <label class="input-label">{{ t('admin.groups.invalidRequestFallback.title') }}</label>
@@ -1890,9 +1537,7 @@
                       ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                       : group.platform === 'openai'
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : group.platform === 'antigravity'
-                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                   ]"
                 >
                   {{ t('admin.groups.platforms.' + group.platform) }}
@@ -2011,18 +1656,14 @@ const exclusiveOptions = computed(() => [
 const platformOptions = computed(() => [
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'openai', label: 'OpenAI' },
-  { value: 'gemini', label: 'Gemini' },
-  { value: 'antigravity', label: 'Antigravity' },
-  { value: 'sora', label: 'Sora' }
+  { value: 'gemini', label: 'Gemini' }
 ])
 
 const platformFilterOptions = computed(() => [
   { value: '', label: t('admin.groups.allPlatforms') },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'openai', label: 'OpenAI' },
-  { value: 'gemini', label: 'Gemini' },
-  { value: 'antigravity', label: 'Antigravity' },
-  { value: 'sora', label: 'Sora' }
+  { value: 'gemini', label: 'Gemini' }
 ])
 
 const editStatusOptions = computed(() => [
@@ -2167,16 +1808,10 @@ const createForm = reactive({
   daily_limit_usd: null as number | null,
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
-  // 图片生成计费配置（仅 antigravity 平台使用）
+  // 图片生成计费配置（仅 gemini 平台使用）
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Sora 按次计费配置
-  sora_image_price_360: null as number | null,
-  sora_image_price_540: null as number | null,
-  sora_video_price_per_request: null as number | null,
-  sora_video_price_per_request_hd: null as number | null,
-  sora_storage_quota_gb: null as number | null,
   // Claude Code 客户端限制（仅 anthropic 平台使用）
   claude_code_only: false,
   fallback_group_id: null as number | null,
@@ -2184,15 +1819,11 @@ const createForm = reactive({
   // OpenAI Messages 调度配置（仅 openai 平台使用）
   allow_messages_dispatch: false,
   default_mapped_model: 'gpt-5.4',
-  // 账号过滤控制（OpenAI/Antigravity 平台）
+  // 账号过滤控制（OpenAI 平台）
   require_oauth_only: false,
   require_privacy_set: false,
   // 模型路由开关
   model_routing_enabled: false,
-  // 支持的模型系列（仅 antigravity 平台）
-  supported_model_scopes: ['claude', 'gemini_text', 'gemini_image'] as string[],
-  // MCP XML 协议注入开关（仅 antigravity 平台）
-  mcp_xml_inject: true,
   // 从分组复制账号
   copy_accounts_from_group_ids: [] as number[]
 })
@@ -2303,26 +1934,6 @@ const removeSelectedAccount = (rule: ModelRoutingRule, accountId: number, _isEdi
   rule.accounts = rule.accounts.filter(a => a.id !== accountId)
 }
 
-// 切换创建表单的模型系列选择
-const toggleCreateScope = (scope: string) => {
-  const idx = createForm.supported_model_scopes.indexOf(scope)
-  if (idx === -1) {
-    createForm.supported_model_scopes.push(scope)
-  } else {
-    createForm.supported_model_scopes.splice(idx, 1)
-  }
-}
-
-// 切换编辑表单的模型系列选择
-const toggleEditScope = (scope: string) => {
-  const idx = editForm.supported_model_scopes.indexOf(scope)
-  if (idx === -1) {
-    editForm.supported_model_scopes.push(scope)
-  } else {
-    editForm.supported_model_scopes.splice(idx, 1)
-  }
-}
-
 // 处理账号搜索输入框聚焦
 const onAccountSearchFocus = (rule: ModelRoutingRule, isEdit: boolean = false) => {
   const key = getRuleSearchKey(rule, isEdit)
@@ -2418,16 +2029,10 @@ const editForm = reactive({
   daily_limit_usd: null as number | null,
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
-  // 图片生成计费配置（仅 antigravity 平台使用）
+  // 图片生成计费配置（仅 gemini 平台使用）
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Sora 按次计费配置
-  sora_image_price_360: null as number | null,
-  sora_image_price_540: null as number | null,
-  sora_video_price_per_request: null as number | null,
-  sora_video_price_per_request_hd: null as number | null,
-  sora_storage_quota_gb: null as number | null,
   // Claude Code 客户端限制（仅 anthropic 平台使用）
   claude_code_only: false,
   fallback_group_id: null as number | null,
@@ -2435,15 +2040,11 @@ const editForm = reactive({
   // OpenAI Messages 调度配置（仅 openai 平台使用）
   allow_messages_dispatch: false,
   default_mapped_model: '',
-  // 账号过滤控制（OpenAI/Antigravity 平台）
+  // 账号过滤控制（OpenAI 平台）
   require_oauth_only: false,
   require_privacy_set: false,
   // 模型路由开关
   model_routing_enabled: false,
-  // 支持的模型系列（仅 antigravity 平台）
-  supported_model_scopes: ['claude', 'gemini_text', 'gemini_image'] as string[],
-  // MCP XML 协议注入开关（仅 antigravity 平台）
-  mcp_xml_inject: true,
   // 从分组复制账号
   copy_accounts_from_group_ids: [] as number[]
 })
@@ -2574,11 +2175,6 @@ const closeCreateModal = () => {
   createForm.image_price_1k = null
   createForm.image_price_2k = null
   createForm.image_price_4k = null
-  createForm.sora_image_price_360 = null
-  createForm.sora_image_price_540 = null
-  createForm.sora_video_price_per_request = null
-  createForm.sora_video_price_per_request_hd = null
-  createForm.sora_storage_quota_gb = null
   createForm.claude_code_only = false
   createForm.fallback_group_id = null
   createForm.fallback_group_id_on_invalid_request = null
@@ -2586,8 +2182,6 @@ const closeCreateModal = () => {
   createForm.require_oauth_only = false
   createForm.require_privacy_set = false
   createForm.default_mapped_model = 'gpt-5.4'
-  createForm.supported_model_scopes = ['claude', 'gemini_text', 'gemini_image']
-  createForm.mcp_xml_inject = true
   createForm.copy_accounts_from_group_ids = []
   createModelRoutingRules.value = []
   createModelPricing.value = undefined
@@ -2618,13 +2212,11 @@ const handleCreateGroup = async () => {
   submitting.value = true
   try {
     // 构建请求数据，包含模型路由配置
-    const { sora_storage_quota_gb: createQuotaGb, ...createRest } = createForm
     const requestData = {
-      ...createRest,
+      ...createForm,
       daily_limit_usd: normalizeOptionalLimit(createForm.daily_limit_usd as number | string | null),
       weekly_limit_usd: normalizeOptionalLimit(createForm.weekly_limit_usd as number | string | null),
       monthly_limit_usd: normalizeOptionalLimit(createForm.monthly_limit_usd as number | string | null),
-      sora_storage_quota_bytes: createQuotaGb ? Math.round(createQuotaGb * 1024 * 1024 * 1024) : 0,
       model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
       model_pricing: createModelPricing.value
     }
@@ -2665,11 +2257,6 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.image_price_1k = group.image_price_1k
   editForm.image_price_2k = group.image_price_2k
   editForm.image_price_4k = group.image_price_4k
-  editForm.sora_image_price_360 = group.sora_image_price_360
-  editForm.sora_image_price_540 = group.sora_image_price_540
-  editForm.sora_video_price_per_request = group.sora_video_price_per_request
-  editForm.sora_video_price_per_request_hd = group.sora_video_price_per_request_hd
-  editForm.sora_storage_quota_gb = group.sora_storage_quota_bytes ? Number((group.sora_storage_quota_bytes / (1024 * 1024 * 1024)).toFixed(2)) : null
   editForm.claude_code_only = group.claude_code_only || false
   editForm.fallback_group_id = group.fallback_group_id
   editForm.fallback_group_id_on_invalid_request = group.fallback_group_id_on_invalid_request
@@ -2678,8 +2265,6 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.require_privacy_set = group.require_privacy_set ?? false
   editForm.default_mapped_model = group.default_mapped_model || ''
   editForm.model_routing_enabled = group.model_routing_enabled || false
-  editForm.supported_model_scopes = group.supported_model_scopes || ['claude', 'gemini_text', 'gemini_image']
-  editForm.mcp_xml_inject = group.mcp_xml_inject ?? true
   editForm.copy_accounts_from_group_ids = [] // 复制账号字段每次编辑时重置为空
   // 加载模型定价配置
   editModelPricing.value = group.model_pricing || undefined
@@ -2710,13 +2295,11 @@ const handleUpdateGroup = async () => {
   submitting.value = true
   try {
     // 转换 fallback_group_id: null -> 0 (后端使用 0 表示清除)
-    const { sora_storage_quota_gb: editQuotaGb, ...editRest } = editForm
     const payload = {
-      ...editRest,
+      ...editForm,
       daily_limit_usd: normalizeOptionalLimit(editForm.daily_limit_usd as number | string | null),
       weekly_limit_usd: normalizeOptionalLimit(editForm.weekly_limit_usd as number | string | null),
       monthly_limit_usd: normalizeOptionalLimit(editForm.monthly_limit_usd as number | string | null),
-      sora_storage_quota_bytes: editQuotaGb ? Math.round(editQuotaGb * 1024 * 1024 * 1024) : 0,
       fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
       fallback_group_id_on_invalid_request:
         editForm.fallback_group_id_on_invalid_request === null
@@ -2781,14 +2364,14 @@ watch(
 watch(
   () => createForm.platform,
   (newVal) => {
-    if (!['anthropic', 'antigravity'].includes(newVal)) {
+    if (newVal !== 'anthropic') {
       createForm.fallback_group_id_on_invalid_request = null
     }
     if (newVal !== 'openai') {
       createForm.allow_messages_dispatch = false
       createForm.default_mapped_model = ''
     }
-    if (!['openai', 'antigravity', 'anthropic', 'gemini'].includes(newVal)) {
+    if (!['openai', 'anthropic', 'gemini'].includes(newVal)) {
       createForm.require_oauth_only = false
       createForm.require_privacy_set = false
     }

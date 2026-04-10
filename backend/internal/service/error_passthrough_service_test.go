@@ -414,12 +414,6 @@ func TestPlatformMatches(t *testing.T) {
 			requestPlatform: "anthropic",
 			expected:        true,
 		},
-		{
-			name:            "匹配 antigravity",
-			rulePlatforms:   []string{"antigravity"},
-			requestPlatform: "antigravity",
-			expected:        true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -544,11 +538,6 @@ func TestMatchRule_PlatformFilter(t *testing.T) {
 		assert.Equal(t, int64(3), matched.ID)
 	})
 
-	t.Run("Antigravity 请求匹配全平台规则", func(t *testing.T) {
-		matched := svc.MatchRule("antigravity", 422, []byte("error"))
-		require.NotNil(t, matched)
-		assert.Equal(t, int64(3), matched.ID)
-	})
 }
 
 func TestMatchRule_NoMatch(t *testing.T) {
@@ -629,7 +618,7 @@ func TestMatchRule_RealWorldScenario_ContextLimitPassthrough(t *testing.T) {
 			ErrorCodes:      []int{422},
 			Keywords:        []string{"context limit"},
 			MatchMode:       model.MatchModeAll, // 必须同时满足
-			Platforms:       []string{"anthropic", "antigravity"},
+			Platforms:       []string{"anthropic"},
 			PassthroughCode: true,
 			PassthroughBody: true,
 		},
@@ -646,12 +635,6 @@ func TestMatchRule_RealWorldScenario_ContextLimitPassthrough(t *testing.T) {
 		assert.True(t, matched.PassthroughBody)
 	})
 
-	// 测试 Antigravity 平台
-	t.Run("Antigravity 422 with context limit", func(t *testing.T) {
-		body := []byte(`{"error":"context limit exceeded"}`)
-		matched := svc.MatchRule("antigravity", 422, body)
-		require.NotNil(t, matched)
-	})
 
 	// 测试 OpenAI 平台（不在规则的平台列表中）
 	t.Run("OpenAI should not match", func(t *testing.T) {
