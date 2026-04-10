@@ -30,6 +30,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 const (
@@ -3060,7 +3061,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 				Price4K: apiKey.Group.ImagePrice4K,
 			}
 		}
-		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, 1.0)
+		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig)
 	} else {
 		// Token 计费：仅使用自定义模型定价
 		tokens := UsageTokens{
@@ -3080,7 +3081,11 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		if customPricing != nil {
 			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
 		} else {
-			// 未配置自定义定价的模型不计费
+			// 未配置自定义定价的模型不计费，记录警告便于运维发现漏配
+			logger.L().Warn("billing: model has no custom pricing, zero cost applied",
+				zap.String("model", billingModel),
+				zap.Any("group_id", apiKey.GroupID),
+			)
 			cost = &CostBreakdown{}
 		}
 	}
@@ -3244,7 +3249,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 				Price4K: apiKey.Group.ImagePrice4K,
 			}
 		}
-		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, 1.0)
+		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig)
 	} else {
 		// Token 计费：仅使用自定义模型定价
 		tokens := UsageTokens{
@@ -3264,7 +3269,10 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		if customPricing != nil {
 			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
 		} else {
-			// 未配置自定义定价的模型不计费
+			logger.L().Warn("billing: model has no custom pricing, zero cost applied",
+				zap.String("model", billingModel),
+				zap.Any("group_id", apiKey.GroupID),
+			)
 			cost = &CostBreakdown{}
 		}
 	}

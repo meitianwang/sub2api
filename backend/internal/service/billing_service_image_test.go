@@ -13,12 +13,12 @@ func TestCalculateImageCost_DefaultPricing(t *testing.T) {
 	svc := &BillingService{} // pricingService 为 nil，使用硬编码默认值
 
 	// 2K 尺寸，默认价格 $0.134 * 1.5 = $0.201
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil)
 	require.InDelta(t, 0.201, cost.TotalCost, 0.0001)
 	require.InDelta(t, 0.201, cost.ActualCost, 0.0001)
 
 	// 多张图片
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 3, nil, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 3, nil)
 	require.InDelta(t, 0.603, cost.TotalCost, 0.0001)
 }
 
@@ -36,15 +36,15 @@ func TestCalculateImageCost_GroupCustomPricing(t *testing.T) {
 	}
 
 	// 1K 使用分组价格
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 2, groupConfig, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 2, groupConfig)
 	require.InDelta(t, 0.20, cost.TotalCost, 0.0001)
 
 	// 2K 使用分组价格
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig)
 	require.InDelta(t, 0.15, cost.TotalCost, 0.0001)
 
 	// 4K 使用分组价格
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, groupConfig, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, groupConfig)
 	require.InDelta(t, 0.30, cost.TotalCost, 0.0001)
 }
 
@@ -53,30 +53,15 @@ func TestCalculateImageCost_4KDoublePrice(t *testing.T) {
 	svc := &BillingService{}
 
 	// 4K 尺寸，默认价格翻倍 $0.134 * 2 = $0.268
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, nil, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, nil)
 	require.InDelta(t, 0.268, cost.TotalCost, 0.0001)
-}
-
-// TestCalculateImageCost_RateMultiplier 测试费率倍数
-func TestCalculateImageCost_RateMultiplier(t *testing.T) {
-	svc := &BillingService{}
-
-	// 费率倍数 1.5x
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil, 1.5)
-	require.InDelta(t, 0.201, cost.TotalCost, 0.0001)   // TotalCost = 0.134 * 1.5
-	require.InDelta(t, 0.3015, cost.ActualCost, 0.0001) // ActualCost = 0.201 * 1.5
-
-	// 费率倍数 2.0x
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 2, nil, 2.0)
-	require.InDelta(t, 0.402, cost.TotalCost, 0.0001)
-	require.InDelta(t, 0.804, cost.ActualCost, 0.0001)
 }
 
 // TestCalculateImageCost_ZeroCount 测试 imageCount=0
 func TestCalculateImageCost_ZeroCount(t *testing.T) {
 	svc := &BillingService{}
 
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 0, nil, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 0, nil)
 	require.Equal(t, 0.0, cost.TotalCost)
 	require.Equal(t, 0.0, cost.ActualCost)
 }
@@ -85,18 +70,9 @@ func TestCalculateImageCost_ZeroCount(t *testing.T) {
 func TestCalculateImageCost_NegativeCount(t *testing.T) {
 	svc := &BillingService{}
 
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", -1, nil, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", -1, nil)
 	require.Equal(t, 0.0, cost.TotalCost)
 	require.Equal(t, 0.0, cost.ActualCost)
-}
-
-// TestCalculateImageCost_ZeroRateMultiplier 测试费率倍数为 0 时默认使用 1.0
-func TestCalculateImageCost_ZeroRateMultiplier(t *testing.T) {
-	svc := &BillingService{}
-
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil, 0)
-	require.InDelta(t, 0.201, cost.TotalCost, 0.0001)
-	require.InDelta(t, 0.201, cost.ActualCost, 0.0001) // 0 倍率当作 1.0 处理
 }
 
 // TestGetImageUnitPrice_GroupPriorityOverDefault 测试分组价格优先于默认价格
@@ -109,7 +85,7 @@ func TestGetImageUnitPrice_GroupPriorityOverDefault(t *testing.T) {
 	}
 
 	// 分组配置了 2K 价格，应该使用分组价格而不是默认的 $0.134
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig)
 	require.InDelta(t, 0.20, cost.TotalCost, 0.0001)
 }
 
@@ -124,15 +100,15 @@ func TestGetImageUnitPrice_PartialGroupConfig(t *testing.T) {
 	}
 
 	// 1K 使用分组价格
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 1, groupConfig, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 1, groupConfig)
 	require.InDelta(t, 0.10, cost.TotalCost, 0.0001)
 
 	// 2K 回退默认价格 $0.201 (1.5倍)
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, groupConfig)
 	require.InDelta(t, 0.201, cost.TotalCost, 0.0001)
 
 	// 4K 回退默认价格 $0.268 (翻倍)
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, groupConfig, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "4K", 1, groupConfig)
 	require.InDelta(t, 0.268, cost.TotalCost, 0.0001)
 }
 
@@ -141,9 +117,9 @@ func TestGetDefaultImagePrice_FallbackHardcoded(t *testing.T) {
 	svc := &BillingService{} // pricingService 为 nil
 
 	// 1K 默认价格 $0.134，2K 默认价格 $0.201 (1.5倍)
-	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 1, nil, 1.0)
+	cost := svc.CalculateImageCost("gemini-3-pro-image", "1K", 1, nil)
 	require.InDelta(t, 0.134, cost.TotalCost, 0.0001)
 
-	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil, 1.0)
+	cost = svc.CalculateImageCost("gemini-3-pro-image", "2K", 1, nil)
 	require.InDelta(t, 0.201, cost.TotalCost, 0.0001)
 }

@@ -432,8 +432,7 @@ type ImagePriceConfig struct {
 // imageSize: 图片尺寸 "1K", "2K", "4K"
 // imageCount: 生成的图片数量
 // groupConfig: 分组配置的价格（可能为 nil，表示使用默认值）
-// rateMultiplier: 费率倍数
-func (s *BillingService) CalculateImageCost(model string, imageSize string, imageCount int, groupConfig *ImagePriceConfig, rateMultiplier float64) *CostBreakdown {
+func (s *BillingService) CalculateImageCost(model string, imageSize string, imageCount int, groupConfig *ImagePriceConfig) *CostBreakdown {
 	if imageCount <= 0 {
 		return &CostBreakdown{}
 	}
@@ -443,12 +442,7 @@ func (s *BillingService) CalculateImageCost(model string, imageSize string, imag
 
 	// 计算总费用
 	totalCost := unitPrice * float64(imageCount)
-
-	// 应用倍率
-	if rateMultiplier <= 0 {
-		rateMultiplier = 1.0
-	}
-	actualCost := totalCost * rateMultiplier
+	actualCost := totalCost
 
 	return &CostBreakdown{
 		TotalCost:  totalCost,
