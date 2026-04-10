@@ -29,8 +29,6 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"golang.org/x/sync/singleflight"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,8 +37,7 @@ const (
 	claudeAPICountTokensURL = "https://api.anthropic.com/v1/messages/count_tokens?beta=true"
 	stickySessionTTL        = time.Hour // 粘性会话TTL
 	defaultMaxLineSize      = 500 * 1024 * 1024
-	defaultUserGroupRateCacheTTL = 30 * time.Second
-	defaultModelsListCacheTTL    = 15 * time.Second
+	defaultModelsListCacheTTL = 15 * time.Second
 	postUsageBillingTimeout      = 15 * time.Second
 )
 
@@ -63,12 +60,6 @@ var (
 	windowCostPrefetchFallbackTotal  atomic.Int64
 	windowCostPrefetchErrorTotal     atomic.Int64
 
-	userGroupRateCacheHitTotal      atomic.Int64
-	userGroupRateCacheMissTotal     atomic.Int64
-	userGroupRateCacheLoadTotal     atomic.Int64
-	userGroupRateCacheSFSharedTotal atomic.Int64
-	userGroupRateCacheFallbackTotal atomic.Int64
-
 	modelsListCacheHitTotal   atomic.Int64
 	modelsListCacheMissTotal  atomic.Int64
 	modelsListCacheStoreTotal atomic.Int64
@@ -80,14 +71,6 @@ func GatewayWindowCostPrefetchStats() (cacheHit, cacheMiss, batchSQL, fallback, 
 		windowCostPrefetchBatchSQLTotal.Load(),
 		windowCostPrefetchFallbackTotal.Load(),
 		windowCostPrefetchErrorTotal.Load()
-}
-
-func GatewayUserGroupRateCacheStats() (cacheHit, cacheMiss, load, singleflightShared, fallback int64) {
-	return userGroupRateCacheHitTotal.Load(),
-		userGroupRateCacheMissTotal.Load(),
-		userGroupRateCacheLoadTotal.Load(),
-		userGroupRateCacheSFSharedTotal.Load(),
-		userGroupRateCacheFallbackTotal.Load()
 }
 
 func GatewayModelsListCacheStats() (cacheHit, cacheMiss, store int64) {
@@ -231,13 +214,6 @@ func derefGroupID(groupID *int64) int64 {
 	return *groupID
 }
 
-func resolveUserGroupRateCacheTTL(cfg *config.Config) time.Duration {
-	if cfg == nil || cfg.Gateway.UserGroupRateCacheTTLSeconds <= 0 {
-		return defaultUserGroupRateCacheTTL
-	}
-	return time.Duration(cfg.Gateway.UserGroupRateCacheTTLSeconds) * time.Second
-}
-
 func resolveModelsListCacheTTL(cfg *config.Config) time.Duration {
 	if cfg == nil || cfg.Gateway.ModelsListCacheTTLSeconds <= 0 {
 		return defaultModelsListCacheTTL
@@ -374,8 +350,7 @@ type GatewayService struct {
 	usageBillingRepo      UsageBillingRepository
 	userRepo              UserRepository
 	userSubRepo           UserSubscriptionRepository
-	userGroupRateRepo     UserGroupRateRepository
-	cache                 GatewayCache
+	cache GatewayCache
 	digestStore           *DigestSessionStore
 	cfg                   *config.Config
 	schedulerSnapshot     *SchedulerSnapshotService
@@ -389,10 +364,7 @@ type GatewayService struct {
 	claudeTokenProvider   *ClaudeTokenProvider
 	sessionLimitCache     SessionLimitCache // 会话数量限制缓存（仅 Anthropic OAuth/SetupToken）
 	rpmCache              RPMCache          // RPM 计数缓存（仅 Anthropic OAuth/SetupToken）
-	userGroupRateResolver *userGroupRateResolver
-	userGroupRateCache    *gocache.Cache
-	userGroupRateSF       singleflight.Group
-	modelsListCache       *gocache.Cache
+	modelsListCache *gocache.Cache
 	modelsListCacheTTL    time.Duration
 	settingService        *SettingService
 	responseHeaderFilter  *responseheaders.CompiledHeaderFilter
@@ -408,7 +380,6 @@ func NewGatewayService(
 	usageBillingRepo UsageBillingRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
-	userGroupRateRepo UserGroupRateRepository,
 	cache GatewayCache,
 	cfg *config.Config,
 	schedulerSnapshot *SchedulerSnapshotService,
@@ -426,7 +397,6 @@ func NewGatewayService(
 	settingService *SettingService,
 	tlsFPProfileService *TLSFingerprintProfileService,
 ) *GatewayService {
-	userGroupRateTTL := resolveUserGroupRateCacheTTL(cfg)
 	modelsListTTL := resolveModelsListCacheTTL(cfg)
 
 	svc := &GatewayService{
@@ -435,9 +405,8 @@ func NewGatewayService(
 		usageLogRepo:         usageLogRepo,
 		usageBillingRepo:     usageBillingRepo,
 		userRepo:             userRepo,
-		userSubRepo:          userSubRepo,
-		userGroupRateRepo:    userGroupRateRepo,
-		cache:                cache,
+		userSubRepo: userSubRepo,
+		cache:       cache,
 		digestStore:          digestStore,
 		cfg:                  cfg,
 		schedulerSnapshot:    schedulerSnapshot,
@@ -450,21 +419,13 @@ func NewGatewayService(
 		deferredService:      deferredService,
 		claudeTokenProvider:  claudeTokenProvider,
 		sessionLimitCache:    sessionLimitCache,
-		rpmCache:             rpmCache,
-		userGroupRateCache:   gocache.New(userGroupRateTTL, time.Minute),
-		settingService:       settingService,
+		rpmCache:       rpmCache,
+		settingService: settingService,
 		modelsListCache:      gocache.New(modelsListTTL, time.Minute),
 		modelsListCacheTTL:   modelsListTTL,
 		responseHeaderFilter: compileResponseHeaderFilter(cfg),
 		tlsFPProfileService:  tlsFPProfileService,
 	}
-	svc.userGroupRateResolver = newUserGroupRateResolver(
-		userGroupRateRepo,
-		svc.userGroupRateCache,
-		userGroupRateTTL,
-		&svc.userGroupRateSF,
-		"service.gateway",
-	)
 	svc.debugModelRouting.Store(parseDebugEnvBool(os.Getenv("SUB2API_DEBUG_MODEL_ROUTING")))
 	return svc
 }
@@ -2763,23 +2724,6 @@ func (s *GatewayService) handleFailoverSideEffects(ctx context.Context, resp *ht
 // handleRetryExhaustedError 处理重试耗尽后的错误
 // OAuth 403：标记账号异常
 // API Key 未配置错误码：仅返回错误，不标记账号
-func (s *GatewayService) getUserGroupRateMultiplier(ctx context.Context, userID, groupID int64, groupDefaultMultiplier float64) float64 {
-	if s == nil {
-		return groupDefaultMultiplier
-	}
-	resolver := s.userGroupRateResolver
-	if resolver == nil {
-		resolver = newUserGroupRateResolver(
-			s.userGroupRateRepo,
-			s.userGroupRateCache,
-			resolveUserGroupRateCacheTTL(s.cfg),
-			&s.userGroupRateSF,
-			"service.gateway",
-		)
-	}
-	return resolver.Resolve(ctx, userID, groupID, groupDefaultMultiplier)
-}
-
 // RecordUsageInput 记录使用量的输入参数
 type RecordUsageInput struct {
 	Result             *ForwardResult
@@ -2812,15 +2756,14 @@ type usageLogBestEffortWriter interface {
 
 // postUsageBillingParams 统一扣费所需的参数
 type postUsageBillingParams struct {
-	Cost                  *CostBreakdown
-	User                  *User
-	APIKey                *APIKey
-	Account               *Account
-	Subscription          *UserSubscription
-	RequestPayloadHash    string
-	IsSubscriptionBill    bool
-	AccountRateMultiplier float64
-	APIKeyService         APIKeyQuotaUpdater
+	Cost               *CostBreakdown
+	User               *User
+	APIKey             *APIKey
+	Account            *Account
+	Subscription       *UserSubscription
+	RequestPayloadHash string
+	IsSubscriptionBill bool
+	APIKeyService      APIKeyQuotaUpdater
 }
 
 // postUsageBilling 统一处理使用量记录后的扣费逻辑：
@@ -2865,11 +2808,10 @@ func postUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *bill
 		}
 	}
 
-	// 4. 账号配额用量（账号口径：TotalCost × 账号计费倍率）
+	// 4. 账号配额用量
 	if cost.TotalCost > 0 && p.Account.Type == AccountTypeAPIKey && p.Account.HasAnyQuotaLimit() {
-		accountCost := cost.TotalCost * p.AccountRateMultiplier
-		if err := deps.accountRepo.IncrementQuotaUsed(billingCtx, p.Account.ID, accountCost); err != nil {
-			slog.Error("increment account quota used failed", "account_id", p.Account.ID, "cost", accountCost, "error", err)
+		if err := deps.accountRepo.IncrementQuotaUsed(billingCtx, p.Account.ID, cost.TotalCost); err != nil {
+			slog.Error("increment account quota used failed", "account_id", p.Account.ID, "cost", cost.TotalCost, "error", err)
 		}
 	}
 
@@ -2955,7 +2897,7 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 		cmd.APIKeyRateLimitCost = p.Cost.ActualCost
 	}
 	if p.Cost.TotalCost > 0 && p.Account.Type == AccountTypeAPIKey && p.Account.HasAnyQuotaLimit() {
-		cmd.AccountQuotaCost = p.Cost.TotalCost * p.AccountRateMultiplier
+		cmd.AccountQuotaCost = p.Cost.TotalCost
 	}
 
 	cmd.Normalize()
@@ -3102,16 +3044,6 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		cacheTTLOverridden = (result.Usage.CacheCreation5mTokens + result.Usage.CacheCreation1hTokens) > 0
 	}
 
-	// 获取费率倍数（优先级：用户专属 > 分组默认 > 系统默认）
-	multiplier := 1.0
-	if s.cfg != nil {
-		multiplier = s.cfg.Default.RateMultiplier
-	}
-	if apiKey.GroupID != nil && apiKey.Group != nil {
-		groupDefault := apiKey.Group.RateMultiplier
-		multiplier = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
-	}
-
 	var cost *CostBreakdown
 	billingModel := forwardResultBillingModel(result.Model, result.UpstreamModel)
 
@@ -3128,9 +3060,9 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 				Price4K: apiKey.Group.ImagePrice4K,
 			}
 		}
-		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, multiplier)
+		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, 1.0)
 	} else {
-		// Token 计费
+		// Token 计费：仅使用自定义模型定价
 		tokens := UsageTokens{
 			InputTokens:           result.Usage.InputTokens,
 			OutputTokens:          result.Usage.OutputTokens,
@@ -3140,7 +3072,6 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			CacheCreation1hTokens: result.Usage.CacheCreation1hTokens,
 		}
 
-		// 优先使用自定义模型定价
 		var customPricing *ModelPricingEntry
 		if apiKey.GroupID != nil && apiKey.Group != nil && apiKey.Group.ModelPricing != nil {
 			customPricing = apiKey.Group.ModelPricing.GetPricing(billingModel)
@@ -3149,12 +3080,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		if customPricing != nil {
 			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
 		} else {
-			var err error
-			cost, err = s.billingService.CalculateCost(billingModel, tokens, multiplier)
-			if err != nil {
-				logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
-				cost = &CostBreakdown{ActualCost: 0}
-			}
+			// 未配置自定义定价的模型不计费
+			cost = &CostBreakdown{}
 		}
 	}
 
@@ -3175,7 +3102,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	if strings.TrimSpace(result.MediaType) != "" {
 		mediaType = &result.MediaType
 	}
-	accountRateMultiplier := account.BillingRateMultiplier()
+	fixedRateMultiplier := 1.0
 	requestID := resolveUsageBillingRequestID(ctx, result.RequestID)
 	usageLog := &UsageLog{
 		UserID:                user.ID,
@@ -3200,8 +3127,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		CacheReadCost:         cost.CacheReadCost,
 		TotalCost:             cost.TotalCost,
 		ActualCost:            cost.ActualCost,
-		RateMultiplier:        multiplier,
-		AccountRateMultiplier: &accountRateMultiplier,
+		RateMultiplier:        fixedRateMultiplier,
+		AccountRateMultiplier: &fixedRateMultiplier,
 		UpstreamCost:          cost.UpstreamCost,
 		BillingType:           billingType,
 		Stream:                result.Stream,
@@ -3241,15 +3168,14 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 
 	billingErr := func() error {
 		_, err := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
-			Cost:                  cost,
-			User:                  user,
-			APIKey:                apiKey,
-			Account:               account,
-			Subscription:          subscription,
-			RequestPayloadHash:    resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
-			IsSubscriptionBill:    isSubscriptionBilling,
-			AccountRateMultiplier: accountRateMultiplier,
-			APIKeyService:         input.APIKeyService,
+			Cost:               cost,
+			User:               user,
+			APIKey:             apiKey,
+			Account:            account,
+			Subscription:       subscription,
+			RequestPayloadHash: resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
+			IsSubscriptionBill: isSubscriptionBilling,
+			APIKeyService:      input.APIKeyService,
 		}, s.billingDeps(), s.usageBillingRepo)
 		return err
 	}()
@@ -3304,16 +3230,6 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		cacheTTLOverridden = (result.Usage.CacheCreation5mTokens + result.Usage.CacheCreation1hTokens) > 0
 	}
 
-	// 获取费率倍数（优先级：用户专属 > 分组默认 > 系统默认）
-	multiplier := 1.0
-	if s.cfg != nil {
-		multiplier = s.cfg.Default.RateMultiplier
-	}
-	if apiKey.GroupID != nil && apiKey.Group != nil {
-		groupDefault := apiKey.Group.RateMultiplier
-		multiplier = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
-	}
-
 	var cost *CostBreakdown
 	billingModel := forwardResultBillingModel(result.Model, result.UpstreamModel)
 
@@ -3328,9 +3244,9 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 				Price4K: apiKey.Group.ImagePrice4K,
 			}
 		}
-		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, multiplier)
+		cost = s.billingService.CalculateImageCost(billingModel, result.ImageSize, result.ImageCount, groupConfig, 1.0)
 	} else {
-		// Token 计费（使用长上下文计费方法）
+		// Token 计费：仅使用自定义模型定价
 		tokens := UsageTokens{
 			InputTokens:           result.Usage.InputTokens,
 			OutputTokens:          result.Usage.OutputTokens,
@@ -3340,7 +3256,6 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 			CacheCreation1hTokens: result.Usage.CacheCreation1hTokens,
 		}
 
-		// 优先使用自定义模型定价
 		var customPricing *ModelPricingEntry
 		if apiKey.GroupID != nil && apiKey.Group != nil && apiKey.Group.ModelPricing != nil {
 			customPricing = apiKey.Group.ModelPricing.GetPricing(billingModel)
@@ -3349,12 +3264,8 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		if customPricing != nil {
 			cost = s.billingService.CalculateCostWithCustomPricing(billingModel, customPricing, tokens)
 		} else {
-			var err error
-			cost, err = s.billingService.CalculateCostWithLongContext(billingModel, tokens, multiplier, input.LongContextThreshold, input.LongContextMultiplier)
-			if err != nil {
-				logger.LegacyPrintf("service.gateway", "Calculate cost failed: %v", err)
-				cost = &CostBreakdown{ActualCost: 0}
-			}
+			// 未配置自定义定价的模型不计费
+			cost = &CostBreakdown{}
 		}
 	}
 
@@ -3371,7 +3282,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	if result.ImageSize != "" {
 		imageSize = &result.ImageSize
 	}
-	accountRateMultiplier := account.BillingRateMultiplier()
+	fixedRateMultiplier := 1.0
 	requestID := resolveUsageBillingRequestID(ctx, result.RequestID)
 	usageLog := &UsageLog{
 		UserID:                user.ID,
@@ -3396,8 +3307,8 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		CacheReadCost:         cost.CacheReadCost,
 		TotalCost:             cost.TotalCost,
 		ActualCost:            cost.ActualCost,
-		RateMultiplier:        multiplier,
-		AccountRateMultiplier: &accountRateMultiplier,
+		RateMultiplier:        fixedRateMultiplier,
+		AccountRateMultiplier: &fixedRateMultiplier,
 		UpstreamCost:          cost.UpstreamCost,
 		BillingType:           billingType,
 		Stream:                result.Stream,
@@ -3436,15 +3347,14 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 
 	billingErr := func() error {
 		_, err := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
-			Cost:                  cost,
-			User:                  user,
-			APIKey:                apiKey,
-			Account:               account,
-			Subscription:          subscription,
-			RequestPayloadHash:    resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
-			IsSubscriptionBill:    isSubscriptionBilling,
-			AccountRateMultiplier: accountRateMultiplier,
-			APIKeyService:         input.APIKeyService,
+			Cost:               cost,
+			User:               user,
+			APIKey:             apiKey,
+			Account:            account,
+			Subscription:       subscription,
+			RequestPayloadHash: resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
+			IsSubscriptionBill: isSubscriptionBilling,
+			APIKeyService:      input.APIKeyService,
 		}, s.billingDeps(), s.usageBillingRepo)
 		return err
 	}()

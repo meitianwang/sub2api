@@ -133,7 +133,7 @@ func TestAdminService_CreateGroup_WithImagePricing(t *testing.T) {
 		Name:           "test-group",
 		Description:    "Test group",
 		Platform:       PlatformAnthropic,
-		RateMultiplier: 1.0,
+
 		ImagePrice1K:   &price1K,
 		ImagePrice2K:   &price2K,
 		ImagePrice4K:   &price4K,
@@ -162,7 +162,7 @@ func TestAdminService_CreateGroup_NilImagePricing(t *testing.T) {
 		Name:           "test-group",
 		Description:    "Test group",
 		Platform:       PlatformAnthropic,
-		RateMultiplier: 1.0,
+
 		// ImagePrice 字段全部为 nil
 	}
 

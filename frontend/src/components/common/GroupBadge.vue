@@ -11,14 +11,7 @@
     <span class="truncate">{{ name }}</span>
     <!-- Right side label -->
     <span v-if="showLabel" :class="labelClass">
-      <template v-if="hasCustomRate">
-        <!-- 原倍率删除线 + 专属倍率高亮 -->
-        <span class="line-through opacity-50 mr-0.5">{{ rateMultiplier }}x</span>
-        <span class="font-bold">{{ userRateMultiplier }}x</span>
-      </template>
-      <template v-else>
-        {{ labelText }}
-      </template>
+      {{ labelText }}
     </span>
   </span>
 </template>
@@ -33,8 +26,6 @@ interface Props {
   name: string
   platform?: GroupPlatform
   subscriptionType?: SubscriptionType
-  rateMultiplier?: number
-  userRateMultiplier?: number | null // 用户专属倍率
   showRate?: boolean
   daysRemaining?: number | null // 剩余天数（订阅类型时使用）
 }
@@ -42,31 +33,19 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   subscriptionType: 'standard',
   showRate: true,
-  daysRemaining: null,
-  userRateMultiplier: null
+  daysRemaining: null
 })
 
 const { t } = useI18n()
 
 const isSubscription = computed(() => props.subscriptionType === 'subscription')
 
-// 是否有专属倍率（且与默认倍率不同）
-const hasCustomRate = computed(() => {
-  return (
-    props.userRateMultiplier !== null &&
-    props.userRateMultiplier !== undefined &&
-    props.rateMultiplier !== undefined &&
-    props.userRateMultiplier !== props.rateMultiplier
-  )
-})
-
 // 是否显示右侧标签
 const showLabel = computed(() => {
   if (!props.showRate) return false
   // 订阅类型：显示天数或"订阅"
   if (isSubscription.value) return true
-  // 标准类型：显示倍率（包括专属倍率）
-  return props.rateMultiplier !== undefined || hasCustomRate.value
+  return false
 })
 
 // Label text
@@ -82,7 +61,7 @@ const labelText = computed(() => {
     // 否则显示"订阅"
     return t('groups.subscription')
   }
-  return props.rateMultiplier !== undefined ? `${props.rateMultiplier}x` : ''
+  return ''
 })
 
 // Label style based on type and days remaining
@@ -90,7 +69,6 @@ const labelClass = computed(() => {
   const base = 'px-1.5 py-0.5 rounded text-[10px] font-semibold'
 
   if (!isSubscription.value) {
-    // Standard: subtle background (不再为专属倍率使用不同的背景色)
     return `${base} bg-black/10 dark:bg-white/10`
   }
 

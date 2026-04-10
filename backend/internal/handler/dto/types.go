@@ -28,9 +28,6 @@ type AdminUser struct {
 	User
 
 	Notes string `json:"notes"`
-	// GroupRates 用户专属分组倍率配置
-	// map[groupID]rateMultiplier
-	GroupRates map[int64]float64 `json:"group_rates,omitempty"`
 }
 
 type APIKey struct {
@@ -71,9 +68,8 @@ type Group struct {
 	ID             int64   `json:"id"`
 	Name           string  `json:"name"`
 	Description    string  `json:"description"`
-	Platform       string  `json:"platform"`
-	RateMultiplier float64 `json:"rate_multiplier"`
-	IsExclusive    bool    `json:"is_exclusive"`
+	Platform    string `json:"platform"`
+	IsExclusive bool   `json:"is_exclusive"`
 	Status         string  `json:"status"`
 
 	SubscriptionType string   `json:"subscription_type"`
@@ -139,10 +135,9 @@ type Account struct {
 	Extra              map[string]any `json:"extra"`
 	ProxyID            *int64         `json:"proxy_id"`
 	Concurrency        int            `json:"concurrency"`
-	LoadFactor         *int           `json:"load_factor,omitempty"`
-	Priority           int            `json:"priority"`
-	RateMultiplier     float64        `json:"rate_multiplier"`
-	Status             string         `json:"status"`
+	LoadFactor *int    `json:"load_factor,omitempty"`
+	Priority   int    `json:"priority"`
+	Status     string `json:"status"`
 	ErrorMessage       string         `json:"error_message"`
 	LastUsedAt         *time.Time     `json:"last_used_at"`
 	ExpiresAt          *int64         `json:"expires_at"`

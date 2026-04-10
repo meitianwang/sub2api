@@ -51,9 +51,8 @@ type DataAccount struct {
 	Extra              map[string]any `json:"extra,omitempty"`
 	ProxyKey           *string        `json:"proxy_key,omitempty"`
 	Concurrency        int            `json:"concurrency"`
-	Priority           int            `json:"priority"`
-	RateMultiplier     *float64       `json:"rate_multiplier,omitempty"`
-	ExpiresAt          *int64         `json:"expires_at,omitempty"`
+	Priority  int    `json:"priority"`
+	ExpiresAt *int64 `json:"expires_at,omitempty"`
 	AutoPauseOnExpired *bool          `json:"auto_pause_on_expired,omitempty"`
 }
 
@@ -155,9 +154,8 @@ func (h *AccountHandler) ExportData(c *gin.Context) {
 			Extra:              acc.Extra,
 			ProxyKey:           proxyKey,
 			Concurrency:        acc.Concurrency,
-			Priority:           acc.Priority,
-			RateMultiplier:     acc.RateMultiplier,
-			ExpiresAt:          expiresAt,
+			Priority:  acc.Priority,
+			ExpiresAt: expiresAt,
 			AutoPauseOnExpired: &acc.AutoPauseOnExpired,
 		})
 	}
@@ -306,9 +304,8 @@ func (h *AccountHandler) importData(ctx context.Context, req DataImportRequest) 
 			Extra:                item.Extra,
 			ProxyID:              proxyID,
 			Concurrency:          item.Concurrency,
-			Priority:             item.Priority,
-			RateMultiplier:       item.RateMultiplier,
-			GroupIDs:             nil,
+			Priority: item.Priority,
+			GroupIDs: nil,
 			ExpiresAt:            item.ExpiresAt,
 			AutoPauseOnExpired:   item.AutoPauseOnExpired,
 			SkipDefaultGroupBind: skipDefaultGroupBind,
@@ -521,9 +518,6 @@ func validateDataAccount(item DataAccount) error {
 	case service.AccountTypeOAuth, service.AccountTypeSetupToken, service.AccountTypeAPIKey, service.AccountTypeUpstream:
 	default:
 		return fmt.Errorf("account type is invalid: %s", item.Type)
-	}
-	if item.RateMultiplier != nil && *item.RateMultiplier < 0 {
-		return errors.New("rate_multiplier must be >= 0")
 	}
 	if item.Concurrency < 0 {
 		return errors.New("concurrency must be >= 0")

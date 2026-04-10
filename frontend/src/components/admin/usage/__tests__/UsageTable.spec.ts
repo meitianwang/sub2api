@@ -66,8 +66,7 @@ describe('admin UsageTable tooltip', () => {
       request_id: 'req-admin-1',
       actual_cost: 0.092883,
       total_cost: 0.092883,
-      account_rate_multiplier: 1,
-      rate_multiplier: 1,
+
       service_tier: 'priority',
       input_cost: 0.020285,
       output_cost: 0.00303,
@@ -117,8 +116,7 @@ describe('admin UsageTable tooltip', () => {
       upstream_model: 'claude-sonnet-4-20250514',
       actual_cost: 0,
       total_cost: 0,
-      account_rate_multiplier: 1,
-      rate_multiplier: 1,
+
       input_cost: 0,
       output_cost: 0,
       cache_creation_cost: 0,

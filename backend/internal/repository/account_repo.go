@@ -95,9 +95,7 @@ func (r *accountRepository) Create(ctx context.Context, account *service.Account
 		SetSchedulable(account.Schedulable).
 		SetAutoPauseOnExpired(account.AutoPauseOnExpired)
 
-	if account.RateMultiplier != nil {
-		builder.SetRateMultiplier(*account.RateMultiplier)
-	}
+
 	if account.LoadFactor != nil {
 		builder.SetLoadFactor(*account.LoadFactor)
 	}
@@ -332,9 +330,7 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 		SetSchedulable(account.Schedulable).
 		SetAutoPauseOnExpired(account.AutoPauseOnExpired)
 
-	if account.RateMultiplier != nil {
-		builder.SetRateMultiplier(*account.RateMultiplier)
-	}
+
 	if account.LoadFactor != nil {
 		builder.SetLoadFactor(*account.LoadFactor)
 	} else {
@@ -1280,11 +1276,6 @@ func (r *accountRepository) BulkUpdate(ctx context.Context, ids []int64, updates
 		args = append(args, *updates.Priority)
 		idx++
 	}
-	if updates.RateMultiplier != nil {
-		setClauses = append(setClauses, "rate_multiplier = $"+itoa(idx))
-		args = append(args, *updates.RateMultiplier)
-		idx++
-	}
 	if updates.LoadFactor != nil {
 		if *updates.LoadFactor <= 0 {
 			setClauses = append(setClauses, "load_factor = NULL")
@@ -1602,8 +1593,6 @@ func accountEntityToService(m *dbent.Account) *service.Account {
 		return nil
 	}
 
-	rateMultiplier := m.RateMultiplier
-
 	return &service.Account{
 		ID:                      m.ID,
 		Name:                    m.Name,
@@ -1614,9 +1603,8 @@ func accountEntityToService(m *dbent.Account) *service.Account {
 		Extra:                   copyJSONMap(m.Extra),
 		ProxyID:                 m.ProxyID,
 		Concurrency:             m.Concurrency,
-		Priority:                m.Priority,
-		RateMultiplier:          &rateMultiplier,
-		LoadFactor:              m.LoadFactor,
+		Priority:   m.Priority,
+		LoadFactor: m.LoadFactor,
 		Status:                  m.Status,
 		ErrorMessage:            derefString(m.ErrorMessage),
 		LastUsedAt:              m.LastUsedAt,

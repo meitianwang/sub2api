@@ -8,7 +8,6 @@
         :name="group.name"
         :platform="group.platform"
         :subscription-type="group.subscription_type"
-        :rate-multiplier="group.rate_multiplier"
         :show-rate="false"
         class="max-w-24"
       />
@@ -59,7 +58,6 @@
               :name="group.name"
               :platform="group.platform"
               :subscription-type="group.subscription_type"
-              :rate-multiplier="group.rate_multiplier"
               :show-rate="false"
             />
           </div>

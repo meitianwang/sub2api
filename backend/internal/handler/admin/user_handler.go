@@ -54,9 +54,6 @@ type UpdateUserRequest struct {
 	Concurrency   *int     `json:"concurrency"`
 	Status        string   `json:"status" binding:"omitempty,oneof=active disabled"`
 	AllowedGroups *[]int64 `json:"allowed_groups"`
-	// GroupRates 用户专属分组倍率配置
-	// map[groupID]*rate，nil 表示删除该分组的专属倍率
-	GroupRates map[int64]*float64 `json:"group_rates"`
 }
 
 // UpdateBalanceRequest represents balance update request
@@ -220,8 +217,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		Balance:               req.Balance,
 		Concurrency:           req.Concurrency,
 		Status:                req.Status,
-		AllowedGroups:         req.AllowedGroups,
-		GroupRates:            req.GroupRates,
+		AllowedGroups: req.AllowedGroups,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

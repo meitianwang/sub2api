@@ -47,7 +47,6 @@ func createGroupIfNotExists(ctx context.Context, client *dbent.Client, name, pla
 		SetPlatform(platform).
 		SetStatus(service.StatusActive).
 		SetSubscriptionType(service.SubscriptionTypeStandard).
-		SetRateMultiplier(1.0).
 		SetIsExclusive(false).
 		Save(ctx)
 	if err != nil {

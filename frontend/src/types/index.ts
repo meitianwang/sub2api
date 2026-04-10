@@ -41,8 +41,6 @@ export interface User {
 export interface AdminUser extends User {
   // 管理员备注（普通用户接口不返回）
   notes: string
-  // 用户专属分组倍率配置 (group_id -> rate_multiplier)
-  group_rates?: Record<number, number>
   // 当前并发数（仅管理员列表接口返回）
   current_concurrency?: number
 }
@@ -371,7 +369,6 @@ export interface Group {
   name: string
   description: string | null
   platform: GroupPlatform
-  rate_multiplier: number
   is_exclusive: boolean
   status: 'active' | 'inactive'
   subscription_type: SubscriptionType
@@ -485,7 +482,6 @@ export interface CreateGroupRequest {
   name: string
   description?: string | null
   platform?: GroupPlatform
-  rate_multiplier?: number
   is_exclusive?: boolean
   subscription_type?: SubscriptionType
   daily_limit_usd?: number | null
@@ -516,7 +512,6 @@ export interface UpdateGroupRequest {
   name?: string
   description?: string | null
   platform?: GroupPlatform
-  rate_multiplier?: number
   is_exclusive?: boolean
   status?: 'active' | 'inactive'
   subscription_type?: SubscriptionType
@@ -681,7 +676,6 @@ export interface Account {
   load_factor?: number | null
   current_concurrency?: number // Real-time concurrency count from Redis
   priority: number
-  rate_multiplier?: number // Account billing multiplier (>=0, 0 means free)
   status: 'active' | 'inactive' | 'error'
   error_message: string | null
   last_used_at: string | null
@@ -847,7 +841,6 @@ export interface CreateAccountRequest {
   concurrency?: number
   load_factor?: number | null
   priority?: number
-  rate_multiplier?: number // Account billing multiplier (>=0, 0 means free)
   group_ids?: number[]
   expires_at?: number | null
   auto_pause_on_expired?: boolean
@@ -864,7 +857,6 @@ export interface UpdateAccountRequest {
   concurrency?: number
   load_factor?: number | null
   priority?: number
-  rate_multiplier?: number // Account billing multiplier (>=0, 0 means free)
   schedulable?: boolean
   status?: 'active' | 'inactive' | 'error'
   group_ids?: number[]
@@ -941,7 +933,6 @@ export interface AdminDataAccount {
   proxy_key?: string | null
   concurrency: number
   priority: number
-  rate_multiplier?: number | null
   expires_at?: number | null
   auto_pause_on_expired?: boolean
 }
@@ -995,7 +986,6 @@ export interface UsageLog {
   cache_read_cost: number
   total_cost: number
   actual_cost: number
-  rate_multiplier: number
   billing_type: number
 
   request_type?: UsageRequestType
@@ -1029,9 +1019,6 @@ export interface UsageLogAccountSummary {
 
 export interface AdminUsageLog extends UsageLog {
   upstream_model?: string | null
-
-  // 账号计费倍率（仅管理员可见）
-  account_rate_multiplier?: number | null
 
   // 上游成本（仅管理员可见）
   upstream_cost?: number | null
@@ -1267,9 +1254,6 @@ export interface UpdateUserRequest {
   concurrency?: number
   status?: 'active' | 'disabled'
   allowed_groups?: number[] | null
-  // 用户专属分组倍率配置 (group_id -> rate_multiplier | null)
-  // null 表示删除该分组的专属倍率
-  group_rates?: Record<number, number | null>
 }
 
 export interface ChangePasswordRequest {

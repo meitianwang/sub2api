@@ -45,19 +45,17 @@ type GroupSortOrderUpdate struct {
 
 // CreateGroupRequest 创建分组请求
 type CreateGroupRequest struct {
-	Name           string  `json:"name"`
-	Description    string  `json:"description"`
-	RateMultiplier float64 `json:"rate_multiplier"`
-	IsExclusive    bool    `json:"is_exclusive"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsExclusive bool   `json:"is_exclusive"`
 }
 
 // UpdateGroupRequest 更新分组请求
 type UpdateGroupRequest struct {
-	Name           *string  `json:"name"`
-	Description    *string  `json:"description"`
-	RateMultiplier *float64 `json:"rate_multiplier"`
-	IsExclusive    *bool    `json:"is_exclusive"`
-	Status         *string  `json:"status"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	IsExclusive *bool   `json:"is_exclusive"`
+	Status      *string `json:"status"`
 }
 
 // GroupService 分组管理服务
@@ -90,7 +88,6 @@ func (s *GroupService) Create(ctx context.Context, req CreateGroupRequest) (*Gro
 		Name:             req.Name,
 		Description:      req.Description,
 		Platform:         PlatformAnthropic,
-		RateMultiplier:   req.RateMultiplier,
 		IsExclusive:      req.IsExclusive,
 		Status:           StatusActive,
 		SubscriptionType: SubscriptionTypeStandard,
@@ -154,10 +151,6 @@ func (s *GroupService) Update(ctx context.Context, id int64, req UpdateGroupRequ
 		group.Description = *req.Description
 	}
 
-	if req.RateMultiplier != nil {
-		group.RateMultiplier = *req.RateMultiplier
-	}
-
 	if req.IsExclusive != nil {
 		group.IsExclusive = *req.IsExclusive
 	}
@@ -208,12 +201,11 @@ func (s *GroupService) GetStats(ctx context.Context, id int64) (map[string]any, 
 	}
 
 	stats := map[string]any{
-		"id":              group.ID,
-		"name":            group.Name,
-		"rate_multiplier": group.RateMultiplier,
-		"is_exclusive":    group.IsExclusive,
-		"status":          group.Status,
-		"account_count":   accountCount,
+		"id":            group.ID,
+		"name":          group.Name,
+		"is_exclusive":  group.IsExclusive,
+		"status":        group.Status,
+		"account_count": accountCount,
 	}
 
 	return stats, nil

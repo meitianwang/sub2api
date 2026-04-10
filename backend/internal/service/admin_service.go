@@ -42,9 +42,6 @@ type AdminService interface {
 	UpdateGroup(ctx context.Context, id int64, input *UpdateGroupInput) (*Group, error)
 	DeleteGroup(ctx context.Context, id int64) error
 	GetGroupAPIKeys(ctx context.Context, groupID int64, page, pageSize int) ([]APIKey, int64, error)
-	GetGroupRateMultipliers(ctx context.Context, groupID int64) ([]UserGroupRateEntry, error)
-	ClearGroupRateMultipliers(ctx context.Context, groupID int64) error
-	BatchSetGroupRateMultipliers(ctx context.Context, groupID int64, entries []GroupRateMultiplierInput) error
 	UpdateGroupSortOrders(ctx context.Context, updates []GroupSortOrderUpdate) error
 
 	// API Key management (admin)
@@ -117,17 +114,13 @@ type UpdateUserInput struct {
 	Concurrency   *int     // 使用指针区分"未提供"和"设置为0"
 	Status        string
 	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
-	// GroupRates 用户专属分组倍率配置
-	// map[groupID]*rate，nil 表示删除该分组的专属倍率
-	GroupRates map[int64]*float64
 }
 
 type CreateGroupInput struct {
-	Name             string
-	Description      string
-	Platform         string
-	RateMultiplier   float64
-	IsExclusive      bool
+	Name        string
+	Description string
+	Platform    string
+	IsExclusive bool
 	SubscriptionType string   // standard/subscription
 	DailyLimitUSD    *float64 // 日限额 (USD)
 	WeeklyLimitUSD   *float64 // 周限额 (USD)
@@ -156,11 +149,10 @@ type CreateGroupInput struct {
 }
 
 type UpdateGroupInput struct {
-	Name             string
-	Description      string
-	Platform         string
-	RateMultiplier   *float64 // 使用指针以支持设置为0
-	IsExclusive      *bool
+	Name        string
+	Description string
+	Platform    string
+	IsExclusive *bool
 	Status           string
 	SubscriptionType string   // standard/subscription
 	DailyLimitUSD    *float64 // 日限额 (USD)
@@ -198,10 +190,9 @@ type CreateAccountInput struct {
 	Extra              map[string]any
 	ProxyID            *int64
 	Concurrency        int
-	Priority           int
-	RateMultiplier     *float64 // 账号计费倍率（>=0，允许 0）
-	LoadFactor         *int
-	GroupIDs           []int64
+	Priority   int
+	LoadFactor *int
+	GroupIDs   []int64
 	ExpiresAt          *int64
 	AutoPauseOnExpired *bool
 	// SkipDefaultGroupBind prevents auto-binding to platform default group when GroupIDs is empty.
@@ -219,9 +210,8 @@ type UpdateAccountInput struct {
 	Extra                 map[string]any
 	ProxyID               *int64
 	Concurrency           *int     // 使用指针区分"未提供"和"设置为0"
-	Priority              *int     // 使用指针区分"未提供"和"设置为0"
-	RateMultiplier        *float64 // 账号计费倍率（>=0，允许 0）
-	LoadFactor            *int
+	Priority   *int // 使用指针区分"未提供"和"设置为0"
+	LoadFactor *int
 	Status                string
 	GroupIDs              *[]int64
 	ExpiresAt             *int64
@@ -235,11 +225,10 @@ type BulkUpdateAccountsInput struct {
 	Name           string
 	ProxyID        *int64
 	Concurrency    *int
-	Priority       *int
-	RateMultiplier *float64 // 账号计费倍率（>=0，允许 0）
-	LoadFactor     *int
-	Status         string
-	Schedulable    *bool
+	Priority    *int
+	LoadFactor  *int
+	Status      string
+	Schedulable *bool
 	GroupIDs       *[]int64
 	Credentials    map[string]any
 	Extra          map[string]any
@@ -420,10 +409,9 @@ type adminServiceImpl struct {
 	groupRepo            GroupRepository
 	accountRepo          AccountRepository
 	proxyRepo            ProxyRepository
-	apiKeyRepo           APIKeyRepository
-	redeemCodeRepo       RedeemCodeRepository
-	userGroupRateRepo    UserGroupRateRepository
-	billingCacheService  *BillingCacheService
+	apiKeyRepo          APIKeyRepository
+	redeemCodeRepo      RedeemCodeRepository
+	billingCacheService *BillingCacheService
 	proxyProber          ProxyExitInfoProber
 	proxyLatencyCache    ProxyLatencyCache
 	authCacheInvalidator APIKeyAuthCacheInvalidator
@@ -434,10 +422,6 @@ type adminServiceImpl struct {
 	privacyClientFactory PrivacyClientFactory
 }
 
-type userGroupRateBatchReader interface {
-	GetByUserIDs(ctx context.Context, userIDs []int64) (map[int64]map[int64]float64, error)
-}
-
 // NewAdminService creates a new AdminService
 func NewAdminService(
 	userRepo UserRepository,
@@ -446,7 +430,6 @@ func NewAdminService(
 	proxyRepo ProxyRepository,
 	apiKeyRepo APIKeyRepository,
 	redeemCodeRepo RedeemCodeRepository,
-	userGroupRateRepo UserGroupRateRepository,
 	billingCacheService *BillingCacheService,
 	proxyProber ProxyExitInfoProber,
 	proxyLatencyCache ProxyLatencyCache,
@@ -463,9 +446,8 @@ func NewAdminService(
 		accountRepo:          accountRepo,
 		proxyRepo:            proxyRepo,
 		apiKeyRepo:           apiKeyRepo,
-		redeemCodeRepo:       redeemCodeRepo,
-		userGroupRateRepo:    userGroupRateRepo,
-		billingCacheService:  billingCacheService,
+		redeemCodeRepo:      redeemCodeRepo,
+		billingCacheService: billingCacheService,
 		proxyProber:          proxyProber,
 		proxyLatencyCache:    proxyLatencyCache,
 		authCacheInvalidator: authCacheInvalidator,
@@ -484,58 +466,13 @@ func (s *adminServiceImpl) ListUsers(ctx context.Context, page, pageSize int, fi
 	if err != nil {
 		return nil, 0, err
 	}
-	// 批量加载用户专属分组倍率
-	if s.userGroupRateRepo != nil && len(users) > 0 {
-		if batchRepo, ok := s.userGroupRateRepo.(userGroupRateBatchReader); ok {
-			userIDs := make([]int64, 0, len(users))
-			for i := range users {
-				userIDs = append(userIDs, users[i].ID)
-			}
-			ratesByUser, err := batchRepo.GetByUserIDs(ctx, userIDs)
-			if err != nil {
-				logger.LegacyPrintf("service.admin", "failed to load user group rates in batch: err=%v", err)
-				s.loadUserGroupRatesOneByOne(ctx, users)
-			} else {
-				for i := range users {
-					if rates, ok := ratesByUser[users[i].ID]; ok {
-						users[i].GroupRates = rates
-					}
-				}
-			}
-		} else {
-			s.loadUserGroupRatesOneByOne(ctx, users)
-		}
-	}
 	return users, result.Total, nil
-}
-
-func (s *adminServiceImpl) loadUserGroupRatesOneByOne(ctx context.Context, users []User) {
-	if s.userGroupRateRepo == nil {
-		return
-	}
-	for i := range users {
-		rates, err := s.userGroupRateRepo.GetByUserID(ctx, users[i].ID)
-		if err != nil {
-			logger.LegacyPrintf("service.admin", "failed to load user group rates: user_id=%d err=%v", users[i].ID, err)
-			continue
-		}
-		users[i].GroupRates = rates
-	}
 }
 
 func (s *adminServiceImpl) GetUser(ctx context.Context, id int64) (*User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
-	}
-	// 加载用户专属分组倍率
-	if s.userGroupRateRepo != nil {
-		rates, err := s.userGroupRateRepo.GetByUserID(ctx, id)
-		if err != nil {
-			logger.LegacyPrintf("service.admin", "failed to load user group rates: user_id=%d err=%v", id, err)
-		} else {
-			user.GroupRates = rates
-		}
 	}
 	return user, nil
 }
@@ -623,13 +560,6 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, err
-	}
-
-	// 同步用户专属分组倍率
-	if input.GroupRates != nil && s.userGroupRateRepo != nil {
-		if err := s.userGroupRateRepo.SyncUserGroupRates(ctx, user.ID, input.GroupRates); err != nil {
-			logger.LegacyPrintf("service.admin", "failed to sync user group rates: user_id=%d err=%v", user.ID, err)
-		}
 	}
 
 	if s.authCacheInvalidator != nil {
@@ -886,9 +816,8 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	group := &Group{
 		Name:                            input.Name,
 		Description:                     input.Description,
-		Platform:                        platform,
-		RateMultiplier:                  input.RateMultiplier,
-		IsExclusive:                     input.IsExclusive,
+		Platform:    platform,
+		IsExclusive: input.IsExclusive,
 		Status:                          StatusActive,
 		SubscriptionType:                subscriptionType,
 		DailyLimitUSD:                   dailyLimit,
@@ -1071,9 +1000,6 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	}
 	if input.Platform != "" {
 		group.Platform = input.Platform
-	}
-	if input.RateMultiplier != nil {
-		group.RateMultiplier = *input.RateMultiplier
 	}
 	if input.IsExclusive != nil {
 		group.IsExclusive = *input.IsExclusive
@@ -1258,8 +1184,6 @@ func (s *adminServiceImpl) DeleteGroup(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	// 注意：user_group_rate_multipliers 表通过外键 ON DELETE CASCADE 自动清理
-
 	// 事务成功后，异步失效受影响用户的订阅缓存
 	if len(affectedUserIDs) > 0 && s.billingCacheService != nil {
 		groupID := id
@@ -1289,27 +1213,6 @@ func (s *adminServiceImpl) GetGroupAPIKeys(ctx context.Context, groupID int64, p
 		return nil, 0, err
 	}
 	return keys, result.Total, nil
-}
-
-func (s *adminServiceImpl) GetGroupRateMultipliers(ctx context.Context, groupID int64) ([]UserGroupRateEntry, error) {
-	if s.userGroupRateRepo == nil {
-		return nil, nil
-	}
-	return s.userGroupRateRepo.GetByGroupID(ctx, groupID)
-}
-
-func (s *adminServiceImpl) ClearGroupRateMultipliers(ctx context.Context, groupID int64) error {
-	if s.userGroupRateRepo == nil {
-		return nil
-	}
-	return s.userGroupRateRepo.DeleteByGroupID(ctx, groupID)
-}
-
-func (s *adminServiceImpl) BatchSetGroupRateMultipliers(ctx context.Context, groupID int64, entries []GroupRateMultiplierInput) error {
-	if s.userGroupRateRepo == nil {
-		return nil
-	}
-	return s.userGroupRateRepo.SyncGroupRateMultipliers(ctx, groupID, entries)
 }
 
 func (s *adminServiceImpl) UpdateGroupSortOrders(ctx context.Context, updates []GroupSortOrderUpdate) error {
@@ -1570,12 +1473,6 @@ func (s *adminServiceImpl) CreateAccount(ctx context.Context, input *CreateAccou
 	} else {
 		account.AutoPauseOnExpired = true
 	}
-	if input.RateMultiplier != nil {
-		if *input.RateMultiplier < 0 {
-			return nil, errors.New("rate_multiplier must be >= 0")
-		}
-		account.RateMultiplier = input.RateMultiplier
-	}
 	if input.LoadFactor != nil && *input.LoadFactor > 0 {
 		if *input.LoadFactor > 10000 {
 			return nil, errors.New("load_factor must be <= 10000")
@@ -1662,12 +1559,6 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 	// 只在指针非 nil 时更新 Priority（支持设置为 0）
 	if input.Priority != nil {
 		account.Priority = *input.Priority
-	}
-	if input.RateMultiplier != nil {
-		if *input.RateMultiplier < 0 {
-			return nil, errors.New("rate_multiplier must be >= 0")
-		}
-		account.RateMultiplier = input.RateMultiplier
 	}
 	if input.LoadFactor != nil {
 		if *input.LoadFactor <= 0 {
@@ -1773,12 +1664,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 		}
 	}
 
-	if input.RateMultiplier != nil {
-		if *input.RateMultiplier < 0 {
-			return nil, errors.New("rate_multiplier must be >= 0")
-		}
-	}
-
 	// Prepare bulk updates for columns and JSONB fields.
 	repoUpdates := AccountBulkUpdate{
 		Credentials: input.Credentials,
@@ -1795,9 +1680,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 	}
 	if input.Priority != nil {
 		repoUpdates.Priority = input.Priority
-	}
-	if input.RateMultiplier != nil {
-		repoUpdates.RateMultiplier = input.RateMultiplier
 	}
 	if input.LoadFactor != nil {
 		if *input.LoadFactor <= 0 {

@@ -1120,7 +1120,6 @@
                           :name="(option as unknown as DefaultSubscriptionGroupOption).label"
                           :platform="(option as unknown as DefaultSubscriptionGroupOption).platform"
                           :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
-                          :rate-multiplier="(option as unknown as DefaultSubscriptionGroupOption).rate"
                         />
                         <span v-else class="text-gray-400">
                           {{ t('admin.settings.defaults.subscriptionGroup') }}
@@ -1131,7 +1130,6 @@
                           :name="(option as unknown as DefaultSubscriptionGroupOption).label"
                           :platform="(option as unknown as DefaultSubscriptionGroupOption).platform"
                           :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
-                          :rate-multiplier="(option as unknown as DefaultSubscriptionGroupOption).rate"
                           :description="(option as unknown as DefaultSubscriptionGroupOption).description"
                           :selected="selected"
                         />
@@ -2074,7 +2072,6 @@ interface DefaultSubscriptionGroupOption {
   description: string | null
   platform: AdminGroup['platform']
   subscriptionType: AdminGroup['subscription_type']
-  rate: number
   [key: string]: unknown
 }
 
@@ -2158,8 +2155,7 @@ const defaultSubscriptionGroupOptions = computed<DefaultSubscriptionGroupOption[
     label: group.name,
     description: group.description,
     platform: group.platform,
-    subscriptionType: group.subscription_type,
-    rate: group.rate_multiplier
+    subscriptionType: group.subscription_type
   }))
 )
 

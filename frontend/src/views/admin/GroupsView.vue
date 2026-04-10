@@ -146,9 +146,6 @@
             </div>
           </template>
 
-          <template #cell-rate_multiplier="{ value }">
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ value }}x</span>
-          </template>
 
           <template #cell-is_exclusive="{ value }">
             <span :class="['badge', value ? 'badge-primary' : 'badge-gray']">
@@ -217,13 +214,6 @@
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('common.edit') }}</span>
-              </button>
-              <button
-                @click="handleRateMultipliers(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-purple-600 dark:hover:bg-dark-700 dark:hover:text-purple-400"
-              >
-                <Icon name="dollar" size="sm" />
-                <span class="text-xs">{{ t('admin.groups.rateMultipliers') }}</span>
               </button>
               <button
                 @click="handleDelete(row)"
@@ -358,19 +348,6 @@
             </option>
           </select>
           <p class="input-hint">{{ t('admin.groups.copyAccounts.hint') }}</p>
-        </div>
-        <div>
-          <label class="input-label">{{ t('admin.groups.form.rateMultiplier') }}</label>
-          <input
-            v-model.number="createForm.rate_multiplier"
-            type="number"
-            step="0.001"
-            min="0.001"
-            required
-            class="input"
-            data-tour="group-form-multiplier"
-          />
-          <p class="input-hint">{{ t('admin.groups.rateMultiplierHint') }}</p>
         </div>
         <div v-if="createForm.subscription_type !== 'subscription'" data-tour="group-form-exclusive">
           <div class="mb-1.5 flex items-center gap-1">
@@ -971,18 +948,6 @@
             </option>
           </select>
           <p class="input-hint">{{ t('admin.groups.copyAccounts.hintEdit') }}</p>
-        </div>
-        <div>
-          <label class="input-label">{{ t('admin.groups.form.rateMultiplier') }}</label>
-          <input
-            v-model.number="editForm.rate_multiplier"
-            type="number"
-            step="0.001"
-            min="0.001"
-            required
-            class="input"
-            data-tour="group-form-multiplier"
-          />
         </div>
         <div v-if="editForm.subscription_type !== 'subscription'">
           <div class="mb-1.5 flex items-center gap-1">
@@ -1587,13 +1552,6 @@
       </template>
     </BaseDialog>
 
-    <!-- Group Rate Multipliers Modal -->
-    <GroupRateMultipliersModal
-      :show="showRateMultipliersModal"
-      :group="rateMultipliersGroup"
-      @close="showRateMultipliersModal = false"
-      @success="loadGroups"
-    />
   </AppLayout>
 </template>
 
@@ -1615,7 +1573,6 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
-import GroupRateMultipliersModal from '@/components/admin/group/GroupRateMultipliersModal.vue'
 import ModelPricingEditor from '@/components/admin/group/ModelPricingEditor.vue'
 import GroupCapacityBadge from '@/components/common/GroupCapacityBadge.vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -1631,7 +1588,6 @@ const columns = computed<Column[]>(() => [
   { key: 'name', label: t('admin.groups.columns.name'), sortable: true },
   { key: 'platform', label: t('admin.groups.columns.platform'), sortable: true },
   { key: 'billing_type', label: t('admin.groups.columns.billingType'), sortable: true },
-  { key: 'rate_multiplier', label: t('admin.groups.columns.rateMultiplier'), sortable: true },
   { key: 'is_exclusive', label: t('admin.groups.columns.type'), sortable: true },
   { key: 'account_count', label: t('admin.groups.columns.accounts'), sortable: true },
   { key: 'capacity', label: t('admin.groups.columns.capacity'), sortable: false },
@@ -1794,15 +1750,12 @@ const submitting = ref(false)
 const sortSubmitting = ref(false)
 const editingGroup = ref<AdminGroup | null>(null)
 const deletingGroup = ref<AdminGroup | null>(null)
-const showRateMultipliersModal = ref(false)
-const rateMultipliersGroup = ref<AdminGroup | null>(null)
 const sortableGroups = ref<AdminGroup[]>([])
 
 const createForm = reactive({
   name: '',
   description: '',
   platform: 'anthropic' as GroupPlatform,
-  rate_multiplier: 1.0,
   is_exclusive: false,
   subscription_type: 'standard' as SubscriptionType,
   daily_limit_usd: null as number | null,
@@ -2022,7 +1975,6 @@ const editForm = reactive({
   name: '',
   description: '',
   platform: 'anthropic' as GroupPlatform,
-  rate_multiplier: 1.0,
   is_exclusive: false,
   status: 'active' as 'active' | 'inactive',
   subscription_type: 'standard' as SubscriptionType,
@@ -2166,7 +2118,6 @@ const closeCreateModal = () => {
   createForm.name = ''
   createForm.description = ''
   createForm.platform = 'anthropic'
-  createForm.rate_multiplier = 1.0
   createForm.is_exclusive = false
   createForm.subscription_type = 'standard'
   createForm.daily_limit_usd = null
@@ -2247,7 +2198,6 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.name = group.name
   editForm.description = group.description || ''
   editForm.platform = group.platform
-  editForm.rate_multiplier = group.rate_multiplier
   editForm.is_exclusive = group.is_exclusive
   editForm.status = group.status
   editForm.subscription_type = group.subscription_type || 'standard'
@@ -2323,11 +2273,6 @@ const handleUpdateGroup = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-const handleRateMultipliers = (group: AdminGroup) => {
-  rateMultipliersGroup.value = group
-  showRateMultipliersModal.value = true
 }
 
 const handleDelete = (group: AdminGroup) => {

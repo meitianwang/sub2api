@@ -448,7 +448,6 @@ func writeConfigFile(cfg *SetupConfig) error {
 			UserConcurrency int     `yaml:"user_concurrency"`
 			UserBalance     float64 `yaml:"user_balance"`
 			APIKeyPrefix    string  `yaml:"api_key_prefix"`
-			RateMultiplier  float64 `yaml:"rate_multiplier"`
 		} `yaml:"default"`
 		RateLimit struct {
 			RequestsPerMinute int `yaml:"requests_per_minute"`
@@ -470,12 +469,10 @@ func writeConfigFile(cfg *SetupConfig) error {
 			UserConcurrency int     `yaml:"user_concurrency"`
 			UserBalance     float64 `yaml:"user_balance"`
 			APIKeyPrefix    string  `yaml:"api_key_prefix"`
-			RateMultiplier  float64 `yaml:"rate_multiplier"`
 		}{
 			UserConcurrency: defaultUserConcurrency,
 			UserBalance:     0,
 			APIKeyPrefix:    "sk-",
-			RateMultiplier:  1.0,
 		},
 		RateLimit: struct {
 			RequestsPerMinute int `yaml:"requests_per_minute"`

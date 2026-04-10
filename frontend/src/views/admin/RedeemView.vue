@@ -249,7 +249,6 @@
                       :name="(option as unknown as GroupOption).label"
                       :platform="(option as unknown as GroupOption).platform"
                       :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                      :rate-multiplier="(option as unknown as GroupOption).rate"
                     />
                     <span v-else class="text-gray-400">{{
                       t('admin.redeem.selectGroupPlaceholder')
@@ -260,7 +259,6 @@
                       :name="(option as unknown as GroupOption).label"
                       :platform="(option as unknown as GroupOption).platform"
                       :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                      :rate-multiplier="(option as unknown as GroupOption).rate"
                       :description="(option as unknown as GroupOption).description"
                       :selected="selected"
                     />
@@ -420,7 +418,6 @@ interface GroupOption {
   description: string | null
   platform: GroupPlatform
   subscriptionType: SubscriptionType
-  rate: number
 }
 
 const showGenerateDialog = ref(false)
@@ -437,8 +434,7 @@ const subscriptionGroupOptions = computed(() => {
       label: g.name,
       description: g.description,
       platform: g.platform,
-      subscriptionType: g.subscription_type,
-      rate: g.rate_multiplier
+      subscriptionType: g.subscription_type
     }))
 })
 

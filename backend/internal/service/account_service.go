@@ -81,9 +81,8 @@ type AccountBulkUpdate struct {
 	Name           *string
 	ProxyID        *int64
 	Concurrency    *int
-	Priority       *int
-	RateMultiplier *float64
-	LoadFactor     *int
+	Priority   *int
+	LoadFactor *int
 	Status         *string
 	Schedulable    *bool
 	Credentials    map[string]any

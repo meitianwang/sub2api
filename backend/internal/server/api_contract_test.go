@@ -167,7 +167,7 @@ func TestAPIContracts(t *testing.T) {
 						Name:                "Group One",
 						Description:         "desc",
 						Platform:            service.PlatformAnthropic,
-						RateMultiplier:      1.5,
+
 						IsExclusive:         false,
 						Status:              service.StatusActive,
 						SubscriptionType:    service.SubscriptionTypeStandard,
@@ -194,7 +194,6 @@ func TestAPIContracts(t *testing.T) {
 						"name": "Group One",
 						"description": "desc",
 						"platform": "anthropic",
-						"rate_multiplier": 1.5,
 						"is_exclusive": false,
 						"status": "active",
 						"subscription_type": "standard",

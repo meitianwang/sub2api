@@ -9,9 +9,8 @@ type Group struct {
 	ID             int64
 	Name           string
 	Description    string
-	Platform       string
-	RateMultiplier float64
-	IsExclusive    bool
+	Platform    string
+	IsExclusive bool
 	Status         string
 	Hydrated       bool // indicates the group was loaded from a trusted repository source
 
@@ -72,10 +71,6 @@ func (g *Group) IsActive() bool {
 
 func (g *Group) IsSubscriptionType() bool {
 	return g.SubscriptionType == SubscriptionTypeSubscription
-}
-
-func (g *Group) IsFreeSubscription() bool {
-	return g.IsSubscriptionType() && g.RateMultiplier == 0
 }
 
 func (g *Group) HasDailyLimit() bool {

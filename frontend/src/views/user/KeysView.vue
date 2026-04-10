@@ -102,8 +102,6 @@
                   :name="row.group.name"
                   :platform="row.group.platform"
                   :subscription-type="row.group.subscription_type"
-                  :rate-multiplier="row.group.rate_multiplier"
-                  :user-rate-multiplier="userGroupRates[row.group.id]"
                 />
                 <span v-else class="text-sm text-gray-400 dark:text-dark-500">{{
                   t('keys.noGroup')
@@ -412,8 +410,7 @@
                 :name="(option as unknown as GroupOption).label"
                 :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                :rate-multiplier="(option as unknown as GroupOption).rate"
-                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+
               />
               <span v-else class="text-gray-400">{{ t('keys.selectGroup') }}</span>
             </template>
@@ -422,8 +419,7 @@
                 :name="(option as unknown as GroupOption).label"
                 :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                :rate-multiplier="(option as unknown as GroupOption).rate"
-                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+
                 :description="(option as unknown as GroupOption).description"
                 :selected="selected"
               />
@@ -970,8 +966,7 @@
               :name="option.label"
               :platform="option.platform"
               :subscription-type="option.subscriptionType"
-              :rate-multiplier="option.rate"
-              :user-rate-multiplier="option.userRate"
+
               :description="option.description"
               :selected="
                 selectedKeyForGroup?.group_id === option.value ||
@@ -1029,8 +1024,6 @@ interface GroupOption {
   value: number
   label: string
   description: string | null
-  rate: number
-  userRate: number | null
   subscriptionType: SubscriptionType
   platform: GroupPlatform
 }
@@ -1059,7 +1052,6 @@ const submitting = ref(false)
 const now = ref(new Date())
 let resetTimer: ReturnType<typeof setInterval> | null = null
 const usageStats = ref<Record<string, BatchApiKeyUsageStats>>({})
-const userGroupRates = ref<Record<number, number>>({})
 
 const pagination = ref({
   page: 1,
@@ -1181,8 +1173,6 @@ const groupOptions = computed(() =>
     value: group.id,
     label: group.name,
     description: group.description,
-    rate: group.rate_multiplier,
-    userRate: userGroupRates.value[group.id] ?? null,
     subscriptionType: group.subscription_type,
     platform: group.platform
   }))
@@ -1271,14 +1261,6 @@ const loadGroups = async () => {
     groups.value = await userGroupsAPI.getAvailable()
   } catch (error) {
     console.error('Failed to load groups:', error)
-  }
-}
-
-const loadUserGroupRates = async () => {
-  try {
-    userGroupRates.value = await userGroupsAPI.getUserGroupRates()
-  } catch (error) {
-    console.error('Failed to load user group rates:', error)
   }
 }
 
@@ -1703,7 +1685,6 @@ function formatResetTime(resetAt: string | null): string {
 onMounted(() => {
   loadApiKeys()
   loadGroups()
-  loadUserGroupRates()
   loadPublicSettings()
   document.addEventListener('click', closeGroupSelector)
   resetTimer = setInterval(() => { now.value = new Date() }, 60000)

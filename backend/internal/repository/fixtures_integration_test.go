@@ -87,7 +87,6 @@ func mustCreateGroup(t *testing.T, client *dbent.Client, g *service.Group) *serv
 		SetPlatform(g.Platform).
 		SetStatus(g.Status).
 		SetSubscriptionType(g.SubscriptionType).
-		SetRateMultiplier(g.RateMultiplier).
 		SetIsExclusive(g.IsExclusive)
 	if g.Description != "" {
 		create.SetDescription(g.Description)

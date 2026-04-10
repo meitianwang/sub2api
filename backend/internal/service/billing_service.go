@@ -64,27 +64,6 @@ const (
 	openAIGPT54LongContextOutputMultiplier = 1.5
 )
 
-func normalizeBillingServiceTier(serviceTier string) string {
-	return strings.ToLower(strings.TrimSpace(serviceTier))
-}
-
-func usePriorityServiceTierPricing(serviceTier string, pricing *ModelPricing) bool {
-	if pricing == nil || normalizeBillingServiceTier(serviceTier) != "priority" {
-		return false
-	}
-	return pricing.InputPricePerTokenPriority > 0 || pricing.OutputPricePerTokenPriority > 0 || pricing.CacheReadPricePerTokenPriority > 0
-}
-
-func serviceTierCostMultiplier(serviceTier string) float64 {
-	switch normalizeBillingServiceTier(serviceTier) {
-	case "priority":
-		return 2.0
-	case "flex":
-		return 0.5
-	default:
-		return 1.0
-	}
-}
 
 // UsageTokens 使用的token数量
 type UsageTokens struct {
@@ -372,83 +351,6 @@ func (s *BillingService) GetModelPricing(model string) (*ModelPricing, error) {
 	return nil, fmt.Errorf("pricing not found for model: %s", model)
 }
 
-// CalculateCost 计算使用费用
-func (s *BillingService) CalculateCost(model string, tokens UsageTokens, rateMultiplier float64) (*CostBreakdown, error) {
-	return s.CalculateCostWithServiceTier(model, tokens, rateMultiplier, "")
-}
-
-func (s *BillingService) CalculateCostWithServiceTier(model string, tokens UsageTokens, rateMultiplier float64, serviceTier string) (*CostBreakdown, error) {
-	pricing, err := s.GetModelPricing(model)
-	if err != nil {
-		return nil, err
-	}
-
-	breakdown := &CostBreakdown{}
-	inputPricePerToken := pricing.InputPricePerToken
-	outputPricePerToken := pricing.OutputPricePerToken
-	cacheReadPricePerToken := pricing.CacheReadPricePerToken
-	tierMultiplier := 1.0
-	if usePriorityServiceTierPricing(serviceTier, pricing) {
-		if pricing.InputPricePerTokenPriority > 0 {
-			inputPricePerToken = pricing.InputPricePerTokenPriority
-		}
-		if pricing.OutputPricePerTokenPriority > 0 {
-			outputPricePerToken = pricing.OutputPricePerTokenPriority
-		}
-		if pricing.CacheReadPricePerTokenPriority > 0 {
-			cacheReadPricePerToken = pricing.CacheReadPricePerTokenPriority
-		}
-	} else {
-		tierMultiplier = serviceTierCostMultiplier(serviceTier)
-	}
-	if s.shouldApplySessionLongContextPricing(tokens, pricing) {
-		inputPricePerToken *= pricing.LongContextInputMultiplier
-		outputPricePerToken *= pricing.LongContextOutputMultiplier
-	}
-
-	// 计算输入token费用（使用per-token价格）
-	breakdown.InputCost = float64(tokens.InputTokens) * inputPricePerToken
-
-	// 计算输出token费用
-	breakdown.OutputCost = float64(tokens.OutputTokens) * outputPricePerToken
-
-	// 计算缓存费用
-	if pricing.SupportsCacheBreakdown && (pricing.CacheCreation5mPrice > 0 || pricing.CacheCreation1hPrice > 0) {
-		// 支持详细缓存分类的模型（5分钟/1小时缓存，价格为 per-token）
-		if tokens.CacheCreation5mTokens == 0 && tokens.CacheCreation1hTokens == 0 && tokens.CacheCreationTokens > 0 {
-			// API 未返回 ephemeral 明细，回退到全部按 5m 单价计费
-			breakdown.CacheCreationCost = float64(tokens.CacheCreationTokens) * pricing.CacheCreation5mPrice
-		} else {
-			breakdown.CacheCreationCost = float64(tokens.CacheCreation5mTokens)*pricing.CacheCreation5mPrice +
-				float64(tokens.CacheCreation1hTokens)*pricing.CacheCreation1hPrice
-		}
-	} else {
-		// 标准缓存创建价格（per-token）
-		breakdown.CacheCreationCost = float64(tokens.CacheCreationTokens) * pricing.CacheCreationPricePerToken
-	}
-
-	breakdown.CacheReadCost = float64(tokens.CacheReadTokens) * cacheReadPricePerToken
-
-	if tierMultiplier != 1.0 {
-		breakdown.InputCost *= tierMultiplier
-		breakdown.OutputCost *= tierMultiplier
-		breakdown.CacheCreationCost *= tierMultiplier
-		breakdown.CacheReadCost *= tierMultiplier
-	}
-
-	// 计算总费用
-	breakdown.TotalCost = breakdown.InputCost + breakdown.OutputCost +
-		breakdown.CacheCreationCost + breakdown.CacheReadCost
-
-	// 应用倍率计算实际费用
-	if rateMultiplier <= 0 {
-		rateMultiplier = 1.0
-	}
-	breakdown.ActualCost = breakdown.TotalCost * rateMultiplier
-
-	return breakdown, nil
-}
-
 func (s *BillingService) applyModelSpecificPricingPolicy(model string, pricing *ModelPricing) *ModelPricing {
 	if pricing == nil {
 		return nil
@@ -472,101 +374,9 @@ func (s *BillingService) applyModelSpecificPricingPolicy(model string, pricing *
 	return &cloned
 }
 
-func (s *BillingService) shouldApplySessionLongContextPricing(tokens UsageTokens, pricing *ModelPricing) bool {
-	if pricing == nil || pricing.LongContextInputThreshold <= 0 {
-		return false
-	}
-	if pricing.LongContextInputMultiplier <= 1 && pricing.LongContextOutputMultiplier <= 1 {
-		return false
-	}
-	totalInputTokens := tokens.InputTokens + tokens.CacheReadTokens
-	return totalInputTokens > pricing.LongContextInputThreshold
-}
-
 func isOpenAIGPT54Model(model string) bool {
 	normalized := normalizeCodexModel(strings.TrimSpace(strings.ToLower(model)))
 	return normalized == "gpt-5.4"
-}
-
-// CalculateCostWithConfig 使用配置中的默认倍率计算费用
-func (s *BillingService) CalculateCostWithConfig(model string, tokens UsageTokens) (*CostBreakdown, error) {
-	multiplier := s.cfg.Default.RateMultiplier
-	if multiplier <= 0 {
-		multiplier = 1.0
-	}
-	return s.CalculateCost(model, tokens, multiplier)
-}
-
-// CalculateCostWithLongContext 计算费用，支持长上下文双倍计费
-// threshold: 阈值（如 200000），超过此值的部分按 extraMultiplier 倍计费
-// extraMultiplier: 超出部分的倍率（如 2.0 表示双倍）
-//
-// 示例：缓存 210k + 输入 10k = 220k，阈值 200k，倍率 2.0
-// 拆分为：范围内 (200k, 0) + 范围外 (10k, 10k)
-// 范围内正常计费，范围外 × 2 计费
-func (s *BillingService) CalculateCostWithLongContext(model string, tokens UsageTokens, rateMultiplier float64, threshold int, extraMultiplier float64) (*CostBreakdown, error) {
-	// 未启用长上下文计费，直接走正常计费
-	if threshold <= 0 || extraMultiplier <= 1 {
-		return s.CalculateCost(model, tokens, rateMultiplier)
-	}
-
-	// 计算总输入 token（缓存读取 + 新输入）
-	total := tokens.CacheReadTokens + tokens.InputTokens
-	if total <= threshold {
-		return s.CalculateCost(model, tokens, rateMultiplier)
-	}
-
-	// 拆分成范围内和范围外
-	var inRangeCacheTokens, inRangeInputTokens int
-	var outRangeCacheTokens, outRangeInputTokens int
-
-	if tokens.CacheReadTokens >= threshold {
-		// 缓存已超过阈值：范围内只有缓存，范围外是超出的缓存+全部输入
-		inRangeCacheTokens = threshold
-		inRangeInputTokens = 0
-		outRangeCacheTokens = tokens.CacheReadTokens - threshold
-		outRangeInputTokens = tokens.InputTokens
-	} else {
-		// 缓存未超过阈值：范围内是全部缓存+部分输入，范围外是剩余输入
-		inRangeCacheTokens = tokens.CacheReadTokens
-		inRangeInputTokens = threshold - tokens.CacheReadTokens
-		outRangeCacheTokens = 0
-		outRangeInputTokens = tokens.InputTokens - inRangeInputTokens
-	}
-
-	// 范围内部分：正常计费
-	inRangeTokens := UsageTokens{
-		InputTokens:           inRangeInputTokens,
-		OutputTokens:          tokens.OutputTokens, // 输出只算一次
-		CacheCreationTokens:   tokens.CacheCreationTokens,
-		CacheReadTokens:       inRangeCacheTokens,
-		CacheCreation5mTokens: tokens.CacheCreation5mTokens,
-		CacheCreation1hTokens: tokens.CacheCreation1hTokens,
-	}
-	inRangeCost, err := s.CalculateCost(model, inRangeTokens, rateMultiplier)
-	if err != nil {
-		return nil, err
-	}
-
-	// 范围外部分：× extraMultiplier 计费
-	outRangeTokens := UsageTokens{
-		InputTokens:     outRangeInputTokens,
-		CacheReadTokens: outRangeCacheTokens,
-	}
-	outRangeCost, err := s.CalculateCost(model, outRangeTokens, rateMultiplier*extraMultiplier)
-	if err != nil {
-		return inRangeCost, fmt.Errorf("out-range cost: %w", err)
-	}
-
-	// 合并成本
-	return &CostBreakdown{
-		InputCost:         inRangeCost.InputCost + outRangeCost.InputCost,
-		OutputCost:        inRangeCost.OutputCost,
-		CacheCreationCost: inRangeCost.CacheCreationCost,
-		CacheReadCost:     inRangeCost.CacheReadCost + outRangeCost.CacheReadCost,
-		TotalCost:         inRangeCost.TotalCost + outRangeCost.TotalCost,
-		ActualCost:        inRangeCost.ActualCost + outRangeCost.ActualCost,
-	}, nil
 }
 
 // ListSupportedModels 列出所有支持的模型（现在总是返回true，因为有模糊匹配）
@@ -589,20 +399,6 @@ func (s *BillingService) IsModelSupported(model string) bool {
 		strings.Contains(modelLower, "haiku")
 }
 
-// GetEstimatedCost 估算费用（用于前端展示）
-func (s *BillingService) GetEstimatedCost(model string, estimatedInputTokens, estimatedOutputTokens int) (float64, error) {
-	tokens := UsageTokens{
-		InputTokens:  estimatedInputTokens,
-		OutputTokens: estimatedOutputTokens,
-	}
-
-	breakdown, err := s.CalculateCostWithConfig(model, tokens)
-	if err != nil {
-		return 0, err
-	}
-
-	return breakdown.ActualCost, nil
-}
 
 // GetPricingServiceStatus 获取价格服务状态
 func (s *BillingService) GetPricingServiceStatus() map[string]any {
