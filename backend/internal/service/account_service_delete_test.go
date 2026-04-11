@@ -147,6 +147,10 @@ func (s *accountRepoStub) ListSchedulableByGroupIDAndPlatforms(ctx context.Conte
 	panic("unexpected ListSchedulableByGroupIDAndPlatforms call")
 }
 
+func (s *accountRepoStub) ListSchedulableUngrouped(ctx context.Context) ([]Account, error) {
+	panic("unexpected ListSchedulableUngrouped call")
+}
+
 func (s *accountRepoStub) ListSchedulableUngroupedByPlatform(ctx context.Context, platform string) ([]Account, error) {
 	panic("unexpected ListSchedulableUngroupedByPlatform call")
 }

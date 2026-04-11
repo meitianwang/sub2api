@@ -97,7 +97,7 @@ func (s *SchedulerSnapshotService) Stop() {
 }
 
 func (s *SchedulerSnapshotService) ListSchedulableAccounts(ctx context.Context, groupID *int64, platform string, hasForcePlatform bool) ([]Account, bool, error) {
-	useMixed := (platform == PlatformAnthropic || platform == PlatformGemini) && !hasForcePlatform
+	const useMixed = false
 	mode := s.resolveMode(platform, hasForcePlatform)
 	bucket := s.bucketFor(groupID, platform, mode)
 
@@ -439,12 +439,7 @@ func (s *SchedulerSnapshotService) rebuildByAccount(ctx context.Context, account
 	if len(groupIDs) == 0 {
 		return nil
 	}
-
-	var firstErr error
-	if err := s.rebuildBucketsForPlatform(ctx, account.Platform, groupIDs, reason); err != nil && firstErr == nil {
-		firstErr = err
-	}
-	return firstErr
+	return s.rebuildBucketsForGroupIDs(ctx, groupIDs, reason)
 }
 
 func (s *SchedulerSnapshotService) rebuildByGroupIDs(ctx context.Context, groupIDs []int64, reason string) error {
@@ -452,32 +447,17 @@ func (s *SchedulerSnapshotService) rebuildByGroupIDs(ctx context.Context, groupI
 	if len(groupIDs) == 0 {
 		return nil
 	}
-	platforms := []string{PlatformAnthropic, PlatformGemini, PlatformOpenAI}
-	var firstErr error
-	for _, platform := range platforms {
-		if err := s.rebuildBucketsForPlatform(ctx, platform, groupIDs, reason); err != nil && firstErr == nil {
-			firstErr = err
-		}
-	}
-	return firstErr
+	return s.rebuildBucketsForGroupIDs(ctx, groupIDs, reason)
 }
 
-func (s *SchedulerSnapshotService) rebuildBucketsForPlatform(ctx context.Context, platform string, groupIDs []int64, reason string) error {
-	if platform == "" {
-		return nil
-	}
+func (s *SchedulerSnapshotService) rebuildBucketsForGroupIDs(ctx context.Context, groupIDs []int64, reason string) error {
 	var firstErr error
 	for _, gid := range groupIDs {
-		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: platform, Mode: SchedulerModeSingle}, reason); err != nil && firstErr == nil {
+		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: "_all", Mode: SchedulerModeSingle}, reason); err != nil && firstErr == nil {
 			firstErr = err
 		}
-		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: platform, Mode: SchedulerModeForced}, reason); err != nil && firstErr == nil {
+		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: "_all", Mode: SchedulerModeForced}, reason); err != nil && firstErr == nil {
 			firstErr = err
-		}
-		if platform == PlatformAnthropic || platform == PlatformGemini {
-			if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: platform, Mode: SchedulerModeMixed}, reason); err != nil && firstErr == nil {
-				firstErr = err
-			}
 		}
 	}
 	return firstErr
@@ -606,15 +586,15 @@ func (s *SchedulerSnapshotService) loadAccountsFromDB(ctx context.Context, bucke
 		return s.accountRepo.ListSchedulableByGroupID(ctx, groupID)
 	}
 	if s.isRunModeSimple() {
-		return s.accountRepo.ListSchedulableByPlatform(ctx, bucket.Platform)
+		return s.accountRepo.ListSchedulable(ctx)
 	}
-	return s.accountRepo.ListSchedulableUngroupedByPlatform(ctx, bucket.Platform)
+	return s.accountRepo.ListSchedulableUngrouped(ctx)
 }
 
-func (s *SchedulerSnapshotService) bucketFor(groupID *int64, platform string, mode string) SchedulerBucket {
+func (s *SchedulerSnapshotService) bucketFor(groupID *int64, _ string, mode string) SchedulerBucket {
 	return SchedulerBucket{
 		GroupID:  s.normalizeGroupID(groupID),
-		Platform: platform,
+		Platform: "_all",
 		Mode:     mode,
 	}
 }
@@ -654,12 +634,9 @@ func (s *SchedulerSnapshotService) normalizeGroupIDs(groupIDs []int64) []int64 {
 	return out
 }
 
-func (s *SchedulerSnapshotService) resolveMode(platform string, hasForcePlatform bool) string {
+func (s *SchedulerSnapshotService) resolveMode(_ string, hasForcePlatform bool) string {
 	if hasForcePlatform {
 		return SchedulerModeForced
-	}
-	if platform == PlatformAnthropic || platform == PlatformGemini {
-		return SchedulerModeMixed
 	}
 	return SchedulerModeSingle
 }
@@ -718,27 +695,22 @@ func (s *SchedulerSnapshotService) fullRebuildInterval() time.Duration {
 }
 
 func (s *SchedulerSnapshotService) defaultBuckets(ctx context.Context) ([]SchedulerBucket, error) {
-	buckets := make([]SchedulerBucket, 0)
-	platforms := []string{PlatformAnthropic, PlatformGemini, PlatformOpenAI}
-	for _, platform := range platforms {
-		buckets = append(buckets, SchedulerBucket{GroupID: 0, Platform: platform, Mode: SchedulerModeSingle})
-		buckets = append(buckets, SchedulerBucket{GroupID: 0, Platform: platform, Mode: SchedulerModeForced})
+	buckets := []SchedulerBucket{
+		{GroupID: 0, Platform: "_all", Mode: SchedulerModeSingle},
+		{GroupID: 0, Platform: "_all", Mode: SchedulerModeForced},
 	}
 
 	if s.isRunModeSimple() || s.groupRepo == nil {
-		return dedupeBuckets(buckets), nil
+		return buckets, nil
 	}
 
 	groups, err := s.groupRepo.ListActive(ctx)
 	if err != nil {
-		return dedupeBuckets(buckets), nil
+		return buckets, nil
 	}
 	for _, group := range groups {
-		if group.Platform == "" {
-			continue
-		}
-		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: group.Platform, Mode: SchedulerModeSingle})
-		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: group.Platform, Mode: SchedulerModeForced})
+		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: "_all", Mode: SchedulerModeSingle})
+		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: "_all", Mode: SchedulerModeForced})
 	}
 	return dedupeBuckets(buckets), nil
 }

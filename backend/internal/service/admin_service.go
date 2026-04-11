@@ -960,9 +960,6 @@ func (s *adminServiceImpl) validateFallbackGroup(ctx context.Context, currentGro
 // platform/subscriptionType: 当前分组的有效平台/订阅类型
 // fallbackGroupID: 兜底分组 ID
 func (s *adminServiceImpl) validateFallbackGroupOnInvalidRequest(ctx context.Context, currentGroupID int64, platform, subscriptionType string, fallbackGroupID int64) error {
-	if platform != PlatformAnthropic {
-		return fmt.Errorf("invalid request fallback only supported for anthropic groups")
-	}
 	if subscriptionType == SubscriptionTypeSubscription {
 		return fmt.Errorf("subscription groups cannot set invalid request fallback")
 	}
@@ -973,9 +970,6 @@ func (s *adminServiceImpl) validateFallbackGroupOnInvalidRequest(ctx context.Con
 	fallbackGroup, err := s.groupRepo.GetByIDLite(ctx, fallbackGroupID)
 	if err != nil {
 		return fmt.Errorf("fallback group not found: %w", err)
-	}
-	if fallbackGroup.Platform != PlatformAnthropic {
-		return fmt.Errorf("fallback group must be anthropic platform")
 	}
 	if fallbackGroup.SubscriptionType == SubscriptionTypeSubscription {
 		return fmt.Errorf("fallback group cannot be subscription type")
@@ -2333,50 +2327,8 @@ func (s *adminServiceImpl) probeProxyLatency(ctx context.Context, proxy *Proxy) 
 }
 
 // checkMixedChannelRisk 检查分组中是否存在混合渠道
-// 如果存在混合，返回错误提示用户确认
+// 透传模式下，同分组不同 platform 的账号是正常的，不再报错。
 func (s *adminServiceImpl) checkMixedChannelRisk(ctx context.Context, currentAccountID int64, currentAccountPlatform string, groupIDs []int64) error {
-	// 判断当前账号的渠道类型（基于 platform 字段，而不是 type 字段）
-	currentPlatform := getAccountPlatform(currentAccountPlatform)
-	if currentPlatform == "" {
-		return nil
-	}
-
-	// 检查每个分组中的其他账号
-	for _, groupID := range groupIDs {
-		accounts, err := s.accountRepo.ListByGroup(ctx, groupID)
-		if err != nil {
-			return fmt.Errorf("get accounts in group %d: %w", groupID, err)
-		}
-
-		// 检查是否存在不同渠道的账号
-		for _, account := range accounts {
-			if currentAccountID > 0 && account.ID == currentAccountID {
-				continue // 跳过当前账号
-			}
-
-			otherPlatform := getAccountPlatform(account.Platform)
-			if otherPlatform == "" {
-				continue
-			}
-
-			// 检测混合渠道
-			if currentPlatform != otherPlatform {
-				group, _ := s.groupRepo.GetByID(ctx, groupID)
-				groupName := fmt.Sprintf("Group %d", groupID)
-				if group != nil {
-					groupName = group.Name
-				}
-
-				return &MixedChannelError{
-					GroupID:         groupID,
-					GroupName:       groupName,
-					CurrentPlatform: currentPlatform,
-					OtherPlatform:   otherPlatform,
-				}
-			}
-		}
-	}
-
 	return nil
 }
 

@@ -104,6 +104,9 @@ func (m *mockAccountRepoForGemini) ListSchedulableByPlatforms(_ context.Context,
 func (m *mockAccountRepoForGemini) ListSchedulableByGroupIDAndPlatforms(_ context.Context, _ int64, platforms []string) ([]Account, error) {
 	return m.ListSchedulableByPlatforms(context.Background(), platforms)
 }
+func (m *mockAccountRepoForGemini) ListSchedulableUngrouped(_ context.Context) ([]Account, error) {
+	return nil, nil
+}
 func (m *mockAccountRepoForGemini) ListSchedulableUngroupedByPlatform(_ context.Context, platform string) ([]Account, error) {
 	return m.ListSchedulableByPlatform(context.Background(), platform)
 }
