@@ -1970,7 +1970,6 @@ export default {
         platformType: '平台/类型',
         platform: '平台',
         type: '类型',
-        capacity: '容量',
         notes: '备注',
         priority: '优先级',
         weight: '权重',
@@ -1992,34 +1991,6 @@ export default {
       setPrivacy: '设置隐私',
       subscriptionAbnormal: '异常',
       subscriptionExpires: '到期',
-      // 容量状态提示
-      capacity: {
-        windowCost: {
-          blocked: '5h窗口费用超限，账号暂停调度',
-          stickyOnly: '5h窗口费用达阈值，仅允许粘性会话',
-          normal: '5h窗口费用正常'
-        },
-        sessions: {
-          full: '活跃会话已满，新会话需等待（空闲超时：{idle}分钟）',
-          normal: '活跃会话正常（空闲超时：{idle}分钟）'
-        },
-        rpm: {
-          full: '已达 RPM 上限',
-          warning: 'RPM 接近上限',
-          normal: 'RPM 正常',
-          tieredNormal: 'RPM 限制 (三区模型) - 正常',
-          tieredWarning: 'RPM 限制 (三区模型) - 接近阈值',
-          tieredStickyOnly: 'RPM 限制 (三区模型) - 仅粘性会话 | 缓冲区: {buffer}',
-          tieredBlocked: 'RPM 限制 (三区模型) - 已阻塞 | 缓冲区: {buffer}',
-          stickyExemptNormal: 'RPM 限制 (粘性豁免) - 正常',
-          stickyExemptWarning: 'RPM 限制 (粘性豁免) - 接近阈值',
-          stickyExemptOver: 'RPM 限制 (粘性豁免) - 超限，仅粘性会话'
-        },
-        quota: {
-          exceeded: '配额已用完，账号暂停调度',
-          normal: '配额正常'
-        },
-      },
       clearRateLimit: '清除速率限制',
       resetQuota: '重置配额',
       quotaLimit: '配额限制',

@@ -1934,7 +1934,6 @@ export default {
         platformType: 'Platform/Type',
         platform: 'Platform',
         type: 'Type',
-        capacity: 'Capacity',
         notes: 'Notes',
         priority: 'Priority',
         weight: 'Weight',
@@ -1956,34 +1955,6 @@ export default {
       setPrivacy: 'Set Privacy',
       subscriptionAbnormal: 'Abnormal',
       subscriptionExpires: 'Expires',
-      // Capacity status tooltips
-      capacity: {
-        windowCost: {
-          blocked: '5h window cost exceeded, account scheduling paused',
-          stickyOnly: '5h window cost at threshold, only sticky sessions allowed',
-          normal: '5h window cost normal'
-        },
-        sessions: {
-          full: 'Active sessions full, new sessions must wait (idle timeout: {idle} min)',
-          normal: 'Active sessions normal (idle timeout: {idle} min)'
-        },
-        rpm: {
-          full: 'RPM limit reached',
-          warning: 'RPM approaching limit',
-          normal: 'RPM normal',
-          tieredNormal: 'RPM limit (Tiered) - Normal',
-          tieredWarning: 'RPM limit (Tiered) - Approaching limit',
-          tieredStickyOnly: 'RPM limit (Tiered) - Sticky only | Buffer: {buffer}',
-          tieredBlocked: 'RPM limit (Tiered) - Blocked | Buffer: {buffer}',
-          stickyExemptNormal: 'RPM limit (Sticky Exempt) - Normal',
-          stickyExemptWarning: 'RPM limit (Sticky Exempt) - Approaching limit',
-          stickyExemptOver: 'RPM limit (Sticky Exempt) - Over limit, sticky only'
-        },
-        quota: {
-          exceeded: 'Quota exceeded, account paused',
-          normal: 'Quota normal'
-        },
-      },
       tempUnschedulable: {
         title: 'Temp Unschedulable',
         statusTitle: 'Temp Unschedulable Status',
