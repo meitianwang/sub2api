@@ -150,17 +150,6 @@
             </div>
           </template>
 
-          <template #cell-capacity="{ row }">
-            <GroupCapacityBadge
-              v-if="capacityMap.get(row.id)"
-              :sessions-used="capacityMap.get(row.id)!.sessionsUsed"
-              :sessions-max="capacityMap.get(row.id)!.sessionsMax"
-              :rpm-used="capacityMap.get(row.id)!.rpmUsed"
-              :rpm-max="capacityMap.get(row.id)!.rpmMax"
-            />
-            <span v-else class="text-xs text-gray-400">—</span>
-          </template>
-
           <template #cell-usage="{ row }">
             <div v-if="usageLoading" class="text-xs text-gray-400">—</div>
             <div v-else class="space-y-0.5 text-xs">
@@ -1514,7 +1503,6 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import Icon from '@/components/icons/Icon.vue'
 import ModelPricingEditor from '@/components/admin/group/ModelPricingEditor.vue'
-import GroupCapacityBadge from '@/components/common/GroupCapacityBadge.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { createStableObjectKeyResolver } from '@/utils/stableObjectKey'
 import { useKeyedDebouncedSearch } from '@/composables/useKeyedDebouncedSearch'
@@ -1529,7 +1517,6 @@ const columns = computed<Column[]>(() => [
   { key: 'billing_type', label: t('admin.groups.columns.billingType'), sortable: true },
   { key: 'is_exclusive', label: t('admin.groups.columns.type'), sortable: true },
   { key: 'account_count', label: t('admin.groups.columns.accounts'), sortable: true },
-  { key: 'capacity', label: t('admin.groups.columns.capacity'), sortable: false },
   { key: 'usage', label: t('admin.groups.columns.usage'), sortable: false },
   { key: 'status', label: t('admin.groups.columns.status'), sortable: true },
   { key: 'actions', label: t('admin.groups.columns.actions'), sortable: false }
@@ -1650,7 +1637,6 @@ const groups = ref<AdminGroup[]>([])
 const loading = ref(false)
 const usageMap = ref<Map<number, { today_cost: number; total_cost: number }>>(new Map())
 const usageLoading = ref(false)
-const capacityMap = ref<Map<number, { sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>>(new Map())
 const searchQuery = ref('')
 const filters = reactive({
   status: '',
@@ -1952,7 +1938,6 @@ const loadGroups = async () => {
     pagination.total = response.total
     pagination.pages = response.pages
     loadUsageSummary()
-    loadCapacitySummary()
   } catch (error: any) {
     if (signal.aborted || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
       return
@@ -1986,24 +1971,6 @@ const loadUsageSummary = async () => {
     console.error('Error loading group usage summary:', error)
   } finally {
     usageLoading.value = false
-  }
-}
-
-const loadCapacitySummary = async () => {
-  try {
-    const data = await adminAPI.groups.getCapacitySummary()
-    const map = new Map<number, { sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>()
-    for (const item of data) {
-      map.set(item.group_id, {
-        sessionsUsed: item.sessions_used,
-        sessionsMax: item.sessions_max,
-        rpmUsed: item.rpm_used,
-        rpmMax: item.rpm_max
-      })
-    }
-    capacityMap.value = map
-  } catch (error) {
-    console.error('Error loading group capacity summary:', error)
   }
 }
 

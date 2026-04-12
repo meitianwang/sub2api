@@ -1591,7 +1591,6 @@ export default {
         priority: '优先级',
         apiKeys: 'API 密钥数',
         accounts: '账号数',
-        capacity: '容量',
         usage: '用量',
         status: '状态',
         actions: '操作',

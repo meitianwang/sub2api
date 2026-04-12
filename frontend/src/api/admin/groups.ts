@@ -169,18 +169,6 @@ export async function getUsageSummary(
   return data
 }
 
-/**
- * Get capacity summary (sessions/RPM) for all active groups
- */
-export async function getCapacitySummary(): Promise<
-  { group_id: number; sessions_used: number; sessions_max: number; rpm_used: number; rpm_max: number }[]
-> {
-  const { data } = await apiClient.get<
-    { group_id: number; sessions_used: number; sessions_max: number; rpm_used: number; rpm_max: number }[]
-  >('/admin/groups/capacity-summary')
-  return data
-}
-
 export const groupsAPI = {
   list,
   getAll,
@@ -192,8 +180,7 @@ export const groupsAPI = {
   getStats,
   getGroupApiKeys,
   updateSortOrder,
-  getUsageSummary,
-  getCapacitySummary
+  getUsageSummary
 }
 
 export default groupsAPI
