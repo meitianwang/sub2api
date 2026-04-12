@@ -42,7 +42,6 @@ type dataAccount struct {
 	Credentials map[string]any `json:"credentials"`
 	Extra       map[string]any `json:"extra"`
 	ProxyKey    *string        `json:"proxy_key"`
-	Concurrency int            `json:"concurrency"`
 	Priority    int            `json:"priority"`
 }
 
@@ -207,7 +206,6 @@ func TestImportDataReusesProxyAndSkipsDefaultGroup(t *testing.T) {
 					"type":        service.AccountTypeOAuth,
 					"credentials": map[string]any{"token": "x"},
 					"proxy_key":   "socks5|1.2.3.4|1080|u|p",
-					"concurrency": 3,
 					"priority":    50,
 				},
 			},

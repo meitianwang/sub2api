@@ -43,7 +43,6 @@ func TestAccountHandler_Create_AnthropicAPIKeyPassthroughExtraForwarded(t *testi
 		"extra": map[string]any{
 			"anthropic_passthrough": true,
 		},
-		"concurrency": 1,
 		"priority":    1,
 	}
 	raw, err := json.Marshal(body)

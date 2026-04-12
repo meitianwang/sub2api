@@ -352,7 +352,7 @@ func (h *GroupHandler) GetUsageSummary(c *gin.Context) {
 	response.Success(c, results)
 }
 
-// GetCapacitySummary returns aggregated capacity (concurrency/sessions/RPM) for all active groups.
+// GetCapacitySummary returns aggregated capacity (sessions/RPM) for all active groups.
 // GET /api/v1/admin/groups/capacity-summary
 func (h *GroupHandler) GetCapacitySummary(c *gin.Context) {
 	results, err := h.groupCapacityService.GetAllGroupCapacity(c.Request.Context())

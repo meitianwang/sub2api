@@ -207,7 +207,7 @@ func TestOpsAlertRuleValidation(t *testing.T) {
 	require.Error(t, err)
 
 	require.True(t, isPercentOrRateMetric("error_rate"))
-	require.False(t, isPercentOrRateMetric("concurrency_queue_depth"))
+	require.False(t, isPercentOrRateMetric("total_requests"))
 }
 
 func TestOpsWSHelpers(t *testing.T) {
