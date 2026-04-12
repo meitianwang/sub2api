@@ -22,7 +22,6 @@ var validOpsAlertMetricTypes = []string{
 	"upstream_error_rate",
 	"cpu_usage_percent",
 	"memory_usage_percent",
-	"concurrency_queue_depth",
 	"group_available_accounts",
 	"group_available_ratio",
 	"group_rate_limit_ratio",

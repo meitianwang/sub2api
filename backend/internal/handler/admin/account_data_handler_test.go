@@ -63,7 +63,6 @@ func setupAccountDataRouter() (*gin.Engine, *stubAdminService) {
 		nil,
 		nil,
 		nil,
-		nil,
 	)
 
 	router.GET("/api/v1/admin/accounts/data", h.ExportData)
@@ -106,7 +105,6 @@ func TestExportDataIncludesSecrets(t *testing.T) {
 			Credentials: map[string]any{"token": "secret"},
 			Extra:       map[string]any{"note": "x"},
 			ProxyID:     &proxyID,
-			Concurrency: 3,
 			Priority:    50,
 			Status:      service.StatusDisabled,
 		},
@@ -152,7 +150,6 @@ func TestExportDataWithoutProxies(t *testing.T) {
 			Type:        service.AccountTypeOAuth,
 			Credentials: map[string]any{"token": "secret"},
 			ProxyID:     &proxyID,
-			Concurrency: 3,
 			Priority:    50,
 			Status:      service.StatusDisabled,
 		},

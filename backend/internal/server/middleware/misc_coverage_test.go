@@ -96,13 +96,12 @@ func TestForcePlatform_SetsContextAndGinValue(t *testing.T) {
 
 func TestAuthSubjectHelpers_RoundTrip(t *testing.T) {
 	c := &gin.Context{}
-	c.Set(string(ContextKeyUser), AuthSubject{UserID: 1, Concurrency: 2})
+	c.Set(string(ContextKeyUser), AuthSubject{UserID: 1})
 	c.Set(string(ContextKeyUserRole), "admin")
 
 	sub, ok := GetAuthSubjectFromContext(c)
 	require.True(t, ok)
 	require.Equal(t, int64(1), sub.UserID)
-	require.Equal(t, 2, sub.Concurrency)
 
 	role, ok := GetUserRoleFromContext(c)
 	require.True(t, ok)

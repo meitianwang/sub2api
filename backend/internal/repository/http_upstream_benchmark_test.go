@@ -59,7 +59,7 @@ func BenchmarkHTTPUpstreamProxyClient(b *testing.B) {
 	// 模拟优化后的行为，从缓存获取客户端
 	b.Run("复用", func(b *testing.B) {
 		// 预热：确保客户端已缓存
-		entry, err := svc.getOrCreateClient(proxyURL, 1, 1)
+		entry, err := svc.getOrCreateClient(proxyURL, 1)
 		if err != nil {
 			b.Fatalf("getOrCreateClient: %v", err)
 		}

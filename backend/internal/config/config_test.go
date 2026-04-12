@@ -93,15 +93,6 @@ func TestLoadDefaultOpenAIWSConfig(t *testing.T) {
 	if cfg.Gateway.OpenAIWS.ResponsesWebsockets {
 		t.Fatalf("Gateway.OpenAIWS.ResponsesWebsockets = true, want false")
 	}
-	if !cfg.Gateway.OpenAIWS.DynamicMaxConnsByAccountConcurrencyEnabled {
-		t.Fatalf("Gateway.OpenAIWS.DynamicMaxConnsByAccountConcurrencyEnabled = false, want true")
-	}
-	if cfg.Gateway.OpenAIWS.OAuthMaxConnsFactor != 1.0 {
-		t.Fatalf("Gateway.OpenAIWS.OAuthMaxConnsFactor = %v, want 1.0", cfg.Gateway.OpenAIWS.OAuthMaxConnsFactor)
-	}
-	if cfg.Gateway.OpenAIWS.APIKeyMaxConnsFactor != 1.0 {
-		t.Fatalf("Gateway.OpenAIWS.APIKeyMaxConnsFactor = %v, want 1.0", cfg.Gateway.OpenAIWS.APIKeyMaxConnsFactor)
-	}
 	if cfg.Gateway.OpenAIWS.StickySessionTTLSeconds != 3600 {
 		t.Fatalf("Gateway.OpenAIWS.StickySessionTTLSeconds = %d, want 3600", cfg.Gateway.OpenAIWS.StickySessionTTLSeconds)
 	}
@@ -722,23 +713,6 @@ func TestValidateOpsCleanupScheduleRequired(t *testing.T) {
 	}
 }
 
-func TestValidateConcurrencyPingInterval(t *testing.T) {
-	resetViperWithJWTSecret(t)
-
-	cfg, err := Load()
-	if err != nil {
-		t.Fatalf("Load() error: %v", err)
-	}
-	cfg.Concurrency.PingInterval = 3
-	err = cfg.Validate()
-	if err == nil {
-		t.Fatalf("Validate() expected error for concurrency.ping_interval")
-	}
-	if !strings.Contains(err.Error(), "concurrency.ping_interval") {
-		t.Fatalf("Validate() expected concurrency.ping_interval error, got: %v", err)
-	}
-}
-
 func TestProvideConfig(t *testing.T) {
 	resetViperWithJWTSecret(t)
 	if _, err := ProvideConfig(); err != nil {
@@ -1092,11 +1066,6 @@ func TestValidateConfigErrors(t *testing.T) {
 			wantErr: "gateway.client_idle_ttl_seconds",
 		},
 		{
-			name:    "gateway concurrency slot ttl",
-			mutate:  func(c *Config) { c.Gateway.ConcurrencySlotTTLMinutes = 0 },
-			wantErr: "gateway.concurrency_slot_ttl_minutes",
-		},
-		{
 			name:    "gateway max conns per host",
 			mutate:  func(c *Config) { c.Gateway.MaxConnsPerHost = -1 },
 			wantErr: "gateway.max_conns_per_host",
@@ -1110,16 +1079,6 @@ func TestValidateConfigErrors(t *testing.T) {
 			name:    "gateway stream keepalive range",
 			mutate:  func(c *Config) { c.Gateway.StreamKeepaliveInterval = 4 },
 			wantErr: "gateway.stream_keepalive_interval",
-		},
-		{
-			name:    "gateway openai ws oauth max conns factor",
-			mutate:  func(c *Config) { c.Gateway.OpenAIWS.OAuthMaxConnsFactor = 0 },
-			wantErr: "gateway.openai_ws.oauth_max_conns_factor",
-		},
-		{
-			name:    "gateway openai ws apikey max conns factor",
-			mutate:  func(c *Config) { c.Gateway.OpenAIWS.APIKeyMaxConnsFactor = 0 },
-			wantErr: "gateway.openai_ws.apikey_max_conns_factor",
 		},
 		{
 			name:    "gateway stream data interval range",

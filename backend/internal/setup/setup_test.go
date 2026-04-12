@@ -1,8 +1,6 @@
 package setup
 
 import (
-	"os"
-	"strings"
 	"testing"
 )
 
@@ -51,39 +49,5 @@ func TestDecideAdminBootstrap(t *testing.T) {
 				t.Fatalf("reason=%q, want %q", got.reason, tc.reason)
 			}
 		})
-	}
-}
-
-func TestSetupDefaultAdminConcurrency(t *testing.T) {
-	t.Run("simple mode admin uses higher concurrency", func(t *testing.T) {
-		t.Setenv("RUN_MODE", "simple")
-		if got := setupDefaultAdminConcurrency(); got != simpleModeAdminConcurrency {
-			t.Fatalf("setupDefaultAdminConcurrency()=%d, want %d", got, simpleModeAdminConcurrency)
-		}
-	})
-
-	t.Run("standard mode keeps existing default", func(t *testing.T) {
-		t.Setenv("RUN_MODE", "standard")
-		if got := setupDefaultAdminConcurrency(); got != defaultUserConcurrency {
-			t.Fatalf("setupDefaultAdminConcurrency()=%d, want %d", got, defaultUserConcurrency)
-		}
-	})
-}
-
-func TestWriteConfigFileKeepsDefaultUserConcurrency(t *testing.T) {
-	t.Setenv("RUN_MODE", "simple")
-	t.Setenv("DATA_DIR", t.TempDir())
-
-	if err := writeConfigFile(&SetupConfig{}); err != nil {
-		t.Fatalf("writeConfigFile() error = %v", err)
-	}
-
-	data, err := os.ReadFile(GetConfigFilePath())
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v", err)
-	}
-
-	if !strings.Contains(string(data), "user_concurrency: 5") {
-		t.Fatalf("config missing default user concurrency, got:\n%s", string(data))
 	}
 }

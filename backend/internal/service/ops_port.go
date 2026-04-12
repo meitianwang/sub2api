@@ -217,8 +217,7 @@ type OpsInsertSystemMetricsInput struct {
 	DBConnIdle    *int
 	DBConnWaiting *int
 
-	GoroutineCount        *int
-	ConcurrencyQueueDepth *int
+	GoroutineCount *int
 }
 
 type OpsInsertSystemLogInput struct {
@@ -308,9 +307,8 @@ type OpsSystemMetricsSnapshot struct {
 	DBConnIdle    *int `json:"db_conn_idle"`
 	DBConnWaiting *int `json:"db_conn_waiting"`
 
-	GoroutineCount        *int   `json:"goroutine_count"`
-	ConcurrencyQueueDepth *int   `json:"concurrency_queue_depth"`
-	AccountSwitchCount    *int64 `json:"account_switch_count"`
+	GoroutineCount     *int   `json:"goroutine_count"`
+	AccountSwitchCount *int64 `json:"account_switch_count"`
 }
 
 type OpsUpsertJobHeartbeatInput struct {

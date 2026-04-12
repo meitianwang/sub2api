@@ -793,10 +793,6 @@ func (r *stubUserRepo) DeductBalance(ctx context.Context, id int64, amount float
 	return errors.New("not implemented")
 }
 
-func (r *stubUserRepo) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
-	return errors.New("not implemented")
-}
-
 func (r *stubUserRepo) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	return false, errors.New("not implemented")
 }

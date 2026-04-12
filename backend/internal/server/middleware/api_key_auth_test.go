@@ -35,7 +35,6 @@ func TestSimpleModeBypassesQuotaCheck(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -191,7 +190,6 @@ func TestAPIKeyAuthSetsGroupContext(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -248,7 +246,6 @@ func TestAPIKeyAuthOverwritesInvalidContextGroup(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -305,7 +302,6 @@ func TestAPIKeyAuthIPRestrictionDoesNotTrustSpoofedForwardHeaders(t *testing.T) 
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:          100,
@@ -356,7 +352,6 @@ func TestAPIKeyAuthTouchesLastUsedOnSuccess(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -405,7 +400,6 @@ func TestAPIKeyAuthTouchLastUsedFailureDoesNotBlock(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     101,
@@ -451,7 +445,6 @@ func TestAPIKeyAuthTouchesLastUsedInStandardMode(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     102,

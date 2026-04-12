@@ -268,7 +268,6 @@ func TestApiKeyAuthWithSubscriptionGoogleSetsGroupContext(t *testing.T) {
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -470,7 +469,6 @@ func TestApiKeyAuthWithSubscriptionGoogle_TouchesLastUsedOnSuccess(t *testing.T)
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     201,
@@ -519,7 +517,6 @@ func TestApiKeyAuthWithSubscriptionGoogle_TouchFailureDoesNotBlock(t *testing.T)
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     202,
@@ -565,7 +562,6 @@ func TestApiKeyAuthWithSubscriptionGoogle_TouchesLastUsedInStandardMode(t *testi
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     203,
@@ -620,7 +616,6 @@ func TestApiKeyAuthWithSubscriptionGoogle_SubscriptionLimitExceededReturns429(t 
 		Role:        service.RoleUser,
 		Status:      service.StatusActive,
 		Balance:     10,
-		Concurrency: 3,
 	}
 	apiKey := &service.APIKey{
 		ID:     501,

@@ -63,7 +63,6 @@ func TestJWTAuth_ValidToken(t *testing.T) {
 		Email:        "test@example.com",
 		Role:         "user",
 		Status:       service.StatusActive,
-		Concurrency:  5,
 		TokenVersion: 1,
 	}
 	router, authSvc := newJWTTestEnv(map[int64]*service.User{1: user})
@@ -90,7 +89,6 @@ func TestJWTAuth_ValidToken_LowercaseBearer(t *testing.T) {
 		Email:        "test@example.com",
 		Role:         "user",
 		Status:       service.StatusActive,
-		Concurrency:  5,
 		TokenVersion: 1,
 	}
 	router, authSvc := newJWTTestEnv(map[int64]*service.User{1: user})

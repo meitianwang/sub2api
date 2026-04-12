@@ -76,8 +76,7 @@ INSERT INTO ops_system_metrics (
   db_conn_idle,
   db_conn_waiting,
 
-  goroutine_count,
-  concurrency_queue_depth
+  goroutine_count
 ) VALUES (
   $1,$2,$3,$4,
   $5,$6,$7,$8,
@@ -89,7 +88,7 @@ INSERT INTO ops_system_metrics (
   $32,$33,
   $34,$35,
   $36,$37,$38,
-  $39,$40
+  $39
 )`
 
 	_, err := r.db.ExecContext(
@@ -144,7 +143,6 @@ INSERT INTO ops_system_metrics (
 		opsNullInt(input.DBConnWaiting),
 
 		opsNullInt(input.GoroutineCount),
-		opsNullInt(input.ConcurrencyQueueDepth),
 	)
 	return err
 }
@@ -179,7 +177,6 @@ SELECT
   db_conn_waiting,
 
   goroutine_count,
-  concurrency_queue_depth,
   account_switch_count
 FROM ops_system_metrics
 WHERE window_minutes = $1
@@ -201,7 +198,6 @@ LIMIT 1`
 	var dbIdle sql.NullInt64
 	var dbWaiting sql.NullInt64
 	var goroutines sql.NullInt64
-	var queueDepth sql.NullInt64
 	var accountSwitchCount sql.NullInt64
 
 	if err := r.db.QueryRowContext(ctx, q, windowMinutes).Scan(
@@ -220,7 +216,6 @@ LIMIT 1`
 		&dbIdle,
 		&dbWaiting,
 		&goroutines,
-		&queueDepth,
 		&accountSwitchCount,
 	); err != nil {
 		return nil, err
@@ -273,10 +268,6 @@ LIMIT 1`
 	if goroutines.Valid {
 		v := int(goroutines.Int64)
 		out.GoroutineCount = &v
-	}
-	if queueDepth.Valid {
-		v := int(queueDepth.Int64)
-		out.ConcurrencyQueueDepth = &v
 	}
 	if accountSwitchCount.Valid {
 		v := accountSwitchCount.Int64

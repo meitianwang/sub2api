@@ -16,7 +16,6 @@ func NewTestUser(opts ...func(*service.User)) *service.User {
 		Username:    "testuser",
 		Role:        "user",
 		Balance:     100.0,
-		Concurrency: 5,
 		Status:      service.StatusActive,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -35,7 +34,6 @@ func NewTestAccount(opts ...func(*service.Account)) *service.Account {
 		Platform:    service.PlatformAnthropic,
 		Status:      service.StatusActive,
 		Schedulable: true,
-		Concurrency: 5,
 		Priority:    1,
 	}
 	for _, opt := range opts {

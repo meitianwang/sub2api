@@ -229,7 +229,7 @@ func (h *AccountHandler) List(c *gin.Context) {
 		return
 	}
 
-	// Get current concurrency counts for all accounts
+	// Get current session counts for all accounts
 	accountIDs := make([]int64, len(accounts))
 	for i, acc := range accounts {
 		accountIDs[i] = acc.ID

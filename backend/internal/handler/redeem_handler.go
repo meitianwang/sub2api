@@ -32,7 +32,6 @@ type RedeemResponse struct {
 	Type           string   `json:"type"`
 	Value          float64  `json:"value"`
 	NewBalance     *float64 `json:"new_balance,omitempty"`
-	NewConcurrency *int     `json:"new_concurrency,omitempty"`
 }
 
 // Redeem handles redeeming a code
