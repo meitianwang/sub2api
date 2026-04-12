@@ -91,7 +91,6 @@ func TestUsageBillingRepositoryApply_DeduplicatesSubscriptionBilling(t *testing.
 	})
 	group := mustCreateGroup(t, client, &service.Group{
 		Name:             "usage-billing-group-" + uuid.NewString(),
-		Platform:         service.PlatformAnthropic,
 		SubscriptionType: service.SubscriptionTypeSubscription,
 	})
 	apiKey := mustCreateApiKey(t, client, &service.APIKey{

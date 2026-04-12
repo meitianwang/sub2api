@@ -1118,7 +1118,6 @@
                         <GroupBadge
                           v-if="option"
                           :name="(option as unknown as DefaultSubscriptionGroupOption).label"
-                          :platform="(option as unknown as DefaultSubscriptionGroupOption).platform"
                           :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
                         />
                         <span v-else class="text-gray-400">
@@ -1128,7 +1127,6 @@
                       <template #option="{ option, selected }">
                         <GroupOptionItem
                           :name="(option as unknown as DefaultSubscriptionGroupOption).label"
-                          :platform="(option as unknown as DefaultSubscriptionGroupOption).platform"
                           :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
                           :description="(option as unknown as DefaultSubscriptionGroupOption).description"
                           :selected="selected"
@@ -2070,7 +2068,6 @@ interface DefaultSubscriptionGroupOption {
   value: number
   label: string
   description: string | null
-  platform: AdminGroup['platform']
   subscriptionType: AdminGroup['subscription_type']
   [key: string]: unknown
 }
@@ -2154,7 +2151,6 @@ const defaultSubscriptionGroupOptions = computed<DefaultSubscriptionGroupOption[
     value: group.id,
     label: group.name,
     description: group.description,
-    platform: group.platform,
     subscriptionType: group.subscription_type
   }))
 )

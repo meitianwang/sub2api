@@ -704,7 +704,7 @@ func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context
 		}
 		groupID = resolvedGroupID
 		ctx = s.withGroupContext(ctx, group)
-		platform = group.Platform
+		platform = PlatformAnthropic
 	} else {
 		platform = PlatformAnthropic
 	}
@@ -745,12 +745,8 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 	}
 
 	if s.debugModelRoutingEnabled() && requestedModel != "" {
-		groupPlatform := ""
-		if group != nil {
-			groupPlatform = group.Platform
-		}
-		logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] select entry: group_id=%v group_platform=%s model=%s session=%s sticky_account=%d load_batch=%v concurrency=%v",
-			derefGroupID(groupID), groupPlatform, requestedModel, shortSessionHash(sessionHash), stickyAccountID, cfg.LoadBatchEnabled, s.concurrencyService != nil)
+		logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] select entry: group_id=%v model=%s session=%s sticky_account=%d load_batch=%v concurrency=%v",
+			derefGroupID(groupID), requestedModel, shortSessionHash(sessionHash), stickyAccountID, cfg.LoadBatchEnabled, s.concurrencyService != nil)
 	}
 
 	if s.concurrencyService == nil || !cfg.LoadBatchEnabled {
@@ -813,7 +809,7 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 		}
 	}
 
-	platform, hasForcePlatform, err := s.resolvePlatform(ctx, groupID, group)
+	platform, hasForcePlatform, err := s.resolvePlatform(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1436,20 +1432,10 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 	return group, resolvedID, nil
 }
 
-func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, group *Group) (string, bool, error) {
+func (s *GatewayService) resolvePlatform(ctx context.Context) (string, bool, error) {
 	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
 	if hasForcePlatform && forcePlatform != "" {
 		return forcePlatform, true, nil
-	}
-	if group != nil {
-		return group.Platform, false, nil
-	}
-	if groupID != nil {
-		group, err := s.resolveGroupByID(ctx, *groupID)
-		if err != nil {
-			return "", false, err
-		}
-		return group.Platform, false, nil
 	}
 	return PlatformAnthropic, false, nil
 }

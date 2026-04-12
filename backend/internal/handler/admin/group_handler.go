@@ -84,7 +84,6 @@ func NewGroupHandler(adminService service.AdminService, dashboardService *servic
 type CreateGroupRequest struct {
 	Name             string             `json:"name" binding:"required"`
 	Description      string             `json:"description"`
-	Platform    string `json:"platform" binding:"omitempty,oneof=anthropic openai gemini"`
 	IsExclusive bool   `json:"is_exclusive"`
 	SubscriptionType string             `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
 	DailyLimitUSD    optionalLimitField `json:"daily_limit_usd"`
@@ -116,7 +115,6 @@ type CreateGroupRequest struct {
 type UpdateGroupRequest struct {
 	Name             string             `json:"name"`
 	Description      string             `json:"description"`
-	Platform    string `json:"platform" binding:"omitempty,oneof=anthropic openai gemini"`
 	IsExclusive *bool  `json:"is_exclusive"`
 	Status           string             `json:"status" binding:"omitempty,oneof=active inactive"`
 	SubscriptionType string             `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
@@ -149,7 +147,6 @@ type UpdateGroupRequest struct {
 // GET /api/v1/admin/groups
 func (h *GroupHandler) List(c *gin.Context) {
 	page, pageSize := response.ParsePagination(c)
-	platform := c.Query("platform")
 	status := c.Query("status")
 	search := c.Query("search")
 	// 标准化和验证 search 参数
@@ -165,7 +162,7 @@ func (h *GroupHandler) List(c *gin.Context) {
 		isExclusive = &val
 	}
 
-	groups, total, err := h.adminService.ListGroups(c.Request.Context(), page, pageSize, platform, status, search, isExclusive)
+	groups, total, err := h.adminService.ListGroups(c.Request.Context(), page, pageSize, status, search, isExclusive)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -181,16 +178,7 @@ func (h *GroupHandler) List(c *gin.Context) {
 // GetAll handles getting all active groups without pagination
 // GET /api/v1/admin/groups/all
 func (h *GroupHandler) GetAll(c *gin.Context) {
-	platform := c.Query("platform")
-
-	var groups []service.Group
-	var err error
-
-	if platform != "" {
-		groups, err = h.adminService.GetAllGroupsByPlatform(c.Request.Context(), platform)
-	} else {
-		groups, err = h.adminService.GetAllGroups(c.Request.Context())
-	}
+	groups, err := h.adminService.GetAllGroups(c.Request.Context())
 
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -234,7 +222,6 @@ func (h *GroupHandler) Create(c *gin.Context) {
 	group, err := h.adminService.CreateGroup(c.Request.Context(), &service.CreateGroupInput{
 		Name:                            req.Name,
 		Description:                     req.Description,
-		Platform:    req.Platform,
 		IsExclusive: req.IsExclusive,
 		SubscriptionType:                req.SubscriptionType,
 		DailyLimitUSD:                   req.DailyLimitUSD.ToServiceInput(),
@@ -282,7 +269,6 @@ func (h *GroupHandler) Update(c *gin.Context) {
 	group, err := h.adminService.UpdateGroup(c.Request.Context(), groupID, &service.UpdateGroupInput{
 		Name:                            req.Name,
 		Description:                     req.Description,
-		Platform:    req.Platform,
 		IsExclusive: req.IsExclusive,
 		Status:                          req.Status,
 		SubscriptionType:                req.SubscriptionType,

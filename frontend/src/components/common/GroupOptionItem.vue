@@ -8,7 +8,6 @@
       <!-- Row 1: platform badge (name bold) -->
       <GroupBadge
         :name="name"
-        :platform="platform"
         :subscription-type="subscriptionType"
         :show-rate="false"
         class="groupOptionItemBadge"
@@ -41,11 +40,10 @@
 
 <script setup lang="ts">
 import GroupBadge from './GroupBadge.vue'
-import type { SubscriptionType, GroupPlatform } from '@/types'
+import type { SubscriptionType } from '@/types'
 
 interface Props {
   name: string
-  platform: GroupPlatform
   subscriptionType?: SubscriptionType
   description?: string | null
   selected?: boolean

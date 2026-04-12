@@ -1542,7 +1542,6 @@ export default {
       sortOrderHint: 'Drag groups to adjust display order, groups at the top will be displayed first',
       sortOrderUpdated: 'Sort order updated',
       failedToUpdateSortOrder: 'Failed to update sort order',
-      allPlatforms: 'All Platforms',
       allStatus: 'All Status',
       allGroups: 'All Groups',
       exclusive: 'Exclusive',
@@ -1550,7 +1549,6 @@ export default {
       public: 'Public',
       columns: {
         name: 'Name',
-        platform: 'Platform',
         type: 'Type',
         accounts: 'Accounts',
         capacity: 'Capacity',
@@ -1573,14 +1571,11 @@ export default {
       form: {
         name: 'Name',
         description: 'Description',
-        platform: 'Platform',
         status: 'Status',
         exclusive: 'Exclusive Group'
       },
       enterGroupName: 'Enter group name',
       optionalDescription: 'Optional description',
-      platformHint: 'Select the platform this group is associated with',
-      platformNotEditable: 'Platform cannot be changed after creation',
       exclusiveHint: 'Exclusive group, manually assign to specific users',
       exclusiveTooltip: {
         title: 'What is an exclusive group?',
@@ -1603,12 +1598,6 @@ export default {
       failedToUpdate: 'Failed to update group',
       failedToDelete: 'Failed to delete group',
       nameRequired: 'Please enter group name',
-      platforms: {
-        all: 'All Platforms',
-        anthropic: 'Anthropic',
-        openai: 'OpenAI',
-        gemini: 'Gemini',
-      },
       deleteConfirm:
         "Are you sure you want to delete '{name}'? All associated API keys will no longer belong to any group.",
       deleteConfirmSubscription:

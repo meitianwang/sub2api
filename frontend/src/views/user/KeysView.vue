@@ -100,7 +100,6 @@
                 <GroupBadge
                   v-if="row.group"
                   :name="row.group.name"
-                  :platform="row.group.platform"
                   :subscription-type="row.group.subscription_type"
                 />
                 <span v-else class="text-sm text-gray-400 dark:text-dark-500">{{
@@ -408,7 +407,6 @@
               <GroupBadge
                 v-if="option"
                 :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
 
               />
@@ -417,7 +415,6 @@
             <template #option="{ option, selected }">
               <GroupOptionItem
                 :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
 
                 :description="(option as unknown as GroupOption).description"
@@ -913,7 +910,7 @@
       :show="showUseKeyModal"
       :api-key="selectedKey?.key || ''"
       :base-url="publicSettings?.api_base_url || ''"
-      :platform="selectedKey?.group?.platform || null"
+      :platform="'anthropic'"
       :allow-messages-dispatch="selectedKey?.group?.allow_messages_dispatch || false"
       @close="closeUseKeyModal"
     />
@@ -964,7 +961,6 @@
           >
             <GroupOptionItem
               :name="option.label"
-              :platform="option.platform"
               :subscription-type="option.subscriptionType"
 
               :description="option.description"
@@ -1008,7 +1004,7 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import EndpointPopover from '@/components/keys/EndpointPopover.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
-	import type { ApiKey, Group, PublicSettings, SubscriptionType, GroupPlatform } from '@/types'
+	import type { ApiKey, Group, PublicSettings, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
@@ -1025,7 +1021,6 @@ interface GroupOption {
   label: string
   description: string | null
   subscriptionType: SubscriptionType
-  platform: GroupPlatform
 }
 
 const appStore = useAppStore()
@@ -1173,8 +1168,7 @@ const groupOptions = computed(() =>
     value: group.id,
     label: group.name,
     description: group.description,
-    subscriptionType: group.subscription_type,
-    platform: group.platform
+    subscriptionType: group.subscription_type
   }))
 )
 
@@ -1597,31 +1591,10 @@ const resetRateLimitUsage = async () => {
 }
 
 const importToCcswitch = (row: ApiKey) => {
-  const platform = row.group?.platform || 'anthropic'
-  executeCcsImport(row, platform === 'gemini' ? 'gemini' : 'claude')
-}
-
-const executeCcsImport = (row: ApiKey, _clientType: 'claude' | 'gemini') => {
   const baseUrl = publicSettings.value?.api_base_url || window.location.origin
-  const platform = row.group?.platform || 'anthropic'
 
-  // Determine app name and endpoint based on platform and client type
-  let app: string
-  let endpoint: string
-
-  switch (platform) {
-    case 'openai':
-      app = 'codex'
-      endpoint = baseUrl
-      break
-    case 'gemini':
-      app = 'gemini'
-      endpoint = baseUrl
-      break
-    default: // anthropic
-      app = 'claude'
-      endpoint = baseUrl
-  }
+  const app = 'claude'
+  const endpoint = baseUrl
 
   const usageScript = `({
     request: {

@@ -56,7 +56,6 @@ func newStubAdminService() *stubAdminService {
 	group := service.Group{
 		ID:        2,
 		Name:      "group",
-		Platform:  service.PlatformAnthropic,
 		Status:    service.StatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -140,15 +139,11 @@ func (s *stubAdminService) GetUserUsageStats(ctx context.Context, userID int64, 
 	return map[string]any{"user_id": userID}, nil
 }
 
-func (s *stubAdminService) ListGroups(ctx context.Context, page, pageSize int, platform, status, search string, isExclusive *bool) ([]service.Group, int64, error) {
+func (s *stubAdminService) ListGroups(ctx context.Context, page, pageSize int, status, search string, isExclusive *bool) ([]service.Group, int64, error) {
 	return s.groups, int64(len(s.groups)), nil
 }
 
 func (s *stubAdminService) GetAllGroups(ctx context.Context) ([]service.Group, error) {
-	return s.groups, nil
-}
-
-func (s *stubAdminService) GetAllGroupsByPlatform(ctx context.Context, platform string) ([]service.Group, error) {
 	return s.groups, nil
 }
 

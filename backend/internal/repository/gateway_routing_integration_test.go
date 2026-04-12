@@ -99,7 +99,6 @@ func (s *GatewayRoutingSuite) TestListSchedulableByGroupIDAndPlatforms_WithGroup
 	// 创建 gemini 分组
 	group := mustCreateGroup(s.T(), s.client, &service.Group{
 		Name:     "gemini-group",
-		Platform: service.PlatformGemini,
 		Status:   service.StatusActive,
 	})
 

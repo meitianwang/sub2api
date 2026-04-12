@@ -51,8 +51,6 @@ func TestGroupRepoSuite(t *testing.T) {
 func (s *GroupRepoSuite) TestCreate() {
 	group := &service.Group{
 		Name:             "test-create",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -76,8 +74,6 @@ func (s *GroupRepoSuite) TestGetByID_NotFound() {
 func (s *GroupRepoSuite) TestGetByIDLite_DoesNotUseAccountCount() {
 	group := &service.Group{
 		Name:             "lite-group",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -96,8 +92,6 @@ func (s *GroupRepoSuite) TestGetByIDLite_DoesNotUseAccountCount() {
 func (s *GroupRepoSuite) TestUpdate() {
 	group := &service.Group{
 		Name:             "original",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -116,8 +110,6 @@ func (s *GroupRepoSuite) TestUpdate() {
 func (s *GroupRepoSuite) TestDelete() {
 	group := &service.Group{
 		Name:             "to-delete",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -140,16 +132,12 @@ func (s *GroupRepoSuite) TestList() {
 
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -161,62 +149,21 @@ func (s *GroupRepoSuite) TestList() {
 	s.Require().Equal(basePage.Total+2, page.Total)
 }
 
-func (s *GroupRepoSuite) TestListWithFilters_Platform() {
-	baseGroups, _, err := s.repo.ListWithFilters(
-		s.ctx,
-		pagination.PaginationParams{Page: 1, PageSize: 10},
-		service.PlatformOpenAI,
-		"",
-		"",
-		nil,
-	)
-	s.Require().NoError(err, "ListWithFilters base")
-
-	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
-		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
-		IsExclusive:      false,
-		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
-	}))
-	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
-		Name:             "g2",
-		Platform:         service.PlatformOpenAI,
-
-		IsExclusive:      false,
-		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
-	}))
-
-	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.PlatformOpenAI, "", "", nil)
-	s.Require().NoError(err)
-	s.Require().Len(groups, len(baseGroups)+1)
-	// Verify all groups are OpenAI platform
-	for _, g := range groups {
-		s.Require().Equal(service.PlatformOpenAI, g.Platform)
-	}
-}
-
 func (s *GroupRepoSuite) TestListWithFilters_Status() {
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusDisabled,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
-	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, "", service.StatusDisabled, "", nil)
+	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.StatusDisabled, "", nil)
 	s.Require().NoError(err)
 	s.Require().Len(groups, 1)
 	s.Require().Equal(service.StatusDisabled, groups[0].Status)
@@ -225,23 +172,19 @@ func (s *GroupRepoSuite) TestListWithFilters_Status() {
 func (s *GroupRepoSuite) TestListWithFilters_IsExclusive() {
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      true,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	isExclusive := true
-	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, "", "", "", &isExclusive)
+	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, "", "", &isExclusive)
 	s.Require().NoError(err)
 	s.Require().Len(groups, 1)
 	s.Require().True(groups[0].IsExclusive)
@@ -271,8 +214,6 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 	newGroup := func(name string) *service.Group {
 		return &service.Group{
 			Name:             name,
-			Platform:         service.PlatformAnthropic,
-	
 			IsExclusive:      false,
 			Status:           service.StatusActive,
 			SubscriptionType: service.SubscriptionTypeStandard,
@@ -285,7 +226,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		target := mustCreate(repo, ctx, newGroup("it-group-search-name-target"))
 		other := mustCreate(repo, ctx, newGroup("it-group-search-name-other"))
 
-		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", "name-target", nil)
+		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "name-target", nil)
 		s.Require().NoError(err)
 		s.Require().True(containsID(groups, target.ID), "expected target group to match by name")
 		s.Require().False(containsID(groups, other.ID), "expected other group to be filtered out")
@@ -302,7 +243,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		other.Description = "nothing to see here"
 		other = mustCreate(repo, ctx, other)
 
-		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", "desc-needle", nil)
+		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "desc-needle", nil)
 		s.Require().NoError(err)
 		s.Require().True(containsID(groups, target.ID), "expected target group to match by description")
 		s.Require().False(containsID(groups, other.ID), "expected other group to be filtered out")
@@ -314,7 +255,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		_ = mustCreate(repo, ctx, newGroup("it-group-search-nonexistent-baseline"))
 
 		search := s.T().Name() + "__no_such_group__"
-		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", search, nil)
+		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", search, nil)
 		s.Require().NoError(err)
 		s.Require().Empty(groups)
 	})
@@ -325,7 +266,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		target := mustCreate(repo, ctx, newGroup("MiXeDCaSe-Needle"))
 		other := mustCreate(repo, ctx, newGroup("it-group-search-case-other"))
 
-		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", "mixedcase-needle", nil)
+		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "mixedcase-needle", nil)
 		s.Require().NoError(err)
 		s.Require().True(containsID(groups, target.ID), "expected case-insensitive match")
 		s.Require().False(containsID(groups, other.ID), "expected other group to be filtered out")
@@ -337,7 +278,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		percentTarget := mustCreate(repo, ctx, newGroup("it-group-search-100%-target"))
 		percentOther := mustCreate(repo, ctx, newGroup("it-group-search-100X-other"))
 
-		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", "100%", nil)
+		groups, _, err := repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "100%", nil)
 		s.Require().NoError(err)
 		s.Require().True(containsID(groups, percentTarget.ID), "expected literal %% match")
 		s.Require().False(containsID(groups, percentOther.ID), "expected %% not to act as wildcard")
@@ -345,7 +286,7 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 		underscoreTarget := mustCreate(repo, ctx, newGroup("it-group-search-ab_cd-target"))
 		underscoreOther := mustCreate(repo, ctx, newGroup("it-group-search-abXcd-other"))
 
-		groups, _, err = repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "", "ab_cd", nil)
+		groups, _, err = repo.ListWithFilters(ctx, pagination.PaginationParams{Page: 1, PageSize: 50}, "", "ab_cd", nil)
 		s.Require().NoError(err)
 		s.Require().True(containsID(groups, underscoreTarget.ID), "expected literal _ match")
 		s.Require().False(containsID(groups, underscoreOther.ID), "expected _ not to act as wildcard")
@@ -355,24 +296,18 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 func (s *GroupRepoSuite) TestUpdateSortOrders_BatchCaseWhen() {
 	g1 := &service.Group{
 		Name:             "sort-g1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g2 := &service.Group{
 		Name:             "sort-g2",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g3 := &service.Group{
 		Name:             "sort-g3",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -403,8 +338,6 @@ func (s *GroupRepoSuite) TestUpdateSortOrders_BatchCaseWhen() {
 func (s *GroupRepoSuite) TestUpdateSortOrders_MissingGroupNoPartialUpdate() {
 	g1 := &service.Group{
 		Name:             "sort-no-partial",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -430,16 +363,12 @@ func (s *GroupRepoSuite) TestUpdateSortOrders_MissingGroupNoPartialUpdate() {
 func (s *GroupRepoSuite) TestListWithFilters_AccountCount() {
 	g1 := &service.Group{
 		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g2 := &service.Group{
 		Name:             "g2",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      true,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -461,7 +390,7 @@ func (s *GroupRepoSuite) TestListWithFilters_AccountCount() {
 	s.Require().NoError(err)
 
 	isExclusive := true
-	groups, page, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.PlatformAnthropic, service.StatusActive, "", &isExclusive)
+	groups, page, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.StatusActive, "", &isExclusive)
 	s.Require().NoError(err, "ListWithFilters")
 	s.Require().Equal(int64(1), page.Total)
 	s.Require().Len(groups, 1)
@@ -469,7 +398,7 @@ func (s *GroupRepoSuite) TestListWithFilters_AccountCount() {
 	s.Require().Equal(int64(1), groups[0].AccountCount, "AccountCount mismatch")
 }
 
-// --- ListActive / ListActiveByPlatform ---
+// --- ListActive ---
 
 func (s *GroupRepoSuite) TestListActive() {
 	baseGroups, err := s.repo.ListActive(s.ctx)
@@ -477,16 +406,12 @@ func (s *GroupRepoSuite) TestListActive() {
 
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "active1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "inactive1",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusDisabled,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -506,54 +431,11 @@ func (s *GroupRepoSuite) TestListActive() {
 	s.Require().True(found, "active1 group should be in results")
 }
 
-func (s *GroupRepoSuite) TestListActiveByPlatform() {
-	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
-		Name:             "g1",
-		Platform:         service.PlatformAnthropic,
-
-		IsExclusive:      false,
-		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
-	}))
-	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
-		Name:             "g2",
-		Platform:         service.PlatformOpenAI,
-
-		IsExclusive:      false,
-		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
-	}))
-	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
-		Name:             "g3",
-		Platform:         service.PlatformAnthropic,
-
-		IsExclusive:      false,
-		Status:           service.StatusDisabled,
-		SubscriptionType: service.SubscriptionTypeStandard,
-	}))
-
-	groups, err := s.repo.ListActiveByPlatform(s.ctx, service.PlatformAnthropic)
-	s.Require().NoError(err, "ListActiveByPlatform")
-	// 1 default anthropic group + 1 test active anthropic group = 2 total
-	s.Require().Len(groups, 2)
-	// Verify our test group is in the results
-	var found bool
-	for _, g := range groups {
-		if g.Name == "g1" {
-			found = true
-			break
-		}
-	}
-	s.Require().True(found, "g1 group should be in results")
-}
-
 // --- ExistsByName ---
 
 func (s *GroupRepoSuite) TestExistsByName() {
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "existing-group",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -573,8 +455,6 @@ func (s *GroupRepoSuite) TestExistsByName() {
 func (s *GroupRepoSuite) TestGetAccountCount() {
 	group := &service.Group{
 		Name:             "g-count",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -611,8 +491,6 @@ func (s *GroupRepoSuite) TestGetAccountCount() {
 func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
 	group := &service.Group{
 		Name:             "g-empty",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -629,8 +507,6 @@ func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
 func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID() {
 	g := &service.Group{
 		Name:             "g-del",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -659,8 +535,6 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID() {
 func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID_MultipleAccounts() {
 	g := &service.Group{
 		Name:             "g-multi",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -701,8 +575,6 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID_MultipleAccounts() {
 func (s *GroupRepoSuite) TestDelete_SoftDelete_NotVisibleInList() {
 	group := &service.Group{
 		Name:             "to-soft-delete",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,
@@ -732,8 +604,6 @@ func (s *GroupRepoSuite) TestDelete_SoftDelete_NotVisibleInList() {
 func (s *GroupRepoSuite) TestDelete_SoftDeletedGroup_lockForUpdate() {
 	group := &service.Group{
 		Name:             "lock-soft-delete",
-		Platform:         service.PlatformAnthropic,
-
 		IsExclusive:      false,
 		Status:           service.StatusActive,
 		SubscriptionType: service.SubscriptionTypeStandard,

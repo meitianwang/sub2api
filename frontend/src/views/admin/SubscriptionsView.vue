@@ -201,7 +201,6 @@
             <GroupBadge
               v-if="row.group"
               :name="row.group.name"
-              :platform="row.group.platform"
               :subscription-type="row.group.subscription_type"
               :show-rate="false"
             />
@@ -500,7 +499,6 @@
               <GroupBadge
                 v-if="option"
                 :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
               />
               <span v-else class="text-gray-400">{{ t('admin.subscriptions.selectGroup') }}</span>
@@ -508,7 +506,6 @@
             <template #option="{ option, selected }">
               <GroupOptionItem
                 :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
                 :description="(option as unknown as GroupOption).description"
                 :selected="selected"
@@ -737,7 +734,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
-import type { UserSubscription, Group, GroupPlatform, SubscriptionType } from '@/types'
+import type { UserSubscription, Group, SubscriptionType } from '@/types'
 import type { SimpleUser } from '@/api/admin/usage'
 import type { Column } from '@/components/common/types'
 import { formatDateOnly } from '@/utils/format'
@@ -761,7 +758,6 @@ interface GroupOption {
   value: number
   label: string
   description: string | null
-  platform: GroupPlatform
   subscriptionType: SubscriptionType
 }
 
@@ -971,7 +967,6 @@ const subscriptionGroupOptions = computed(() =>
       value: g.id,
       label: g.name,
       description: g.description,
-      platform: g.platform,
       subscriptionType: g.subscription_type
     }))
 )

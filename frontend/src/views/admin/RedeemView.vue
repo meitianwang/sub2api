@@ -247,7 +247,6 @@
                     <GroupBadge
                       v-if="option"
                       :name="(option as unknown as GroupOption).label"
-                      :platform="(option as unknown as GroupOption).platform"
                       :subscription-type="(option as unknown as GroupOption).subscriptionType"
                     />
                     <span v-else class="text-gray-400">{{
@@ -257,7 +256,6 @@
                   <template #option="{ option, selected }">
                     <GroupOptionItem
                       :name="(option as unknown as GroupOption).label"
-                      :platform="(option as unknown as GroupOption).platform"
                       :subscription-type="(option as unknown as GroupOption).subscriptionType"
                       :description="(option as unknown as GroupOption).description"
                       :selected="selected"
@@ -396,7 +394,7 @@ import { useClipboard } from '@/composables/useClipboard'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { adminAPI } from '@/api/admin'
 import { formatDateTime } from '@/utils/format'
-import type { RedeemCode, RedeemCodeType, Group, GroupPlatform, SubscriptionType } from '@/types'
+import type { RedeemCode, RedeemCodeType, Group, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -416,7 +414,6 @@ interface GroupOption {
   value: number
   label: string
   description: string | null
-  platform: GroupPlatform
   subscriptionType: SubscriptionType
 }
 
@@ -433,7 +430,6 @@ const subscriptionGroupOptions = computed(() => {
       value: g.id,
       label: g.name,
       description: g.description,
-      platform: g.platform,
       subscriptionType: g.subscription_type
     }))
 })

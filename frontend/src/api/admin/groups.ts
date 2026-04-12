@@ -6,7 +6,6 @@
 import { apiClient } from '../client'
 import type {
   AdminGroup,
-  GroupPlatform,
   CreateGroupRequest,
   UpdateGroupRequest,
   PaginatedResponse
@@ -16,14 +15,13 @@ import type {
  * List all groups with pagination
  * @param page - Page number (default: 1)
  * @param pageSize - Items per page (default: 20)
- * @param filters - Optional filters (platform, status, is_exclusive, search)
+ * @param filters - Optional filters (status, is_exclusive, search)
  * @returns Paginated list of groups
  */
 export async function list(
   page: number = 1,
   pageSize: number = 20,
   filters?: {
-    platform?: GroupPlatform
     status?: 'active' | 'inactive'
     is_exclusive?: boolean
     search?: string
@@ -45,23 +43,11 @@ export async function list(
 
 /**
  * Get all active groups (without pagination)
- * @param platform - Optional platform filter
  * @returns List of all active groups
  */
-export async function getAll(platform?: GroupPlatform): Promise<AdminGroup[]> {
-  const { data } = await apiClient.get<AdminGroup[]>('/admin/groups/all', {
-    params: platform ? { platform } : undefined
-  })
+export async function getAll(): Promise<AdminGroup[]> {
+  const { data } = await apiClient.get<AdminGroup[]>('/admin/groups/all')
   return data
-}
-
-/**
- * Get active groups by platform
- * @param platform - Platform to filter by
- * @returns List of groups for the specified platform
- */
-export async function getByPlatform(platform: GroupPlatform): Promise<AdminGroup[]> {
-  return getAll(platform)
 }
 
 /**
@@ -198,7 +184,6 @@ export async function getCapacitySummary(): Promise<
 export const groupsAPI = {
   list,
   getAll,
-  getByPlatform,
   getById,
   create,
   update,

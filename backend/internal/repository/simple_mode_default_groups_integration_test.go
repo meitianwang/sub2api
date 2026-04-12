@@ -22,15 +22,9 @@ func TestEnsureSimpleModeDefaultGroups_CreatesMissingDefaults(t *testing.T) {
 
 	require.NoError(t, ensureSimpleModeDefaultGroups(seedCtx, client))
 
-	assertGroupExists := func(name string) {
-		exists, err := client.Group.Query().Where(group.NameEQ(name), group.DeletedAtIsNil()).Exist(seedCtx)
-		require.NoError(t, err)
-		require.True(t, exists, "expected group %s to exist", name)
-	}
-
-	assertGroupExists(service.PlatformAnthropic + "-default")
-	assertGroupExists(service.PlatformOpenAI + "-default")
-	assertGroupExists(service.PlatformGemini + "-default")
+	exists, err := client.Group.Query().Where(group.NameEQ("default"), group.DeletedAtIsNil()).Exist(seedCtx)
+	require.NoError(t, err)
+	require.True(t, exists, "expected group 'default' to exist")
 }
 
 func TestEnsureSimpleModeDefaultGroups_IgnoresSoftDeletedGroups(t *testing.T) {
@@ -41,13 +35,11 @@ func TestEnsureSimpleModeDefaultGroups_IgnoresSoftDeletedGroups(t *testing.T) {
 	seedCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	// Create and then soft-delete an anthropic default group.
+	// Create and then soft-delete the default group.
 	g, err := client.Group.Create().
-		SetName(service.PlatformAnthropic + "-default").
-		SetPlatform(service.PlatformAnthropic).
+		SetName("default").
 		SetStatus(service.StatusActive).
 		SetSubscriptionType(service.SubscriptionTypeStandard).
-		SetRateMultiplier(1.0).
 		SetIsExclusive(false).
 		Save(seedCtx)
 	require.NoError(t, err)
@@ -58,7 +50,7 @@ func TestEnsureSimpleModeDefaultGroups_IgnoresSoftDeletedGroups(t *testing.T) {
 	require.NoError(t, ensureSimpleModeDefaultGroups(seedCtx, client))
 
 	// New active one should exist.
-	count, err := client.Group.Query().Where(group.NameEQ(service.PlatformAnthropic+"-default"), group.DeletedAtIsNil()).Count(seedCtx)
+	count, err := client.Group.Query().Where(group.NameEQ("default"), group.DeletedAtIsNil()).Count(seedCtx)
 	require.NoError(t, err)
 	require.Equal(t, 1, count)
 }

@@ -9,7 +9,6 @@ type Group struct {
 	ID             int64
 	Name           string
 	Description    string
-	Platform    string
 	IsExclusive bool
 	Status         string
 	Hydrated       bool // indicates the group was loaded from a trusted repository source
@@ -112,7 +111,7 @@ func IsGroupContextValid(group *Group) bool {
 	if !group.Hydrated {
 		return false
 	}
-	if group.Platform == "" || group.Status == "" {
+	if group.Status == "" {
 		return false
 	}
 	return true

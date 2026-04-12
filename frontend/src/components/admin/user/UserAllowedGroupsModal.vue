@@ -63,11 +63,6 @@
                       {{ t('admin.groups.exclusive') }}
                     </span>
                   </div>
-                  <div class="mt-1.5 flex items-center gap-3 text-sm">
-                    <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                      <PlatformIcon :platform="config.platform" size="xs" />
-                      <span>{{ config.platform }}</span>
-                    </span>
                   </div>
                 </div>
               </div>
@@ -107,14 +102,12 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
-import type { AdminUser, Group, GroupPlatform } from '@/types'
+import type { AdminUser, Group } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
-import PlatformIcon from '@/components/common/PlatformIcon.vue'
 
 interface GroupConfig {
   groupId: number
   groupName: string
-  platform: GroupPlatform
   isExclusive: boolean
   isSelected: boolean
 }
@@ -156,7 +149,6 @@ const load = async () => {
     groupConfigs.value = groups.value.map((g) => ({
       groupId: g.id,
       groupName: g.name,
-      platform: g.platform,
       isExclusive: g.is_exclusive,
       // 专属分组：检查是否在 allowed_groups 中
       // 公开分组：始终选中

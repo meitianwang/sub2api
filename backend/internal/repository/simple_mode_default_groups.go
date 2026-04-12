@@ -14,23 +14,10 @@ func ensureSimpleModeDefaultGroups(ctx context.Context, client *dbent.Client) er
 		return fmt.Errorf("nil ent client")
 	}
 
-	platforms := []string{
-		service.PlatformAnthropic,
-		service.PlatformOpenAI,
-		service.PlatformGemini,
-	}
-
-	for _, platform := range platforms {
-		name := platform + "-default"
-		if err := createGroupIfNotExists(ctx, client, name, platform); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return createGroupIfNotExists(ctx, client, "default")
 }
 
-func createGroupIfNotExists(ctx context.Context, client *dbent.Client, name, platform string) error {
+func createGroupIfNotExists(ctx context.Context, client *dbent.Client, name string) error {
 	exists, err := client.Group.Query().
 		Where(group.NameEQ(name), group.DeletedAtIsNil()).
 		Exist(ctx)
@@ -44,7 +31,6 @@ func createGroupIfNotExists(ctx context.Context, client *dbent.Client, name, pla
 	_, err = client.Group.Create().
 		SetName(name).
 		SetDescription("Auto-created default group").
-		SetPlatform(platform).
 		SetStatus(service.StatusActive).
 		SetSubscriptionType(service.SubscriptionTypeStandard).
 		SetIsExclusive(false).

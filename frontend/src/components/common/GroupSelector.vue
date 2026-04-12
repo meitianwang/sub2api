@@ -8,7 +8,7 @@
       class="grid max-h-32 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 dark:border-dark-600 dark:bg-dark-800"
     >
       <label
-        v-for="group in filteredGroups"
+        v-for="group in groups"
         :key="group.id"
         class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-white dark:hover:bg-dark-700"
         :title="t('admin.groups.accountsCount', { count: group.account_count || 0 })"
@@ -22,14 +22,13 @@
         />
         <GroupBadge
           :name="group.name"
-          :platform="group.platform"
           :subscription-type="group.subscription_type"
           class="min-w-0 flex-1"
         />
         <span class="shrink-0 text-xs text-gray-400">{{ group.account_count || 0 }}</span>
       </label>
       <div
-        v-if="filteredGroups.length === 0"
+        v-if="groups.length === 0"
         class="col-span-2 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
       >
         {{ t('common.noGroupsAvailable') }}
@@ -39,31 +38,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GroupBadge from './GroupBadge.vue'
-import type { AdminGroup, GroupPlatform } from '@/types'
+import type { AdminGroup } from '@/types'
 
 const { t } = useI18n()
 
 interface Props {
   modelValue: number[]
   groups: AdminGroup[]
-  platform?: GroupPlatform // Optional platform filter
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: number[]]
 }>()
-
-// Filter groups by platform if specified
-const filteredGroups = computed(() => {
-  if (!props.platform) {
-    return props.groups
-  }
-  return props.groups.filter((g) => g.platform === props.platform)
-})
 
 const handleChange = (groupId: number, checked: boolean) => {
   const newValue = checked

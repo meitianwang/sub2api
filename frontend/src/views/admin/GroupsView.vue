@@ -20,13 +20,6 @@
               />
             </div>
           <Select
-            v-model="filters.platform"
-            :options="platformFilterOptions"
-            :placeholder="t('admin.groups.allPlatforms')"
-            class="w-44"
-            @change="loadGroups"
-          />
-          <Select
             v-model="filters.status"
             :options="statusOptions"
             :placeholder="t('admin.groups.allStatus')"
@@ -76,22 +69,6 @@
         <DataTable :columns="columns" :data="groups" :loading="loading">
           <template #cell-name="{ value }">
             <span class="font-medium text-gray-900 dark:text-white">{{ value }}</span>
-          </template>
-
-          <template #cell-platform="{ value }">
-            <span
-              :class="[
-                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-                value === 'anthropic'
-                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                  : value === 'openai'
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-              ]"
-            >
-              <PlatformIcon :platform="value" size="xs" />
-              {{ t('admin.groups.platforms.' + value) }}
-            </span>
           </template>
 
           <template #cell-billing_type="{ row }">
@@ -276,16 +253,6 @@
             :placeholder="t('admin.groups.optionalDescription')"
           ></textarea>
         </div>
-        <div>
-          <label class="input-label">{{ t('admin.groups.form.platform') }}</label>
-          <Select
-            v-model="createForm.platform"
-            :options="platformOptions"
-            data-tour="group-form-platform"
-            @change="createForm.copy_accounts_from_group_ids = []"
-          />
-          <p class="input-hint">{{ t('admin.groups.platformHint') }}</p>
-        </div>
         <!-- 从分组复制账号 -->
         <div v-if="copyAccountsGroupOptions.length > 0">
           <div class="mb-1.5 flex items-center gap-1">
@@ -452,8 +419,8 @@
           </div>
         </div>
 
-        <!-- 图片生成计费配置（gemini 平台） -->
-        <div v-if="createForm.platform === 'gemini'" class="border-t pt-4">
+        <!-- 图片生成计费配置 -->
+        <div class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
             {{ t('admin.groups.imagePricing.title') }}
           </label>
@@ -498,8 +465,8 @@
         </div>
 
 
-        <!-- Claude Code 客户端限制（仅 anthropic 平台） -->
-        <div v-if="createForm.platform === 'anthropic'" class="border-t pt-4">
+        <!-- Claude Code 客户端限制 -->
+        <div class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('admin.groups.claudeCode.title') }}
@@ -554,8 +521,8 @@
           </div>
         </div>
 
-        <!-- OpenAI Messages 调度配置（仅 openai 平台） -->
-        <div v-if="createForm.platform === 'openai'" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4">
+        <!-- OpenAI Messages 调度配置 -->
+        <div class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ t('admin.groups.openaiMessages.title') }}</h4>
 
           <!-- 允许 Messages 调度开关 -->
@@ -592,8 +559,8 @@
           </div>
         </div>
 
-        <!-- 账号过滤控制 (OpenAI/Anthropic/Gemini) -->
-        <div v-if="['openai', 'anthropic', 'gemini'].includes(createForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
+        <!-- 账号过滤控制 -->
+        <div class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">账号过滤控制</h4>
 
           <!-- require_oauth_only toggle -->
@@ -647,9 +614,9 @@
           </div>
         </div>
 
-        <!-- 无效请求兜底（仅 anthropic 平台，且非订阅分组） -->
+        <!-- 无效请求兜底（非订阅分组） -->
         <div
-          v-if="createForm.platform === 'anthropic' && createForm.subscription_type !== 'subscription'"
+          v-if="createForm.subscription_type !== 'subscription'"
           class="border-t pt-4"
         >
           <label class="input-label">{{ t('admin.groups.invalidRequestFallback.title') }}</label>
@@ -661,8 +628,8 @@
           <p class="input-hint">{{ t('admin.groups.invalidRequestFallback.hint') }}</p>
         </div>
 
-        <!-- 模型路由配置（仅 anthropic 平台） -->
-        <div v-if="createForm.platform === 'anthropic'" class="border-t pt-4">
+        <!-- 模型路由配置 -->
+        <div class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('admin.groups.modelRouting.title') }}
@@ -876,16 +843,6 @@
           <label class="input-label">{{ t('admin.groups.form.description') }}</label>
           <textarea v-model="editForm.description" rows="3" class="input"></textarea>
         </div>
-        <div>
-          <label class="input-label">{{ t('admin.groups.form.platform') }}</label>
-          <Select
-            v-model="editForm.platform"
-            :options="platformOptions"
-            :disabled="true"
-            data-tour="group-form-platform"
-          />
-          <p class="input-hint">{{ t('admin.groups.platformNotEditable') }}</p>
-        </div>
         <!-- 从分组复制账号（编辑时） -->
         <div v-if="copyAccountsGroupOptionsForEdit.length > 0">
           <div class="mb-1.5 flex items-center gap-1">
@@ -1060,8 +1017,8 @@
           </div>
         </div>
 
-        <!-- 图片生成计费配置（gemini 平台） -->
-        <div v-if="editForm.platform === 'gemini'" class="border-t pt-4">
+        <!-- 图片生成计费配置 -->
+        <div class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
             {{ t('admin.groups.imagePricing.title') }}
           </label>
@@ -1105,8 +1062,8 @@
           </div>
         </div>
 
-        <!-- Claude Code 客户端限制（仅 anthropic 平台） -->
-        <div v-if="editForm.platform === 'anthropic'" class="border-t pt-4">
+        <!-- Claude Code 客户端限制 -->
+        <div class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('admin.groups.claudeCode.title') }}
@@ -1161,8 +1118,8 @@
           </div>
         </div>
 
-        <!-- OpenAI Messages 调度配置（仅 openai 平台） -->
-        <div v-if="editForm.platform === 'openai'" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4">
+        <!-- OpenAI Messages 调度配置 -->
+        <div class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ t('admin.groups.openaiMessages.title') }}</h4>
 
           <!-- 允许 Messages 调度开关 -->
@@ -1199,8 +1156,8 @@
           </div>
         </div>
 
-        <!-- 账号过滤控制 (OpenAI/Anthropic/Gemini) -->
-        <div v-if="['openai', 'anthropic', 'gemini'].includes(editForm.platform)" class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
+        <!-- 账号过滤控制 -->
+        <div class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4 space-y-4">
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">账号过滤控制</h4>
 
           <!-- require_oauth_only toggle -->
@@ -1254,9 +1211,9 @@
           </div>
         </div>
 
-        <!-- 无效请求兜底（仅 anthropic 平台，且非订阅分组） -->
+        <!-- 无效请求兜底（非订阅分组） -->
         <div
-          v-if="editForm.platform === 'anthropic' && editForm.subscription_type !== 'subscription'"
+          v-if="editForm.subscription_type !== 'subscription'"
           class="border-t pt-4"
         >
           <label class="input-label">{{ t('admin.groups.invalidRequestFallback.title') }}</label>
@@ -1268,8 +1225,8 @@
           <p class="input-hint">{{ t('admin.groups.invalidRequestFallback.hint') }}</p>
         </div>
 
-        <!-- 模型路由配置（仅 anthropic 平台） -->
-        <div v-if="editForm.platform === 'anthropic'" class="border-t pt-4">
+        <!-- 模型路由配置 -->
+        <div class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('admin.groups.modelRouting.title') }}
@@ -1494,20 +1451,6 @@
             </div>
             <div class="flex-1">
               <div class="font-medium text-gray-900 dark:text-white">{{ group.name }}</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">
-                <span
-                  :class="[
-                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                    group.platform === 'anthropic'
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                      : group.platform === 'openai'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                  ]"
-                >
-                  {{ t('admin.groups.platforms.' + group.platform) }}
-                </span>
-              </div>
             </div>
             <div class="text-sm text-gray-400">
               #{{ group.id }}
@@ -1561,7 +1504,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { adminAPI } from '@/api/admin'
-import type { AdminGroup, GroupPlatform, SubscriptionType } from '@/types'
+import type { AdminGroup, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -1571,7 +1514,6 @@ import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
-import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
 import ModelPricingEditor from '@/components/admin/group/ModelPricingEditor.vue'
 import GroupCapacityBadge from '@/components/common/GroupCapacityBadge.vue'
@@ -1586,7 +1528,6 @@ const onboardingStore = useOnboardingStore()
 
 const columns = computed<Column[]>(() => [
   { key: 'name', label: t('admin.groups.columns.name'), sortable: true },
-  { key: 'platform', label: t('admin.groups.columns.platform'), sortable: true },
   { key: 'billing_type', label: t('admin.groups.columns.billingType'), sortable: true },
   { key: 'is_exclusive', label: t('admin.groups.columns.type'), sortable: true },
   { key: 'account_count', label: t('admin.groups.columns.accounts'), sortable: true },
@@ -1609,19 +1550,6 @@ const exclusiveOptions = computed(() => [
   { value: 'false', label: t('admin.groups.nonExclusive') }
 ])
 
-const platformOptions = computed(() => [
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'gemini', label: 'Gemini' }
-])
-
-const platformFilterOptions = computed(() => [
-  { value: '', label: t('admin.groups.allPlatforms') },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'gemini', label: 'Gemini' }
-])
-
 const editStatusOptions = computed(() => [
   { value: 'active', label: t('admin.accounts.status.active') },
   { value: 'inactive', label: t('admin.accounts.status.inactive') }
@@ -1632,13 +1560,13 @@ const subscriptionTypeOptions = computed(() => [
   { value: 'subscription', label: t('admin.groups.subscription.subscription') }
 ])
 
-// 降级分组选项（创建时）- 仅包含 anthropic 平台且未启用 claude_code_only 的分组
+// 降级分组选项（创建时）- 仅包含未启用 claude_code_only 的分组
 const fallbackGroupOptions = computed(() => {
   const options: { value: number | null; label: string }[] = [
     { value: null, label: t('admin.groups.claudeCode.noFallback') }
   ]
   const eligibleGroups = groups.value.filter(
-    (g) => g.platform === 'anthropic' && !g.claude_code_only && g.status === 'active'
+    (g) => !g.claude_code_only && g.status === 'active'
   )
   eligibleGroups.forEach((g) => {
     options.push({ value: g.id, label: g.name })
@@ -1653,7 +1581,7 @@ const fallbackGroupOptionsForEdit = computed(() => {
   ]
   const currentId = editingGroup.value?.id
   const eligibleGroups = groups.value.filter(
-    (g) => g.platform === 'anthropic' && !g.claude_code_only && g.status === 'active' && g.id !== currentId
+    (g) => !g.claude_code_only && g.status === 'active' && g.id !== currentId
   )
   eligibleGroups.forEach((g) => {
     options.push({ value: g.id, label: g.name })
@@ -1661,14 +1589,13 @@ const fallbackGroupOptionsForEdit = computed(() => {
   return options
 })
 
-// 无效请求兜底分组选项（创建时）- 仅包含 anthropic 平台、非订阅且未配置兜底的分组
+// 无效请求兜底分组选项（创建时）- 仅包含非订阅且未配置兜底的分组
 const invalidRequestFallbackOptions = computed(() => {
   const options: { value: number | null; label: string }[] = [
     { value: null, label: t('admin.groups.invalidRequestFallback.noFallback') }
   ]
   const eligibleGroups = groups.value.filter(
     (g) =>
-      g.platform === 'anthropic' &&
       g.status === 'active' &&
       g.subscription_type !== 'subscription' &&
       g.fallback_group_id_on_invalid_request === null
@@ -1687,7 +1614,6 @@ const invalidRequestFallbackOptionsForEdit = computed(() => {
   const currentId = editingGroup.value?.id
   const eligibleGroups = groups.value.filter(
     (g) =>
-      g.platform === 'anthropic' &&
       g.status === 'active' &&
       g.subscription_type !== 'subscription' &&
       g.fallback_group_id_on_invalid_request === null &&
@@ -1699,10 +1625,10 @@ const invalidRequestFallbackOptionsForEdit = computed(() => {
   return options
 })
 
-// 复制账号的源分组选项（创建时）- 仅包含相同平台且有账号的分组
+// 复制账号的源分组选项（创建时）- 仅包含有账号的分组
 const copyAccountsGroupOptions = computed(() => {
   const eligibleGroups = groups.value.filter(
-    (g) => g.platform === createForm.platform && (g.account_count || 0) > 0
+    (g) => (g.account_count || 0) > 0
   )
   return eligibleGroups.map((g) => ({
     value: g.id,
@@ -1710,11 +1636,11 @@ const copyAccountsGroupOptions = computed(() => {
   }))
 })
 
-// 复制账号的源分组选项（编辑时）- 仅包含相同平台且有账号的分组，排除自身
+// 复制账号的源分组选项（编辑时）- 仅包含有账号的分组，排除自身
 const copyAccountsGroupOptionsForEdit = computed(() => {
   const currentId = editingGroup.value?.id
   const eligibleGroups = groups.value.filter(
-    (g) => g.platform === editForm.platform && (g.account_count || 0) > 0 && g.id !== currentId
+    (g) => (g.account_count || 0) > 0 && g.id !== currentId
   )
   return eligibleGroups.map((g) => ({
     value: g.id,
@@ -1729,7 +1655,6 @@ const usageLoading = ref(false)
 const capacityMap = ref<Map<number, { concurrencyUsed: number; concurrencyMax: number; sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>>(new Map())
 const searchQuery = ref('')
 const filters = reactive({
-  platform: '',
   status: '',
   is_exclusive: ''
 })
@@ -1755,7 +1680,6 @@ const sortableGroups = ref<AdminGroup[]>([])
 const createForm = reactive({
   name: '',
   description: '',
-  platform: 'anthropic' as GroupPlatform,
   is_exclusive: false,
   subscription_type: 'standard' as SubscriptionType,
   daily_limit_usd: null as number | null,
@@ -1974,7 +1898,6 @@ const convertApiFormatToRoutingRules = async (apiFormat: Record<string, number[]
 const editForm = reactive({
   name: '',
   description: '',
-  platform: 'anthropic' as GroupPlatform,
   is_exclusive: false,
   status: 'active' as 'active' | 'inactive',
   subscription_type: 'standard' as SubscriptionType,
@@ -2022,7 +1945,6 @@ const loadGroups = async () => {
   loading.value = true
   try {
     const response = await adminAPI.groups.list(pagination.page, pagination.page_size, {
-      platform: (filters.platform as GroupPlatform) || undefined,
       status: filters.status as any,
       is_exclusive: filters.is_exclusive ? filters.is_exclusive === 'true' : undefined,
       search: searchQuery.value.trim() || undefined
@@ -2117,7 +2039,6 @@ const closeCreateModal = () => {
   clearAllAccountSearchState()
   createForm.name = ''
   createForm.description = ''
-  createForm.platform = 'anthropic'
   createForm.is_exclusive = false
   createForm.subscription_type = 'standard'
   createForm.daily_limit_usd = null
@@ -2197,7 +2118,6 @@ const handleEdit = async (group: AdminGroup) => {
   editingGroup.value = group
   editForm.name = group.name
   editForm.description = group.description || ''
-  editForm.platform = group.platform
   editForm.is_exclusive = group.is_exclusive
   editForm.status = group.status
   editForm.subscription_type = group.subscription_type || 'standard'
@@ -2302,23 +2222,6 @@ watch(
     if (newVal === 'subscription') {
       createForm.is_exclusive = true
       createForm.fallback_group_id_on_invalid_request = null
-    }
-  }
-)
-
-watch(
-  () => createForm.platform,
-  (newVal) => {
-    if (newVal !== 'anthropic') {
-      createForm.fallback_group_id_on_invalid_request = null
-    }
-    if (newVal !== 'openai') {
-      createForm.allow_messages_dispatch = false
-      createForm.default_mapped_model = ''
-    }
-    if (!['openai', 'anthropic', 'gemini'].includes(newVal)) {
-      createForm.require_oauth_only = false
-      createForm.require_privacy_set = false
     }
   }
 )

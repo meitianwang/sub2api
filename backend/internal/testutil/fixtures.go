@@ -67,7 +67,6 @@ func NewTestAPIKey(opts ...func(*service.APIKey)) *service.APIKey {
 func NewTestGroup(opts ...func(*service.Group)) *service.Group {
 	g := &service.Group{
 		ID:       1,
-		Platform: service.PlatformAnthropic,
 		Status:   service.StatusActive,
 		Hydrated: true,
 	}

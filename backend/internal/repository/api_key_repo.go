@@ -145,7 +145,6 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 			q.Select(
 				group.FieldID,
 				group.FieldName,
-				group.FieldPlatform,
 				group.FieldStatus,
 				group.FieldSubscriptionType,
 				group.FieldDailyLimitUsd,
@@ -628,7 +627,6 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		ID:                              g.ID,
 		Name:                            g.Name,
 		Description:                     derefString(g.Description),
-		Platform:    g.Platform,
 		IsExclusive: g.IsExclusive,
 		Status:                          g.Status,
 		Hydrated:                        true,

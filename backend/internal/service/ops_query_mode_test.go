@@ -59,7 +59,6 @@ func TestCloneOpsFilterWithMode(t *testing.T) {
 		cloned := cloneOpsFilterWithMode(original, OpsQueryModeRaw)
 		require.Equal(t, OpsQueryModeRaw, cloned.QueryMode)
 		require.Equal(t, OpsQueryModeAuto, original.QueryMode, "original should not be modified")
-		require.Equal(t, original.Platform, cloned.Platform)
 		require.Equal(t, original.StartTime, cloned.StartTime)
 		require.Equal(t, original.GroupID, cloned.GroupID)
 	})

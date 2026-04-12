@@ -6,7 +6,6 @@
         v-for="group in displayGroups"
         :key="group.id"
         :name="group.name"
-        :platform="group.platform"
         :subscription-type="group.subscription_type"
         :show-rate="false"
         class="max-w-24"
@@ -56,7 +55,6 @@
               v-for="group in groups"
               :key="group.id"
               :name="group.name"
-              :platform="group.platform"
               :subscription-type="group.subscription_type"
               :show-rate="false"
             />

@@ -68,7 +68,6 @@ type Group struct {
 	ID             int64   `json:"id"`
 	Name           string  `json:"name"`
 	Description    string  `json:"description"`
-	Platform    string `json:"platform"`
 	IsExclusive bool   `json:"is_exclusive"`
 	Status         string  `json:"status"`
 

@@ -148,16 +148,12 @@ func (s *groupRepoStub) List(ctx context.Context, params pagination.PaginationPa
 	panic("unexpected List call")
 }
 
-func (s *groupRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, status, search string, isExclusive *bool) ([]Group, *pagination.PaginationResult, error) {
+func (s *groupRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, status, search string, isExclusive *bool) ([]Group, *pagination.PaginationResult, error) {
 	panic("unexpected ListWithFilters call")
 }
 
 func (s *groupRepoStub) ListActive(ctx context.Context) ([]Group, error) {
 	panic("unexpected ListActive call")
-}
-
-func (s *groupRepoStub) ListActiveByPlatform(ctx context.Context, platform string) ([]Group, error) {
-	panic("unexpected ListActiveByPlatform call")
 }
 
 func (s *groupRepoStub) ExistsByName(ctx context.Context, name string) (bool, error) {

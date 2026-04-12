@@ -29,7 +29,6 @@
                 <GroupBadge
                   v-if="key.group_id && key.group"
                   :name="key.group.name"
-                  :platform="key.group.platform"
                   :subscription-type="key.group.subscription_type"
                 />
                 <span v-else class="text-gray-400 italic">{{ t('admin.users.none') }}</span>
@@ -84,7 +83,6 @@
         >
           <GroupOptionItem
             :name="group.name"
-            :platform="group.platform"
             :subscription-type="group.subscription_type"
             :description="group.description"
             :selected="selectedKeyForGroup?.group_id === group.id"

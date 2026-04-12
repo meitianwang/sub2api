@@ -104,7 +104,7 @@ function formatCustomTimeRangeLabel(startTime: string, endTime: string): string 
   return `${formatDate(start)} ~ ${formatDate(end)}`
 }
 
-const groups = ref<Array<{ id: number; name: string; platform: string }>>([])
+const groups = ref<Array<{ id: number; name: string }>>([])
 
 const platformOptions = computed(() => [
   { value: '', label: t('common.all') },
@@ -134,25 +134,13 @@ const queryModeOptions = computed(() => [
 ])
 
 const groupOptions = computed(() => {
-  const filtered = props.platform ? groups.value.filter((g) => g.platform === props.platform) : groups.value
-  return [{ value: null, label: t('common.all') }, ...filtered.map((g) => ({ value: g.id, label: g.name }))]
+  return [{ value: null, label: t('common.all') }, ...groups.value.map((g) => ({ value: g.id, label: g.name }))]
 })
-
-watch(
-  () => props.platform,
-  (newPlatform) => {
-    if (!newPlatform) return
-    const currentGroup = groups.value.find((g) => g.id === props.groupId)
-    if (currentGroup && currentGroup.platform !== newPlatform) {
-      emit('update:group', null)
-    }
-  }
-)
 
 onMounted(async () => {
   try {
     const list = await adminAPI.groups.getAll()
-    groups.value = list.map((g) => ({ id: g.id, name: g.name, platform: g.platform }))
+    groups.value = list.map((g) => ({ id: g.id, name: g.name }))
   } catch (e) {
     console.error('[OpsDashboardHeader] Failed to load groups', e)
     groups.value = []

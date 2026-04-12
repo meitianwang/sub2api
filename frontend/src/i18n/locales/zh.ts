@@ -1601,7 +1601,6 @@ export default {
         "确定要删除订阅分组 '{name}' 吗？此操作会让所有绑定此订阅的用户的 API Key 失效，并删除所有相关的订阅记录。此操作无法撤销。",
       columns: {
         name: '名称',
-        platform: '平台',
         exclusive: '独占',
         type: '类型',
         priority: '优先级',
@@ -1626,7 +1625,6 @@ export default {
       form: {
         name: '名称',
         description: '描述',
-        platform: '平台',
         status: '状态',
         exclusive: '专属分组',
         nameLabel: '分组名称',
@@ -1635,8 +1633,6 @@ export default {
         descriptionPlaceholder: '请输入描述（可选）',
         exclusiveLabel: '专属分组',
         exclusiveHint: '专属分组，可以手动指定给用户',
-        platformLabel: '平台限制',
-        platformPlaceholder: '选择平台（留空则不限制）',
         accountsLabel: '指定账号',
         accountsPlaceholder: '选择账号（留空则不限制）',
         priorityLabel: '优先级',
@@ -1657,12 +1653,6 @@ export default {
         exampleContent:
           '公开分组费率 0.8，您可以创建一个费率 0.7 的专属分组，手动分配给 VIP 用户，让他们享受更优惠的价格。'
       },
-      platforms: {
-        all: '全部平台',
-        anthropic: 'Anthropic',
-        openai: 'OpenAI',
-        gemini: 'Gemini',
-      },
       saving: '保存中...',
       noGroups: '暂无分组',
       noGroupsDescription: '创建分组以更好地管理 API 密钥和费率。',
@@ -1672,7 +1662,6 @@ export default {
       failedToLoad: '加载分组列表失败',
       failedToSave: '保存分组失败',
       failedToDelete: '删除分组失败',
-      allPlatforms: '全部平台',
       allStatus: '全部状态',
       allGroups: '全部分组',
       exclusiveFilter: '专属',
@@ -1681,8 +1670,6 @@ export default {
       accountsCount: '{count} 个账号',
       enterGroupName: '请输入分组名称',
       optionalDescription: '可选描述',
-      platformHint: '选择此分组关联的平台',
-      platformNotEditable: '创建后不可更改平台',
       noGroupsYet: '暂无分组',
       createFirstGroup: '创建您的第一个分组来组织 API 密钥。',
       creating: '创建中...',
