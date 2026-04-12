@@ -63,7 +63,6 @@
                       {{ t('admin.groups.exclusive') }}
                     </span>
                   </div>
-                  </div>
                 </div>
               </div>
             </div>
