@@ -23,9 +23,8 @@ type Account struct {
 	Credentials map[string]any
 	Extra       map[string]any
 	ProxyID     *int64
-	Concurrency int
 	Priority   int
-	LoadFactor *int // 调度负载因子；nil 表示使用 Concurrency
+	LoadFactor *int // 调度负载因子；nil 表示默认 1
 	Status             string
 	ErrorMessage       string
 	LastUsedAt         *time.Time
@@ -78,9 +77,6 @@ func (a *Account) EffectiveLoadFactor() int {
 	}
 	if a.LoadFactor != nil && *a.LoadFactor > 0 {
 		return *a.LoadFactor
-	}
-	if a.Concurrency > 0 {
-		return a.Concurrency
 	}
 	return 1
 }
@@ -1658,8 +1654,7 @@ func (a *Account) GetRPMStrategy() string {
 }
 
 // GetRPMStickyBuffer 获取 RPM 粘性缓冲数量
-// Cache-driven: buffer = concurrency + maxSessions（覆盖幽灵窗口 + 稳态会话需求）
-// floor = baseRPM / 5（向后兼容 maxSessions=0 且 concurrency=0 场景）
+// buffer = maxSessions，floor = baseRPM / 5
 func (a *Account) GetRPMStickyBuffer() int {
 	if a.Extra == nil {
 		return 0
@@ -1678,17 +1673,13 @@ func (a *Account) GetRPMStickyBuffer() int {
 		return 0
 	}
 
-	// Cache-driven buffer = concurrency + maxSessions
-	conc := a.Concurrency
-	if conc < 0 {
-		conc = 0
-	}
+	// Buffer = maxSessions
 	sess := a.GetMaxSessions()
 	if sess < 0 {
 		sess = 0
 	}
 
-	buffer := conc + sess
+	buffer := sess
 
 	// floor: 向后兼容
 	floor := base / 5

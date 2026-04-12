@@ -44,8 +44,7 @@ type OpsMetricsCollector struct {
 	settingRepo SettingRepository
 	cfg         *config.Config
 
-	accountRepo        AccountRepository
-	concurrencyService *ConcurrencyService
+	accountRepo AccountRepository
 
 	db          *sql.DB
 	redisClient *redis.Client
@@ -66,18 +65,16 @@ func NewOpsMetricsCollector(
 	opsRepo OpsRepository,
 	settingRepo SettingRepository,
 	accountRepo AccountRepository,
-	concurrencyService *ConcurrencyService,
 	db *sql.DB,
 	redisClient *redis.Client,
 	cfg *config.Config,
 ) *OpsMetricsCollector {
 	return &OpsMetricsCollector{
-		opsRepo:            opsRepo,
-		settingRepo:        settingRepo,
-		cfg:                cfg,
-		accountRepo:        accountRepo,
-		concurrencyService: concurrencyService,
-		db:                 db,
+		opsRepo:     opsRepo,
+		settingRepo: settingRepo,
+		cfg:         cfg,
+		accountRepo: accountRepo,
+		db:          db,
 		redisClient:        redisClient,
 		instanceID:         uuid.NewString(),
 	}
@@ -299,7 +296,6 @@ func (c *OpsMetricsCollector) collectAndPersist(ctx context.Context) error {
 	tps := float64(tokenConsumed) / windowSeconds
 
 	goroutines := runtime.NumGoroutine()
-	concurrencyQueueDepth := c.collectConcurrencyQueueDepth(ctx)
 
 	input := &OpsInsertSystemMetricsInput{
 		CreatedAt:     windowEnd,
@@ -357,70 +353,9 @@ func (c *OpsMetricsCollector) collectAndPersist(ctx context.Context) error {
 		DBConnActive:          intPtr(active),
 		DBConnIdle:            intPtr(idle),
 		GoroutineCount:        intPtr(goroutines),
-		ConcurrencyQueueDepth: concurrencyQueueDepth,
 	}
 
 	return c.opsRepo.InsertSystemMetrics(ctx, input)
-}
-
-func (c *OpsMetricsCollector) collectConcurrencyQueueDepth(parentCtx context.Context) *int {
-	if c == nil || c.accountRepo == nil || c.concurrencyService == nil {
-		return nil
-	}
-	if parentCtx == nil {
-		parentCtx = context.Background()
-	}
-
-	// Best-effort: never let concurrency sampling break the metrics collector.
-	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
-	defer cancel()
-
-	accounts, err := c.accountRepo.ListSchedulable(ctx)
-	if err != nil {
-		return nil
-	}
-	if len(accounts) == 0 {
-		zero := 0
-		return &zero
-	}
-
-	batch := make([]AccountWithConcurrency, 0, len(accounts))
-	for _, acc := range accounts {
-		if acc.ID <= 0 {
-			continue
-		}
-		batch = append(batch, AccountWithConcurrency{
-			ID:             acc.ID,
-			MaxConcurrency: acc.Concurrency,
-		})
-	}
-	if len(batch) == 0 {
-		zero := 0
-		return &zero
-	}
-
-	loadMap, err := c.concurrencyService.GetAccountsLoadBatch(ctx, batch)
-	if err != nil {
-		return nil
-	}
-
-	var total int64
-	for _, info := range loadMap {
-		if info == nil || info.WaitingCount <= 0 {
-			continue
-		}
-		total += int64(info.WaitingCount)
-	}
-	if total < 0 {
-		total = 0
-	}
-
-	maxInt := int64(^uint(0) >> 1)
-	if total > maxInt {
-		total = maxInt
-	}
-	v := int(total)
-	return &v
 }
 
 type opsCollectedPercentiles struct {

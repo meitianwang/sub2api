@@ -322,10 +322,7 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 		}
 
 	case RedeemTypeConcurrency:
-		// 增加用户并发数
-		if err := s.userRepo.UpdateConcurrency(txCtx, userID, int(redeemCode.Value)); err != nil {
-			return nil, fmt.Errorf("update user concurrency: %w", err)
-		}
+		// 并发数兑换已废弃，跳过
 
 	case RedeemTypeSubscription:
 		validityDays := redeemCode.ValidityDays

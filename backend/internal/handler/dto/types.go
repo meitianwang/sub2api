@@ -12,7 +12,6 @@ type User struct {
 	Username      string    `json:"username"`
 	Role          string    `json:"role"`
 	Balance       float64   `json:"balance"`
-	Concurrency   int       `json:"concurrency"`
 	Status        string    `json:"status"`
 	AllowedGroups []int64   `json:"allowed_groups"`
 	CreatedAt     time.Time `json:"created_at"`
@@ -133,7 +132,6 @@ type Account struct {
 	Credentials        map[string]any `json:"credentials"`
 	Extra              map[string]any `json:"extra"`
 	ProxyID            *int64         `json:"proxy_id"`
-	Concurrency        int            `json:"concurrency"`
 	LoadFactor *int    `json:"load_factor,omitempty"`
 	Priority   int    `json:"priority"`
 	Status     string `json:"status"`

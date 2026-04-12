@@ -100,7 +100,6 @@ type CreateUserInput struct {
 	Username              string
 	Notes                 string
 	Balance               float64
-	Concurrency           int
 	AllowedGroups []int64
 }
 
@@ -110,7 +109,6 @@ type UpdateUserInput struct {
 	Username      *string
 	Notes         *string
 	Balance       *float64 // 使用指针区分"未提供"和"设置为0"
-	Concurrency   *int     // 使用指针区分"未提供"和"设置为0"
 	Status        string
 	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 }
@@ -186,7 +184,6 @@ type CreateAccountInput struct {
 	Credentials        map[string]any
 	Extra              map[string]any
 	ProxyID            *int64
-	Concurrency        int
 	Priority   int
 	LoadFactor *int
 	GroupIDs   []int64
@@ -206,7 +203,6 @@ type UpdateAccountInput struct {
 	Credentials           map[string]any
 	Extra                 map[string]any
 	ProxyID               *int64
-	Concurrency           *int     // 使用指针区分"未提供"和"设置为0"
 	Priority   *int // 使用指针区分"未提供"和"设置为0"
 	LoadFactor *int
 	Status                string
@@ -221,7 +217,6 @@ type BulkUpdateAccountsInput struct {
 	AccountIDs     []int64
 	Name           string
 	ProxyID        *int64
-	Concurrency    *int
 	Priority    *int
 	LoadFactor  *int
 	Status      string
@@ -481,7 +476,6 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 		Notes:                 input.Notes,
 		Role:                  RoleUser, // Always create as regular user, never admin
 		Balance:               input.Balance,
-		Concurrency:           input.Concurrency,
 		Status:                StatusActive,
 		AllowedGroups: input.AllowedGroups,
 	}
@@ -523,7 +517,6 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		return nil, errors.New("cannot disable admin user")
 	}
 
-	oldConcurrency := user.Concurrency
 	oldStatus := user.Status
 	oldRole := user.Role
 
@@ -547,10 +540,6 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		user.Status = input.Status
 	}
 
-	if input.Concurrency != nil {
-		user.Concurrency = *input.Concurrency
-	}
-
 	if input.AllowedGroups != nil {
 		user.AllowedGroups = *input.AllowedGroups
 	}
@@ -560,29 +549,8 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	}
 
 	if s.authCacheInvalidator != nil {
-		if user.Concurrency != oldConcurrency || user.Status != oldStatus || user.Role != oldRole {
+		if user.Status != oldStatus || user.Role != oldRole {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, user.ID)
-		}
-	}
-
-	concurrencyDiff := user.Concurrency - oldConcurrency
-	if concurrencyDiff != 0 {
-		code, err := GenerateRedeemCode()
-		if err != nil {
-			logger.LegacyPrintf("service.admin", "failed to generate adjustment redeem code: %v", err)
-			return user, nil
-		}
-		adjustmentRecord := &RedeemCode{
-			Code:   code,
-			Type:   AdjustmentTypeAdminConcurrency,
-			Value:  float64(concurrencyDiff),
-			Status: StatusUsed,
-			UsedBy: &user.ID,
-		}
-		now := time.Now()
-		adjustmentRecord.UsedAt = &now
-		if err := s.redeemCodeRepo.Create(ctx, adjustmentRecord); err != nil {
-			logger.LegacyPrintf("service.admin", "failed to create concurrency adjustment redeem code: %v", err)
 		}
 	}
 
@@ -1408,7 +1376,6 @@ func (s *adminServiceImpl) CreateAccount(ctx context.Context, input *CreateAccou
 		Credentials: input.Credentials,
 		Extra:       input.Extra,
 		ProxyID:     input.ProxyID,
-		Concurrency: input.Concurrency,
 		Priority:    input.Priority,
 		Status:      StatusActive,
 		Schedulable: true,
@@ -1507,10 +1474,6 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 			account.ProxyID = input.ProxyID
 		}
 		account.Proxy = nil // 清除关联对象，防止 GORM Save 时根据 Proxy.ID 覆盖 ProxyID
-	}
-	// 只在指针非 nil 时更新 Concurrency（支持设置为 0）
-	if input.Concurrency != nil {
-		account.Concurrency = *input.Concurrency
 	}
 	// 只在指针非 nil 时更新 Priority（支持设置为 0）
 	if input.Priority != nil {
@@ -1630,9 +1593,6 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 	}
 	if input.ProxyID != nil {
 		repoUpdates.ProxyID = input.ProxyID
-	}
-	if input.Concurrency != nil {
-		repoUpdates.Concurrency = input.Concurrency
 	}
 	if input.Priority != nil {
 		repoUpdates.Priority = input.Priority

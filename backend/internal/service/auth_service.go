@@ -181,10 +181,8 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 
 	// 获取默认配置
 	defaultBalance := s.cfg.Default.UserBalance
-	defaultConcurrency := s.cfg.Default.UserConcurrency
 	if s.settingService != nil {
 		defaultBalance = s.settingService.GetDefaultBalance(ctx)
-		defaultConcurrency = s.settingService.GetDefaultConcurrency(ctx)
 	}
 
 	// 创建用户
@@ -193,7 +191,6 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		PasswordHash: hashedPassword,
 		Role:         RoleUser,
 		Balance:      defaultBalance,
-		Concurrency:  defaultConcurrency,
 		Status:       StatusActive,
 	}
 
@@ -471,10 +468,8 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 
 			// 新用户默认值。
 			defaultBalance := s.cfg.Default.UserBalance
-			defaultConcurrency := s.cfg.Default.UserConcurrency
 			if s.settingService != nil {
 				defaultBalance = s.settingService.GetDefaultBalance(ctx)
-				defaultConcurrency = s.settingService.GetDefaultConcurrency(ctx)
 			}
 
 			newUser := &User{
@@ -483,7 +478,6 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 				PasswordHash: hashedPassword,
 				Role:         RoleUser,
 				Balance:      defaultBalance,
-				Concurrency:  defaultConcurrency,
 				Status:       StatusActive,
 			}
 
@@ -585,10 +579,8 @@ func (s *AuthService) LoginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 			}
 
 			defaultBalance := s.cfg.Default.UserBalance
-			defaultConcurrency := s.cfg.Default.UserConcurrency
 			if s.settingService != nil {
 				defaultBalance = s.settingService.GetDefaultBalance(ctx)
-				defaultConcurrency = s.settingService.GetDefaultConcurrency(ctx)
 			}
 
 			newUser := &User{
@@ -597,7 +589,6 @@ func (s *AuthService) LoginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 				PasswordHash: hashedPassword,
 				Role:         RoleUser,
 				Balance:      defaultBalance,
-				Concurrency:  defaultConcurrency,
 				Status:       StatusActive,
 			}
 

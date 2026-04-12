@@ -1054,21 +1054,6 @@
                   {{ t('admin.settings.defaults.defaultBalanceHint') }}
                 </p>
               </div>
-              <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.defaults.defaultConcurrency') }}
-                </label>
-                <input
-                  v-model.number="form.default_concurrency"
-                  type="number"
-                  min="1"
-                  class="input"
-                  placeholder="1"
-                />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.defaults.defaultConcurrencyHint') }}
-                </p>
-              </div>
             </div>
 
             <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
@@ -2088,7 +2073,6 @@ const form = reactive<SettingsForm>({
   totp_enabled: false,
   totp_encryption_key_configured: false,
   default_balance: 0,
-  default_concurrency: 1,
   default_subscriptions: [],
   site_name: 'AIInterface',
   site_logo: '',
@@ -2408,7 +2392,6 @@ async function saveSettings() {
       password_reset_enabled: form.password_reset_enabled,
       totp_enabled: form.totp_enabled,
       default_balance: form.default_balance,
-      default_concurrency: form.default_concurrency,
       default_subscriptions: normalizedDefaultSubscriptions,
       site_name: form.site_name,
       site_logo: form.site_logo,

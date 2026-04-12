@@ -797,9 +797,8 @@ export default {
   // Redeem
   redeem: {
     title: 'Redeem Code',
-    description: 'Enter your redeem code to add balance or increase concurrency',
+    description: 'Enter your redeem code to add balance',
     currentBalance: 'Current Balance',
-    concurrency: 'Concurrency',
     requests: 'requests',
     redeemCodeLabel: 'Redeem Code',
     redeemCodePlaceholder: 'Enter your redeem code',
@@ -809,22 +808,17 @@ export default {
     redeemSuccess: 'Code Redeemed Successfully!',
     redeemFailed: 'Redemption Failed',
     added: 'Added',
-    concurrentRequests: 'concurrent requests',
     newBalance: 'New Balance',
-    newConcurrency: 'New Concurrency',
     aboutCodes: 'About Redeem Codes',
     codeRule1: 'Each code can only be used once',
-    codeRule2: 'Codes may add balance, increase concurrency, or grant trial access',
+    codeRule2: 'Codes may add balance or grant trial access',
     codeRule3: 'Contact support if you have issues redeeming a code',
-    codeRule4: 'Balance and concurrency updates are immediate',
+    codeRule4: 'Balance updates are immediate',
     recentActivity: 'Recent Activity',
     historyWillAppear: 'Your redemption history will appear here',
     balanceAddedRedeem: 'Balance Added (Redeem)',
     balanceAddedAdmin: 'Balance Added (Admin)',
     balanceDeductedAdmin: 'Balance Deducted (Admin)',
-    concurrencyAddedRedeem: 'Concurrency Added (Redeem)',
-    concurrencyAddedAdmin: 'Concurrency Added (Admin)',
-    concurrencyReducedAdmin: 'Concurrency Reduced (Admin)',
     adminAdjustment: 'Admin Adjustment',
     subscriptionAssigned: 'Subscription Assigned',
     subscriptionAssignedDesc: 'You have been granted access to {groupName}',
@@ -841,7 +835,6 @@ export default {
     title: 'Profile Settings',
     description: 'Manage your account information and settings',
     accountBalance: 'Account Balance',
-    concurrencyLimit: 'Concurrency Limit',
     memberSince: 'Member Since',
     administrator: 'Administrator',
     user: 'User',
@@ -1358,7 +1351,6 @@ export default {
         subscriptions: 'Subscriptions',
         balance: 'Balance',
         usage: 'Usage',
-        concurrency: 'Concurrency',
         status: 'Status',
         created: 'Created',
         actions: 'Actions'
@@ -1399,7 +1391,6 @@ export default {
       failedToToggle: 'Failed to update user status',
       failedToLoadApiKeys: 'Failed to load user API keys',
       emailRequired: 'Please enter email',
-      concurrencyMin: 'Concurrency must be at least 1',
       amountRequired: 'Please enter a valid amount',
       insufficientBalance: 'Insufficient balance',
       deleteConfirm: "Are you sure you want to delete '{email}'? This action cannot be undone.",
@@ -1450,13 +1441,11 @@ export default {
       // Balance History
       balanceHistory: 'Recharge History',
       balanceHistoryTip: 'Click to open recharge history',
-      balanceHistoryTitle: 'User Recharge & Concurrency History',
+      balanceHistoryTitle: 'User Recharge History',
       noBalanceHistory: 'No records found for this user',
       allTypes: 'All Types',
       typeBalance: 'Balance (Redeem)',
       typeAdminBalance: 'Balance (Admin)',
-      typeConcurrency: 'Concurrency (Redeem)',
-      typeAdminConcurrency: 'Concurrency (Admin)',
       typeSubscription: 'Subscription',
       failedToLoadBalanceHistory: 'Failed to load balance history',
       createdAt: 'Created',
@@ -2150,7 +2139,7 @@ export default {
         apiKeyHint: 'Your OpenAI API Key',
         oauthPassthrough: 'Auto passthrough (auth only)',
         oauthPassthroughDesc:
-          'When enabled, this OpenAI account uses automatic passthrough: the gateway forwards request/response as-is and only swaps auth, while keeping billing/concurrency/audit and necessary safety filtering.',
+          'When enabled, this OpenAI account uses automatic passthrough: the gateway forwards request/response as-is and only swaps auth, while keeping billing/audit and necessary safety filtering.',
         responsesWebsocketsV2: 'Responses WebSocket v2',
         responsesWebsocketsV2Desc:
           'Disabled by default. Enable to allow responses_websockets_v2 capability (still gated by global and account-type switches).',
@@ -2162,7 +2151,7 @@ export default {
         wsModeShared: 'Shared (shared)',
         wsModeDedicated: 'Dedicated (dedicated)',
         wsModeConcurrencyHint:
-          'When WS mode is enabled, account concurrency becomes the WS connection pool limit for this account.',
+          'When WS mode is enabled, account load factor becomes the WS connection pool limit for this account.',
         wsModePassthroughHint: 'Passthrough mode does not use the WS connection pool.',
         oauthResponsesWebsocketsV2: 'OAuth WebSocket Mode',
         oauthResponsesWebsocketsV2Desc:
@@ -2180,7 +2169,7 @@ export default {
       anthropic: {
         apiKeyPassthrough: 'Auto passthrough (auth only)',
         apiKeyPassthroughDesc:
-          'Only applies to Anthropic API Key accounts. When enabled, messages/count_tokens are forwarded in passthrough mode with auth replacement only, while billing/concurrency/audit and safety filtering are preserved. Disable to roll back immediately.'
+          'Only applies to Anthropic API Key accounts. When enabled, messages/count_tokens are forwarded in passthrough mode with auth replacement only, while billing/audit and safety filtering are preserved. Disable to roll back immediately.'
       },
       modelRestriction: 'Model Restriction (Optional)',
       modelWhitelist: 'Model Whitelist',
@@ -2318,7 +2307,6 @@ export default {
       expired: 'Expired',
       proxy: 'Proxy',
       noProxy: 'No Proxy',
-      concurrency: 'Concurrency',
       loadFactor: 'Load Factor',
       loadFactorHint: 'Higher load factor increases scheduling frequency',
       priority: 'Priority',
@@ -2543,7 +2531,7 @@ export default {
           customRequirement: 'Admin must configure Client ID and add you as a test user.',
           badges: {
             recommended: 'Recommended',
-            highConcurrency: 'High concurrency',
+            highConcurrency: 'High load',
             noAdmin: 'No admin setup',
             orgManaged: 'Org managed',
             adminRequired: 'Admin required'
@@ -2931,7 +2919,6 @@ export default {
       allTypes: 'All Types',
       allStatus: 'All Status',
       balance: 'Balance',
-      concurrency: 'Concurrency',
       subscription: 'Subscription',
       invitation: 'Invitation',
       invitationHint: 'Invitation codes are used to restrict user registration. They are automatically marked as used after use.',
@@ -2979,12 +2966,10 @@ export default {
       failedToCopy: 'Failed to copy codes',
       types: {
         balance: 'Balance',
-        concurrency: 'Concurrency',
         subscription: 'Subscription',
         invitation: 'Invitation',
-        // Admin adjustment types (created when admin modifies user balance/concurrency)
-        admin_balance: 'Balance (Admin)',
-        admin_concurrency: 'Concurrency (Admin)'
+        // Admin adjustment types (created when admin modifies user balance)
+        admin_balance: 'Balance (Admin)'
       },
       selectGroup: 'Select Group',
       selectGroupPlaceholder: 'Choose a subscription group',
@@ -3674,7 +3659,6 @@ export default {
           p99: 'P99 Latency (ms)',
           cpu: 'CPU Usage (%)',
           memory: 'Memory Usage (%)',
-          queueDepth: 'Concurrency Queue Depth',
           groupAvailableAccounts: 'Group Available Accounts',
           groupAvailableRatio: 'Group Available Ratio (%)',
           groupRateLimitRatio: 'Group Rate Limit Ratio (%)',
@@ -3691,7 +3675,6 @@ export default {
           p99: 'P99 request latency within the window (ms).',
           cpu: 'Current instance CPU usage (0-100).',
           memory: 'Current instance memory usage (0-100).',
-          queueDepth: 'Concurrency queue depth within the window (queued requests).',
           groupAvailableAccounts: 'Number of available accounts in the selected group (requires group_id).',
           groupAvailableRatio: 'Available account ratio in the selected group (0-100, requires group_id).',
           groupRateLimitRatio: 'Rate-limited account ratio in the selected group (0-100, requires group_id).',
@@ -3915,23 +3898,6 @@ export default {
           upstreamErrorRateMaxRange: 'Upstream error rate maximum must be between 0 and 100'
         }
       },
-      concurrency: {
-        title: 'Concurrency / Queue',
-        byPlatform: 'By Platform',
-        byGroup: 'By Group',
-        byAccount: 'By Account',
-        byUser: 'By User',
-        showByUserTooltip: 'Switch to user view to see concurrency usage per user',
-        switchToUser: 'Switch to user view',
-        switchToPlatform: 'Switch to platform view',
-        totalRows: '{count} rows',
-        disabledHint: 'Realtime monitoring is disabled in settings.',
-        empty: 'No data',
-        queued: 'Queue {count}',
-        rateLimited: 'Rate-limited {count}',
-        errorAccounts: 'Errors {count}',
-        loadFailed: 'Failed to load concurrency data'
-      },
       realtime: {
         title: 'Realtime',
         connected: 'Realtime connected',
@@ -4060,8 +4026,6 @@ export default {
         description: 'Default values for new users',
         defaultBalance: 'Default Balance',
         defaultBalanceHint: 'Initial balance for new users',
-        defaultConcurrency: 'Default Concurrency',
-        defaultConcurrencyHint: 'Maximum concurrent requests for new users',
         defaultSubscriptions: 'Default Subscriptions',
         defaultSubscriptionsHint: 'Auto-assign these subscriptions when a new user is created or registered',
         addDefaultSubscription: 'Add Default Subscription',

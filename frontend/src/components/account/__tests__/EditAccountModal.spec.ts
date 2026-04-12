@@ -96,7 +96,6 @@ function buildAccount() {
     },
     extra: {},
     proxy_id: null,
-    concurrency: 1,
     priority: 1,
     status: 'active',
     group_ids: [],

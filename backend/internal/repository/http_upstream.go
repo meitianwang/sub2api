@@ -118,7 +118,6 @@ func NewHTTPUpstream(cfg *config.Config) service.HTTPUpstream {
 //   - req: HTTP 请求对象
 //   - proxyURL: 代理地址，空字符串表示直连
 //   - accountID: 账户 ID，用于账户级隔离
-//   - accountConcurrency: 账户并发限制，用于动态调整连接池大小
 //
 // 返回:
 //   - *http.Response: HTTP 响应（Body 已包装，关闭时自动更新计数）
@@ -127,13 +126,13 @@ func NewHTTPUpstream(cfg *config.Config) service.HTTPUpstream {
 // 注意:
 //   - 调用方必须关闭 resp.Body，否则会导致 inFlight 计数泄漏
 //   - inFlight > 0 的客户端不会被淘汰，确保活跃请求不被中断
-func (s *httpUpstreamService) Do(req *http.Request, proxyURL string, accountID int64, accountConcurrency int) (*http.Response, error) {
+func (s *httpUpstreamService) Do(req *http.Request, proxyURL string, accountID int64) (*http.Response, error) {
 	if err := s.validateRequestHost(req); err != nil {
 		return nil, err
 	}
 
 	// 获取或创建对应的客户端，并标记请求占用
-	entry, err := s.acquireClient(proxyURL, accountID, accountConcurrency)
+	entry, err := s.acquireClient(proxyURL, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,9 +163,9 @@ func (s *httpUpstreamService) Do(req *http.Request, proxyURL string, accountID i
 //
 // profile 为 nil 时不启用 TLS 指纹，行为与 Do 方法相同。
 // profile 非 nil 时使用指定的 Profile 进行 TLS 指纹伪装。
-func (s *httpUpstreamService) DoWithTLS(req *http.Request, proxyURL string, accountID int64, accountConcurrency int, profile *tlsfingerprint.Profile) (*http.Response, error) {
+func (s *httpUpstreamService) DoWithTLS(req *http.Request, proxyURL string, accountID int64, profile *tlsfingerprint.Profile) (*http.Response, error) {
 	if profile == nil {
-		return s.Do(req, proxyURL, accountID, accountConcurrency)
+		return s.Do(req, proxyURL, accountID)
 	}
 
 	targetHost := ""
@@ -183,7 +182,7 @@ func (s *httpUpstreamService) DoWithTLS(req *http.Request, proxyURL string, acco
 		return nil, err
 	}
 
-	entry, err := s.acquireClientWithTLS(proxyURL, accountID, accountConcurrency, profile)
+	entry, err := s.acquireClientWithTLS(proxyURL, accountID, profile)
 	if err != nil {
 		slog.Debug("tls_fingerprint_acquire_client_failed", "account_id", accountID, "error", err)
 		return nil, err
@@ -208,13 +207,13 @@ func (s *httpUpstreamService) DoWithTLS(req *http.Request, proxyURL string, acco
 }
 
 // acquireClientWithTLS 获取或创建带 TLS 指纹的客户端
-func (s *httpUpstreamService) acquireClientWithTLS(proxyURL string, accountID int64, accountConcurrency int, profile *tlsfingerprint.Profile) (*upstreamClientEntry, error) {
-	return s.getClientEntryWithTLS(proxyURL, accountID, accountConcurrency, profile, true, true)
+func (s *httpUpstreamService) acquireClientWithTLS(proxyURL string, accountID int64, profile *tlsfingerprint.Profile) (*upstreamClientEntry, error) {
+	return s.getClientEntryWithTLS(proxyURL, accountID, profile, true, true)
 }
 
 // getClientEntryWithTLS 获取或创建带 TLS 指纹的客户端条目
 // TLS 指纹客户端使用独立的缓存键，与普通客户端隔离
-func (s *httpUpstreamService) getClientEntryWithTLS(proxyURL string, accountID int64, accountConcurrency int, profile *tlsfingerprint.Profile, markInFlight bool, enforceLimit bool) (*upstreamClientEntry, error) {
+func (s *httpUpstreamService) getClientEntryWithTLS(proxyURL string, accountID int64, profile *tlsfingerprint.Profile, markInFlight bool, enforceLimit bool) (*upstreamClientEntry, error) {
 	isolation := s.getIsolationMode()
 	proxyKey, parsedProxy, err := normalizeProxyURL(proxyURL)
 	if err != nil {
@@ -222,7 +221,7 @@ func (s *httpUpstreamService) getClientEntryWithTLS(proxyURL string, accountID i
 	}
 	// TLS 指纹客户端使用独立的缓存键，加 "tls:" 前缀
 	cacheKey := "tls:" + buildCacheKey(isolation, proxyKey, accountID)
-	poolKey := s.buildPoolKey(isolation, accountConcurrency) + ":tls"
+	poolKey := s.buildPoolKey(isolation) + ":tls"
 
 	now := time.Now()
 	nowUnix := now.UnixNano()
@@ -273,7 +272,7 @@ func (s *httpUpstreamService) getClientEntryWithTLS(proxyURL string, accountID i
 
 	// 创建带 TLS 指纹的 Transport
 	slog.Debug("tls_fingerprint_creating_new_client", "account_id", accountID, "cache_key", cacheKey, "proxy", proxyKey)
-	settings := s.resolvePoolSettings(isolation, accountConcurrency)
+	settings := s.resolvePoolSettings(isolation)
 	transport, err := buildUpstreamTransportWithTLSFingerprint(settings, parsedProxy, profile)
 	if err != nil {
 		s.mu.Unlock()
@@ -338,8 +337,8 @@ func (s *httpUpstreamService) redirectChecker(req *http.Request, via []*http.Req
 
 // acquireClient 获取或创建客户端，并标记为进行中请求
 // 用于请求路径，避免在获取后被淘汰
-func (s *httpUpstreamService) acquireClient(proxyURL string, accountID int64, accountConcurrency int) (*upstreamClientEntry, error) {
-	return s.getClientEntry(proxyURL, accountID, accountConcurrency, true, true)
+func (s *httpUpstreamService) acquireClient(proxyURL string, accountID int64) (*upstreamClientEntry, error) {
+	return s.getClientEntry(proxyURL, accountID, true, true)
 }
 
 // getOrCreateClient 获取或创建客户端
@@ -348,7 +347,6 @@ func (s *httpUpstreamService) acquireClient(proxyURL string, accountID int64, ac
 // 参数:
 //   - proxyURL: 代理地址
 //   - accountID: 账户 ID
-//   - accountConcurrency: 账户并发限制
 //
 // 返回:
 //   - *upstreamClientEntry: 客户端缓存条目
@@ -357,14 +355,14 @@ func (s *httpUpstreamService) acquireClient(proxyURL string, accountID int64, ac
 //   - proxy: 按代理地址隔离，同一代理共享客户端
 //   - account: 按账户隔离，同一账户共享客户端（代理变更时重建）
 //   - account_proxy: 按账户+代理组合隔离，最细粒度
-func (s *httpUpstreamService) getOrCreateClient(proxyURL string, accountID int64, accountConcurrency int) (*upstreamClientEntry, error) {
-	return s.getClientEntry(proxyURL, accountID, accountConcurrency, false, false)
+func (s *httpUpstreamService) getOrCreateClient(proxyURL string, accountID int64) (*upstreamClientEntry, error) {
+	return s.getClientEntry(proxyURL, accountID, false, false)
 }
 
 // getClientEntry 获取或创建客户端条目
 // markInFlight=true 时会标记进行中请求，用于请求路径防止被淘汰
 // enforceLimit=true 时会限制客户端数量，超限且无法淘汰时返回错误
-func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, accountConcurrency int, markInFlight bool, enforceLimit bool) (*upstreamClientEntry, error) {
+func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, markInFlight bool, enforceLimit bool) (*upstreamClientEntry, error) {
 	// 获取隔离模式
 	isolation := s.getIsolationMode()
 	// 标准化代理 URL 并解析
@@ -375,7 +373,7 @@ func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, a
 	// 构建缓存键（根据隔离策略不同）
 	cacheKey := buildCacheKey(isolation, proxyKey, accountID)
 	// 构建连接池配置键（用于检测配置变更）
-	poolKey := s.buildPoolKey(isolation, accountConcurrency)
+	poolKey := s.buildPoolKey(isolation)
 
 	now := time.Now()
 	nowUnix := now.UnixNano()
@@ -418,7 +416,7 @@ func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, a
 	}
 
 	// 缓存未命中或需要重建，创建新客户端
-	settings := s.resolvePoolSettings(isolation, accountConcurrency)
+	settings := s.resolvePoolSettings(isolation)
 	transport, err := buildUpstreamTransport(settings, parsedProxy)
 	if err != nil {
 		s.mu.Unlock()
@@ -592,27 +590,14 @@ func (s *httpUpstreamService) clientIdleTTL() time.Duration {
 }
 
 // resolvePoolSettings 解析连接池配置
-// 根据隔离策略和账户并发数动态调整连接池参数
 //
 // 参数:
 //   - isolation: 隔离模式
-//   - accountConcurrency: 账户并发限制
 //
 // 返回:
 //   - poolSettings: 连接池配置
-//
-// 说明:
-//   - 账户隔离模式下，连接池大小与账户并发数对应
-//   - 这确保了单账户不会占用过多连接资源
-func (s *httpUpstreamService) resolvePoolSettings(isolation string, accountConcurrency int) poolSettings {
-	settings := defaultPoolSettings(s.cfg)
-	// 账户隔离模式下，根据账户并发数调整连接池大小
-	if (isolation == config.ConnectionPoolIsolationAccount || isolation == config.ConnectionPoolIsolationAccountProxy) && accountConcurrency > 0 {
-		settings.maxIdleConns = accountConcurrency
-		settings.maxIdleConnsPerHost = accountConcurrency
-		settings.maxConnsPerHost = accountConcurrency
-	}
-	return settings
+func (s *httpUpstreamService) resolvePoolSettings(isolation string) poolSettings {
+	return defaultPoolSettings(s.cfg)
 }
 
 // buildPoolKey 构建连接池配置键
@@ -620,15 +605,12 @@ func (s *httpUpstreamService) resolvePoolSettings(isolation string, accountConcu
 //
 // 参数:
 //   - isolation: 隔离模式
-//   - accountConcurrency: 账户并发限制
 //
 // 返回:
 //   - string: 配置键
-func (s *httpUpstreamService) buildPoolKey(isolation string, accountConcurrency int) string {
+func (s *httpUpstreamService) buildPoolKey(isolation string) string {
 	if isolation == config.ConnectionPoolIsolationAccount || isolation == config.ConnectionPoolIsolationAccountProxy {
-		if accountConcurrency > 0 {
-			return fmt.Sprintf("account:%d", accountConcurrency)
-		}
+		return "account"
 	}
 	return "default"
 }

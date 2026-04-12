@@ -197,8 +197,6 @@ const typeOptions = computed(() => [
   { value: '', label: t('admin.users.allTypes') },
   { value: 'balance', label: t('admin.users.typeBalance') },
   { value: 'admin_balance', label: t('admin.users.typeAdminBalance') },
-  { value: 'concurrency', label: t('admin.users.typeConcurrency') },
-  { value: 'admin_concurrency', label: t('admin.users.typeAdminConcurrency') },
   { value: 'subscription', label: t('admin.users.typeSubscription') }
 ])
 
@@ -232,7 +230,7 @@ const loadHistory = async (page: number) => {
 }
 
 // Helper: check if admin type
-const isAdminType = (type: string) => type === 'admin_balance' || type === 'admin_concurrency'
+const isAdminType = (type: string) => type === 'admin_balance'
 
 // Helper: check if balance type (includes admin_balance)
 const isBalanceType = (type: string) => type === 'balance' || type === 'admin_balance'
@@ -244,7 +242,7 @@ const isSubscriptionType = (type: string) => type === 'subscription'
 const getIconName = (item: BalanceHistoryItem) => {
   if (isBalanceType(item.type)) return 'dollar'
   if (isSubscriptionType(item.type)) return 'badge'
-  return 'bolt' // concurrency
+  return 'dollar'
 }
 
 // Icon background color
@@ -293,10 +291,6 @@ const getItemTitle = (item: BalanceHistoryItem) => {
       return t('redeem.balanceAddedRedeem')
     case 'admin_balance':
       return item.value >= 0 ? t('redeem.balanceAddedAdmin') : t('redeem.balanceDeductedAdmin')
-    case 'concurrency':
-      return t('redeem.concurrencyAddedRedeem')
-    case 'admin_concurrency':
-      return item.value >= 0 ? t('redeem.concurrencyAddedAdmin') : t('redeem.concurrencyReducedAdmin')
     case 'subscription':
       return t('redeem.subscriptionAssigned')
     default:
@@ -315,8 +309,8 @@ const formatValue = (item: BalanceHistoryItem) => {
     const groupName = item.group?.name || ''
     return groupName ? `${days}d - ${groupName}` : `${days}d`
   }
-  // concurrency types
+  // concurrency types removed - fallback to balance display
   const sign = item.value >= 0 ? '+' : ''
-  return `${sign}${item.value}`
+  return `${sign}$${item.value.toFixed(2)}`
 }
 </script>

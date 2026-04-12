@@ -153,8 +153,6 @@
           <template #cell-capacity="{ row }">
             <GroupCapacityBadge
               v-if="capacityMap.get(row.id)"
-              :concurrency-used="capacityMap.get(row.id)!.concurrencyUsed"
-              :concurrency-max="capacityMap.get(row.id)!.concurrencyMax"
               :sessions-used="capacityMap.get(row.id)!.sessionsUsed"
               :sessions-max="capacityMap.get(row.id)!.sessionsMax"
               :rpm-used="capacityMap.get(row.id)!.rpmUsed"
@@ -1652,7 +1650,7 @@ const groups = ref<AdminGroup[]>([])
 const loading = ref(false)
 const usageMap = ref<Map<number, { today_cost: number; total_cost: number }>>(new Map())
 const usageLoading = ref(false)
-const capacityMap = ref<Map<number, { concurrencyUsed: number; concurrencyMax: number; sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>>(new Map())
+const capacityMap = ref<Map<number, { sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>>(new Map())
 const searchQuery = ref('')
 const filters = reactive({
   status: '',
@@ -1994,11 +1992,9 @@ const loadUsageSummary = async () => {
 const loadCapacitySummary = async () => {
   try {
     const data = await adminAPI.groups.getCapacitySummary()
-    const map = new Map<number, { concurrencyUsed: number; concurrencyMax: number; sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>()
+    const map = new Map<number, { sessionsUsed: number; sessionsMax: number; rpmUsed: number; rpmMax: number }>()
     for (const item of data) {
       map.set(item.group_id, {
-        concurrencyUsed: item.concurrency_used,
-        concurrencyMax: item.concurrency_max,
         sessionsUsed: item.sessions_used,
         sessionsMax: item.sessions_max,
         rpmUsed: item.rpm_used,

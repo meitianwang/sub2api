@@ -32,7 +32,6 @@ type APIKeyAuthUserSnapshot struct {
 	Status      string  `json:"status"`
 	Role        string  `json:"role"`
 	Balance     float64 `json:"balance"`
-	Concurrency int     `json:"concurrency"`
 }
 
 // APIKeyAuthGroupSnapshot 分组快照

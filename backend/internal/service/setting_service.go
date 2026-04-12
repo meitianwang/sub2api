@@ -474,7 +474,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
 
 	// 默认配置
-	updates[SettingKeyDefaultConcurrency] = strconv.Itoa(settings.DefaultConcurrency)
 	updates[SettingKeyDefaultBalance] = strconv.FormatFloat(settings.DefaultBalance, 'f', 8, 64)
 	defaultSubsJSON, err := json.Marshal(settings.DefaultSubscriptions)
 	if err != nil {
@@ -756,16 +755,9 @@ func (s *SettingService) GetSiteName(ctx context.Context) string {
 	return value
 }
 
-// GetDefaultConcurrency 获取默认并发量
+// GetDefaultConcurrency is deprecated and always returns 0.
 func (s *SettingService) GetDefaultConcurrency(ctx context.Context) int {
-	value, err := s.settingRepo.GetValue(ctx, SettingKeyDefaultConcurrency)
-	if err != nil {
-		return s.cfg.Default.UserConcurrency
-	}
-	if v, err := strconv.Atoi(value); err == nil && v > 0 {
-		return v
-	}
-	return s.cfg.Default.UserConcurrency
+	return 0
 }
 
 // GetDefaultBalance 获取默认余额
@@ -813,7 +805,6 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPurchaseSubscriptionURL:          "",
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
-		SettingKeyDefaultConcurrency:               strconv.Itoa(s.cfg.Default.UserConcurrency),
 		SettingKeyDefaultBalance:                   strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
 		SettingKeyDefaultSubscriptions:             "[]",
 		SettingKeySMTPPort:                         "587",
@@ -881,12 +872,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.SMTPPort = port
 	} else {
 		result.SMTPPort = 587
-	}
-
-	if concurrency, err := strconv.Atoi(settings[SettingKeyDefaultConcurrency]); err == nil {
-		result.DefaultConcurrency = concurrency
-	} else {
-		result.DefaultConcurrency = s.cfg.Default.UserConcurrency
 	}
 
 	// 解析浮点数类型

@@ -12,46 +12,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserWithConcurrency wraps AdminUser with current concurrency info
-type UserWithConcurrency struct {
-	dto.AdminUser
-	CurrentConcurrency int `json:"current_concurrency"`
-}
-
 // UserHandler handles admin user management
 type UserHandler struct {
-	adminService       service.AdminService
-	concurrencyService *service.ConcurrencyService
+	adminService service.AdminService
 }
 
 // NewUserHandler creates a new admin user handler
-func NewUserHandler(adminService service.AdminService, concurrencyService *service.ConcurrencyService) *UserHandler {
+func NewUserHandler(adminService service.AdminService) *UserHandler {
 	return &UserHandler{
-		adminService:       adminService,
-		concurrencyService: concurrencyService,
+		adminService: adminService,
 	}
 }
 
 // CreateUserRequest represents admin create user request
 type CreateUserRequest struct {
-	Email                 string  `json:"email" binding:"required,email"`
-	Password              string  `json:"password" binding:"required,min=6"`
-	Username              string  `json:"username"`
-	Notes                 string  `json:"notes"`
-	Balance               float64 `json:"balance"`
-	Concurrency           int     `json:"concurrency"`
+	Email         string  `json:"email" binding:"required,email"`
+	Password      string  `json:"password" binding:"required,min=6"`
+	Username      string  `json:"username"`
+	Notes         string  `json:"notes"`
+	Balance       float64 `json:"balance"`
 	AllowedGroups []int64 `json:"allowed_groups"`
 }
 
 // UpdateUserRequest represents admin update user request
-// 使用指针类型来区分"未提供"和"设置为0"
 type UpdateUserRequest struct {
 	Email         string   `json:"email" binding:"omitempty,email"`
 	Password      string   `json:"password" binding:"omitempty,min=6"`
 	Username      *string  `json:"username"`
 	Notes         *string  `json:"notes"`
 	Balance       *float64 `json:"balance"`
-	Concurrency   *int     `json:"concurrency"`
 	Status        string   `json:"status" binding:"omitempty,oneof=active disabled"`
 	AllowedGroups *[]int64 `json:"allowed_groups"`
 }
@@ -65,17 +54,10 @@ type UpdateBalanceRequest struct {
 
 // List handles listing all users with pagination
 // GET /api/v1/admin/users
-// Query params:
-//   - status: filter by user status
-//   - role: filter by user role
-//   - search: search in email, username
-//   - attr[{id}]: filter by custom attribute value, e.g. attr[1]=company
-//   - group_name: fuzzy filter by allowed group name
 func (h *UserHandler) List(c *gin.Context) {
 	page, pageSize := response.ParsePagination(c)
 
 	search := c.Query("search")
-	// 标准化和验证 search 参数
 	search = strings.TrimSpace(search)
 	if runes := []rune(search); len(runes) > 100 {
 		search = string(runes[:100])
@@ -99,44 +81,22 @@ func (h *UserHandler) List(c *gin.Context) {
 		return
 	}
 
-	// Batch get current concurrency (nil map if unavailable)
-	var loadInfo map[int64]*service.UserLoadInfo
-	if len(users) > 0 && h.concurrencyService != nil {
-		usersConcurrency := make([]service.UserWithConcurrency, len(users))
-		for i := range users {
-			usersConcurrency[i] = service.UserWithConcurrency{
-				ID:             users[i].ID,
-				MaxConcurrency: users[i].Concurrency,
-			}
-		}
-		loadInfo, _ = h.concurrencyService.GetUsersLoadBatch(c.Request.Context(), usersConcurrency)
-	}
-
-	// Build response with concurrency info
-	out := make([]UserWithConcurrency, len(users))
+	out := make([]*dto.AdminUser, len(users))
 	for i := range users {
-		out[i] = UserWithConcurrency{
-			AdminUser: *dto.UserFromServiceAdmin(&users[i]),
-		}
-		if info := loadInfo[users[i].ID]; info != nil {
-			out[i].CurrentConcurrency = info.CurrentConcurrency
-		}
+		out[i] = dto.UserFromServiceAdmin(&users[i])
 	}
 
 	response.Paginated(c, out, total, page, pageSize)
 }
 
 // parseAttributeFilters extracts attribute filters from query params
-// Format: attr[{attributeID}]=value, e.g. attr[1]=company&attr[2]=developer
 func parseAttributeFilters(c *gin.Context) map[int64]string {
 	result := make(map[int64]string)
 
-	// Get all query params and look for attr[*] pattern
 	for key, values := range c.Request.URL.Query() {
 		if len(values) == 0 || values[0] == "" {
 			continue
 		}
-		// Check if key matches pattern attr[{id}]
 		if len(key) > 5 && key[:5] == "attr[" && key[len(key)-1] == ']' {
 			idStr := key[5 : len(key)-1]
 			id, err := strconv.ParseInt(idStr, 10, 64)
@@ -177,13 +137,12 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	user, err := h.adminService.CreateUser(c.Request.Context(), &service.CreateUserInput{
-		Email:                 req.Email,
-		Password:              req.Password,
-		Username:              req.Username,
-		Notes:                 req.Notes,
-		Balance:               req.Balance,
-		Concurrency:           req.Concurrency,
-		AllowedGroups:         req.AllowedGroups,
+		Email:         req.Email,
+		Password:      req.Password,
+		Username:      req.Username,
+		Notes:         req.Notes,
+		Balance:       req.Balance,
+		AllowedGroups: req.AllowedGroups,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -208,15 +167,13 @@ func (h *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// 使用指针类型直接传递，nil 表示未提供该字段
 	user, err := h.adminService.UpdateUser(c.Request.Context(), userID, &service.UpdateUserInput{
-		Email:                 req.Email,
-		Password:              req.Password,
-		Username:              req.Username,
-		Notes:                 req.Notes,
-		Balance:               req.Balance,
-		Concurrency:           req.Concurrency,
-		Status:                req.Status,
+		Email:         req.Email,
+		Password:      req.Password,
+		Username:      req.Username,
+		Notes:         req.Notes,
+		Balance:       req.Balance,
+		Status:        req.Status,
 		AllowedGroups: req.AllowedGroups,
 	})
 	if err != nil {
@@ -320,10 +277,8 @@ func (h *UserHandler) GetUserUsage(c *gin.Context) {
 	response.Success(c, stats)
 }
 
-// GetBalanceHistory handles getting user's balance/concurrency change history
+// GetBalanceHistory handles getting user's balance change history
 // GET /api/v1/admin/users/:id/balance-history
-// Query params:
-//   - type: filter by record type (balance, admin_balance, concurrency, admin_concurrency, subscription)
 func (h *UserHandler) GetBalanceHistory(c *gin.Context) {
 	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -340,13 +295,11 @@ func (h *UserHandler) GetBalanceHistory(c *gin.Context) {
 		return
 	}
 
-	// Convert to admin DTO (includes notes field for admin visibility)
 	out := make([]dto.AdminRedeemCode, 0, len(codes))
 	for i := range codes {
 		out = append(out, *dto.RedeemCodeFromServiceAdmin(&codes[i]))
 	}
 
-	// Custom response with total_recharged alongside pagination
 	pages := int((total + int64(pageSize) - 1) / int64(pageSize))
 	if pages < 1 {
 		pages = 1

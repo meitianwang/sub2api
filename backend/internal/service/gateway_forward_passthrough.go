@@ -170,7 +170,7 @@ func (s *GatewayService) ForwardPassthrough(
 	// 7. Send request with retry
 	var resp *http.Response
 	for attempt := 1; attempt <= maxRetryAttempts; attempt++ {
-		resp, err = s.httpUpstream.DoWithTLS(req, proxyURL, account.ID, account.Concurrency, s.tlsFPProfileService.ResolveTLSProfile(account))
+		resp, err = s.httpUpstream.DoWithTLS(req, proxyURL, account.ID, s.tlsFPProfileService.ResolveTLSProfile(account))
 		if err != nil {
 			if resp != nil && resp.Body != nil {
 				_ = resp.Body.Close()

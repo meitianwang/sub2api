@@ -418,21 +418,6 @@ func (s *OpsService) executePinnedRetry(ctx context.Context, reqType opsRetryReq
 		}
 	}
 
-	var release func()
-	if s.concurrencyService != nil {
-		acq, err := s.concurrencyService.AcquireAccountSlot(ctx, account.ID, account.Concurrency)
-		if err != nil {
-			return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: fmt.Sprintf("acquire account slot failed: %v", err)}
-		}
-		if acq == nil || !acq.Acquired {
-			return &opsRetryExecution{status: opsRetryStatusFailed, errorMessage: "account concurrency limit reached"}
-		}
-		release = acq.ReleaseFunc
-	}
-	if release != nil {
-		defer release()
-	}
-
 	usedID := account.ID
 	exec := s.executeWithAccount(ctx, reqType, errorLog, body, account)
 	exec.usedAccountID = &usedID

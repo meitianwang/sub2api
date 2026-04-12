@@ -800,9 +800,8 @@ export default {
   // Redeem
   redeem: {
     title: '兑换码',
-    description: '输入兑换码以充值余额或增加并发数',
+    description: '输入兑换码以充值余额',
     currentBalance: '当前余额',
-    concurrency: '并发数',
     requests: '请求',
     redeemCodeLabel: '兑换码',
     redeemCodePlaceholder: '请输入兑换码',
@@ -812,22 +811,17 @@ export default {
     redeemSuccess: '兑换成功！',
     redeemFailed: '兑换失败',
     added: '已添加',
-    concurrentRequests: '并发请求',
     newBalance: '新余额',
-    newConcurrency: '新并发数',
     aboutCodes: '关于兑换码',
     codeRule1: '每个兑换码只能使用一次',
-    codeRule2: '兑换码可以增加余额、并发数或试用权限',
+    codeRule2: '兑换码可以增加余额或试用权限',
     codeRule3: '如有兑换问题，请联系客服',
-    codeRule4: '余额和并发数即时更新',
+    codeRule4: '余额即时更新',
     recentActivity: '最近活动',
     historyWillAppear: '您的兑换历史将显示在这里',
     balanceAddedRedeem: '余额充值（兑换）',
     balanceAddedAdmin: '余额充值（管理员）',
     balanceDeductedAdmin: '余额扣除（管理员）',
-    concurrencyAddedRedeem: '并发增加（兑换）',
-    concurrencyAddedAdmin: '并发增加（管理员）',
-    concurrencyReducedAdmin: '并发减少（管理员）',
     adminAdjustment: '管理员调整',
     subscriptionAssigned: '订阅已分配',
     subscriptionAssignedDesc: '您已获得 {groupName} 的访问权限',
@@ -844,7 +838,6 @@ export default {
     title: '个人设置',
     description: '管理您的账户信息和设置',
     accountBalance: '账户余额',
-    concurrencyLimit: '并发限制',
     memberSince: '注册时间',
     administrator: '管理员',
     user: '用户',
@@ -1383,7 +1376,6 @@ export default {
         subscriptions: '订阅分组',
         balance: '余额',
         usage: '用量',
-        concurrency: '并发数',
         status: '状态',
         created: '创建时间',
         actions: '操作'
@@ -1441,16 +1433,13 @@ export default {
         roleLabel: '角色',
         selectRole: '选择角色',
         balanceLabel: '余额',
-        concurrencyLabel: '并发数',
         statusLabel: '状态',
         selectStatus: '选择状态'
       },
       adjustBalance: '调整余额',
-      adjustConcurrency: '调整并发数',
       adjustmentAmount: '调整金额',
       adjustmentAmountHint: '正数增加，负数减少',
       currentBalance: '当前余额',
-      currentConcurrency: '当前并发数',
       saving: '保存中...',
       noUsers: '暂无用户',
       noUsersDescription: '创建您的第一个用户以开始使用系统。',
@@ -1458,11 +1447,9 @@ export default {
       userUpdatedSuccess: '用户更新成功',
       userDeletedSuccess: '用户删除成功',
       balanceAdjustedSuccess: '余额调整成功',
-      concurrencyAdjustedSuccess: '并发数调整成功',
       failedToSave: '保存用户失败',
       failedToAdjust: '调整失败',
       emailRequired: '请输入邮箱',
-      concurrencyMin: '并发数不能小于1',
       amountRequired: '请输入有效金额',
       insufficientBalance: '余额不足',
       setAllowedGroups: '设置允许分组',
@@ -1508,13 +1495,11 @@ export default {
       // 余额变动记录
       balanceHistory: '充值记录',
       balanceHistoryTip: '点击查看充值记录',
-      balanceHistoryTitle: '用户充值和并发变动记录',
+      balanceHistoryTitle: '用户充值变动记录',
       noBalanceHistory: '暂无变动记录',
       allTypes: '全部类型',
       typeBalance: '余额（兑换码）',
       typeAdminBalance: '余额（管理员调整）',
-      typeConcurrency: '并发（兑换码）',
-      typeAdminConcurrency: '并发（管理员调整）',
       typeSubscription: '订阅',
       failedToLoadBalanceHistory: '加载余额记录失败',
       createdAt: '创建时间',
@@ -2293,7 +2278,7 @@ export default {
         apiKeyHint: '您的 OpenAI API Key',
         oauthPassthrough: '自动透传（仅替换认证）',
         oauthPassthroughDesc:
-          '开启后，该 OpenAI 账号将自动透传请求与响应，仅替换认证并保留计费/并发/审计及必要安全过滤；如遇兼容性问题可随时关闭回滚。',
+          '开启后，该 OpenAI 账号将自动透传请求与响应，仅替换认证并保留计费/审计及必要安全过滤；如遇兼容性问题可随时关闭回滚。',
         responsesWebsocketsV2: 'Responses WebSocket v2',
         responsesWebsocketsV2Desc:
           '默认关闭。开启后可启用 responses_websockets_v2 协议能力（受网关全局开关与账号类型开关约束）。',
@@ -2304,7 +2289,7 @@ export default {
         wsModePassthrough: '透传（passthrough）',
         wsModeShared: '共享（shared）',
         wsModeDedicated: '独享（dedicated）',
-        wsModeConcurrencyHint: '启用 WS mode 后，该账号并发数将作为该账号 WS 连接池上限。',
+        wsModeConcurrencyHint: '启用 WS mode 后，该账号负载因子将作为该账号 WS 连接池上限。',
         wsModePassthroughHint: 'passthrough 模式不使用 WS 连接池。',
         oauthResponsesWebsocketsV2: 'OAuth WebSocket Mode',
         oauthResponsesWebsocketsV2Desc:
@@ -2320,7 +2305,7 @@ export default {
       anthropic: {
         apiKeyPassthrough: '自动透传（仅替换认证）',
         apiKeyPassthroughDesc:
-          '仅对 Anthropic API Key 生效。开启后，messages/count_tokens 请求将透传上游并仅替换认证，保留计费/并发/审计及必要安全过滤；关闭即可回滚到现有兼容链路。'
+          '仅对 Anthropic API Key 生效。开启后，messages/count_tokens 请求将透传上游并仅替换认证，保留计费/审计及必要安全过滤；关闭即可回滚到现有兼容链路。'
       },
       modelRestriction: '模型限制（可选）',
       modelWhitelist: '模型白名单',
@@ -2454,7 +2439,6 @@ export default {
       expired: '已过期',
       proxy: '代理',
       noProxy: '无代理',
-      concurrency: '并发数',
       loadFactor: '负载因子',
       loadFactorHint: '提高负载因子可以提高对账号的调度频率',
       priority: '优先级',
@@ -2467,7 +2451,7 @@ export default {
       aiCreditsBalance: 'AI Credits',
       allowOverages: '允许超量请求 (AI Credits)',
       allowOveragesTooltip:
-        '仅在免费配额被明确判定为耗尽后才会使用 AI Credits。普通并发 429 限流不会切换到超量请求。',
+        '仅在免费配额被明确判定为耗尽后才会使用 AI Credits。普通 429 限流不会切换到超量请求。',
       creating: '创建中...',
       updating: '更新中...',
       accountCreated: '账号创建成功',
@@ -2668,7 +2652,7 @@ export default {
           customRequirement: '需管理员配置 Client ID 并加入测试用户白名单。',
           badges: {
             recommended: '推荐',
-            highConcurrency: '高并发',
+            highConcurrency: '高负载',
             noAdmin: '无需管理员配置',
             orgManaged: '组织管理',
             adminRequired: '需要管理员'
@@ -3060,16 +3044,13 @@ export default {
       },
       types: {
         balance: '余额',
-        concurrency: '并发数',
         subscription: '订阅',
         invitation: '邀请码',
-        // 管理员在用户管理页面调整余额/并发时产生的记录
-        admin_balance: '余额（管理员）',
-        admin_concurrency: '并发数（管理员）'
+        // 管理员在用户管理页面调整余额时产生的记录
+        admin_balance: '余额（管理员）'
       },
       // 用于选择器和筛选器的直接键
       balance: '余额',
-      concurrency: '并发数',
       subscription: '订阅',
       invitation: '邀请码',
       invitationHint: '邀请码用于限制用户注册，使用后自动标记为已使用。',
@@ -3118,7 +3099,6 @@ export default {
         valueLabel: '面值',
         valuePlaceholder: '请输入面值',
         balanceHint: '余额金额（美元）',
-        concurrencyHint: '并发数增量',
         countLabel: '数量',
         countPlaceholder: '请输入数量',
         countHint: '要生成的兑换码数量',
@@ -3141,7 +3121,7 @@ export default {
       deleteCode: '删除',
       deleteConfirmMessage: '确定要删除此兑换码吗？',
       noCodes: '暂无兑换码',
-      noCodesDescription: '生成兑换码以向用户分发余额或并发数。',
+      noCodesDescription: '生成兑换码以向用户分发余额。',
       codesGeneratedSuccess: '兑换码生成成功，共 {count} 个',
       codeDisabledSuccess: '兑换码已禁用',
       codeEnabledSuccess: '兑换码已启用',
@@ -3833,7 +3813,6 @@ export default {
           p99: 'P99 请求时长 (ms)',
           cpu: 'CPU 使用率 (%)',
           memory: '内存使用率 (%)',
-          queueDepth: '并发排队深度',
           groupAvailableAccounts: '分组可用账号数',
           groupAvailableRatio: '分组可用比例 (%)',
           groupRateLimitRatio: '分组限流比例 (%)',
@@ -3850,7 +3829,6 @@ export default {
           p99: '统计窗口内 P99 请求耗时（毫秒）。',
           cpu: '当前实例 CPU 使用率（0~100）。',
           memory: '当前实例内存使用率（0~100）。',
-          queueDepth: '统计窗口内并发队列排队深度（等待中的请求数）。',
           groupAvailableAccounts: '指定分组中当前可用账号数量（需要 group_id 过滤）。',
           groupAvailableRatio: '指定分组中可用账号占比（0~100，需要 group_id 过滤）。',
           groupRateLimitRatio: '指定分组中账号被限流的比例（0~100，需要 group_id 过滤）。',
@@ -4075,23 +4053,6 @@ export default {
           upstreamErrorRateMaxRange: '上游错误率最大值必须在0-100之间'
         }
       },
-      concurrency: {
-        title: '并发 / 排队',
-        byPlatform: '按平台',
-        byGroup: '按分组',
-        byAccount: '按账号',
-        byUser: '按用户',
-        showByUserTooltip: '切换用户视图，显示每个用户的并发使用情况',
-        switchToUser: '切换到用户视图',
-        switchToPlatform: '切换回平台视图',
-        totalRows: '共 {count} 项',
-        disabledHint: '已在设置中关闭实时监控。',
-        empty: '暂无数据',
-        queued: '队列 {count}',
-        rateLimited: '限流 {count}',
-        errorAccounts: '异常 {count}',
-        loadFailed: '加载并发数据失败'
-      },
       realtime: {
         title: '实时信息',
         connected: '实时已连接',
@@ -4220,8 +4181,6 @@ export default {
         description: '新用户的默认值',
         defaultBalance: '默认余额',
         defaultBalanceHint: '新用户的初始余额',
-        defaultConcurrency: '默认并发数',
-        defaultConcurrencyHint: '新用户的最大并发请求数',
         defaultSubscriptions: '默认订阅列表',
         defaultSubscriptionsHint: '新用户创建或注册时自动分配这些订阅',
         addDefaultSubscription: '添加默认订阅',

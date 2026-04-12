@@ -325,7 +325,6 @@ export interface OpsSystemMetricsSnapshot {
   db_conn_waiting?: number | null
 
   goroutine_count?: number | null
-  concurrency_queue_depth?: number | null
   account_switch_count?: number | null
 }
 
@@ -338,78 +337,6 @@ export interface OpsJobHeartbeat {
   last_duration_ms?: number | null
   last_result?: string | null
   updated_at: string
-}
-
-export interface PlatformConcurrencyInfo {
-  platform: string
-  current_in_use: number
-  max_capacity: number
-  load_percentage: number
-  waiting_in_queue: number
-}
-
-export interface GroupConcurrencyInfo {
-  group_id: number
-  group_name: string
-  platform: string
-  current_in_use: number
-  max_capacity: number
-  load_percentage: number
-  waiting_in_queue: number
-}
-
-export interface AccountConcurrencyInfo {
-  account_id: number
-  account_name?: string
-  platform: string
-  group_id: number
-  group_name: string
-  current_in_use: number
-  max_capacity: number
-  load_percentage: number
-  waiting_in_queue: number
-}
-
-export interface OpsConcurrencyStatsResponse {
-  enabled: boolean
-  platform: Record<string, PlatformConcurrencyInfo>
-  group: Record<string, GroupConcurrencyInfo>
-  account: Record<string, AccountConcurrencyInfo>
-  timestamp?: string
-}
-
-export interface UserConcurrencyInfo {
-  user_id: number
-  user_email: string
-  username: string
-  current_in_use: number
-  max_capacity: number
-  load_percentage: number
-  waiting_in_queue: number
-}
-
-export interface OpsUserConcurrencyStatsResponse {
-  enabled: boolean
-  user: Record<string, UserConcurrencyInfo>
-  timestamp?: string
-}
-
-export async function getConcurrencyStats(platform?: string, groupId?: number | null): Promise<OpsConcurrencyStatsResponse> {
-  const params: Record<string, any> = {}
-  if (platform) {
-    params.platform = platform
-  }
-  if (typeof groupId === 'number' && groupId > 0) {
-    params.group_id = groupId
-  }
-
-  const { data } = await apiClient.get<OpsConcurrencyStatsResponse>('/admin/ops/concurrency', { params })
-  return data
-}
-
-export async function getUserConcurrencyStats(): Promise<OpsUserConcurrencyStatsResponse> {
-  const { data } = await apiClient.get<OpsUserConcurrencyStatsResponse>('/admin/ops/user-concurrency')
-  return data
 }
 
 export interface PlatformAvailability {
@@ -734,7 +661,6 @@ export type MetricType =
   | 'upstream_error_rate'
   | 'cpu_usage_percent'
   | 'memory_usage_percent'
-  | 'concurrency_queue_depth'
   | 'group_available_accounts'
   | 'group_available_ratio'
   | 'group_rate_limit_ratio'
@@ -1371,8 +1297,6 @@ export const opsAPI = {
   getErrorTrend,
   getErrorDistribution,
   getOpenAITokenStats,
-  getConcurrencyStats,
-  getUserConcurrencyStats,
   getAccountAvailabilityStats,
   getRealtimeTrafficSummary,
   subscribeQPS,

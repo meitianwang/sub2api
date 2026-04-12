@@ -30,7 +30,6 @@ export interface User {
   email: string
   role: 'admin' | 'user' // User role for authorization
   balance: number // User balance for API usage
-  concurrency: number // Allowed concurrent requests
   status: 'active' | 'disabled' // Account status
   allowed_groups: number[] | null // Allowed group IDs (null = all non-exclusive groups)
   subscriptions?: UserSubscription[] // User's active subscriptions
@@ -41,8 +40,6 @@ export interface User {
 export interface AdminUser extends User {
   // 管理员备注（普通用户接口不返回）
   notes: string
-  // 当前并发数（仅管理员列表接口返回）
-  current_concurrency?: number
 }
 
 export interface LoginRequest {
@@ -667,9 +664,7 @@ export interface Account {
   credentials?: Record<string, unknown>
   extra?: (CodexUsageSnapshot & Record<string, unknown>)
   proxy_id: number | null
-  concurrency: number
   load_factor?: number | null
-  current_concurrency?: number // Real-time concurrency count from Redis
   priority: number
   status: 'active' | 'inactive' | 'error'
   error_message: string | null
@@ -833,7 +828,6 @@ export interface CreateAccountRequest {
   credentials: Record<string, unknown>
   extra?: Record<string, unknown>
   proxy_id?: number | null
-  concurrency?: number
   load_factor?: number | null
   priority?: number
   group_ids?: number[]
@@ -849,7 +843,6 @@ export interface UpdateAccountRequest {
   credentials?: Record<string, unknown>
   extra?: Record<string, unknown>
   proxy_id?: number | null
-  concurrency?: number
   load_factor?: number | null
   priority?: number
   schedulable?: boolean
@@ -926,7 +919,6 @@ export interface AdminDataAccount {
   credentials: Record<string, unknown>
   extra?: Record<string, unknown>
   proxy_key?: string | null
-  concurrency: number
   priority: number
   expires_at?: number | null
   auto_pause_on_expired?: boolean
@@ -950,7 +942,7 @@ export interface AdminDataImportResult {
 
 // ==================== Usage & Redeem Types ====================
 
-export type RedeemCodeType = 'balance' | 'concurrency' | 'subscription' | 'invitation'
+export type RedeemCodeType = 'balance' | 'subscription' | 'invitation'
 export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2'
 
 export interface UsageLog {
@@ -1246,7 +1238,6 @@ export interface UpdateUserRequest {
   notes?: string
   role?: 'admin' | 'user'
   balance?: number
-  concurrency?: number
   status?: 'active' | 'disabled'
   allowed_groups?: number[] | null
 }

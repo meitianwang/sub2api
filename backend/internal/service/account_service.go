@@ -157,7 +157,6 @@ func (s *AccountService) Create(ctx context.Context, req CreateAccountRequest) (
 		Credentials: req.Credentials,
 		Extra:       req.Extra,
 		ProxyID:     req.ProxyID,
-		Concurrency: req.Concurrency,
 		Priority:    req.Priority,
 		Status:      StatusActive,
 		ExpiresAt:   req.ExpiresAt,
@@ -256,10 +255,6 @@ func (s *AccountService) Update(ctx context.Context, id int64, req UpdateAccount
 
 	if req.ProxyID != nil {
 		account.ProxyID = req.ProxyID
-	}
-
-	if req.Concurrency != nil {
-		account.Concurrency = *req.Concurrency
 	}
 
 	if req.Priority != nil {

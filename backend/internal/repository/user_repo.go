@@ -60,7 +60,6 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 		SetPasswordHash(userIn.PasswordHash).
 		SetRole(userIn.Role).
 		SetBalance(userIn.Balance).
-		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
 		Save(ctx)
 	if err != nil {
@@ -142,7 +141,6 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 		SetPasswordHash(userIn.PasswordHash).
 		SetRole(userIn.Role).
 		SetBalance(userIn.Balance).
-		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
 		Save(ctx)
 	if err != nil {
@@ -361,17 +359,6 @@ func (r *userRepository) DeductBalance(ctx context.Context, id int64, amount flo
 	return nil
 }
 
-func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
-	client := clientFromContext(ctx, r.client)
-	n, err := client.User.Update().Where(dbuser.IDEQ(id)).AddConcurrency(amount).Save(ctx)
-	if err != nil {
-		return translatePersistenceError(err, service.ErrUserNotFound, nil)
-	}
-	if n == 0 {
-		return service.ErrUserNotFound
-	}
-	return nil
-}
 
 
 func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {

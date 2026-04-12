@@ -1281,14 +1281,9 @@
 
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div>
-          <label class="input-label">{{ t('admin.accounts.concurrency') }}</label>
-          <input v-model.number="form.concurrency" type="number" min="1" class="input"
-            @input="form.concurrency = Math.max(1, form.concurrency || 1)" />
-        </div>
-        <div>
           <label class="input-label">{{ t('admin.accounts.loadFactor') }}</label>
           <input v-model.number="form.load_factor" type="number" min="1"
-            class="input" :placeholder="String(form.concurrency || 1)"
+            class="input"
             @input="form.load_factor = (form.load_factor &amp;&amp; form.load_factor >= 1) ? form.load_factor : null" />
           <p class="input-hint">{{ t('admin.accounts.loadFactorHint') }}</p>
         </div>
@@ -1899,7 +1894,6 @@ const form = reactive({
   type: 'oauth' as AccountType, // Will be 'oauth', 'setup-token', or 'apikey'
   credentials: {} as Record<string, unknown>,
   proxy_id: null as number | null,
-  concurrency: 10,
   load_factor: null as number | null,
   priority: 1,
   group_ids: [] as number[],
@@ -2301,7 +2295,6 @@ const resetForm = () => {
   form.type = 'oauth'
   form.credentials = {}
   form.proxy_id = null
-  form.concurrency = 10
   form.load_factor = null
   form.priority = 1
   form.group_ids = []
@@ -2624,7 +2617,6 @@ const createAccountAndFinish = async (
     credentials,
     extra: finalExtra,
     proxy_id: form.proxy_id,
-    concurrency: form.concurrency,
     load_factor: form.load_factor ?? undefined,
     priority: form.priority,
     group_ids: form.group_ids,
@@ -2681,7 +2673,6 @@ const handleOpenAIExchange = async (authCode: string) => {
       credentials,
       extra,
       proxy_id: form.proxy_id,
-      concurrency: form.concurrency,
       load_factor: form.load_factor ?? undefined,
       priority: form.priority,
       group_ids: form.group_ids,
@@ -2767,7 +2758,6 @@ const handleOpenAIBatchRT = async (refreshTokenInput: string, clientId?: string)
           credentials,
           extra,
           proxy_id: form.proxy_id,
-          concurrency: form.concurrency,
           load_factor: form.load_factor ?? undefined,
           priority: form.priority,
           group_ids: form.group_ids,
@@ -3066,7 +3056,6 @@ const handleCookieAuth = async (sessionKey: string) => {
           credentials,
           extra,
           proxy_id: form.proxy_id,
-          concurrency: form.concurrency,
           load_factor: form.load_factor ?? undefined,
           priority: form.priority,
           group_ids: form.group_ids,

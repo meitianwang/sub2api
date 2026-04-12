@@ -50,7 +50,6 @@ type AccountHandler struct {
 	rateLimitService   *service.RateLimitService
 	accountUsageService     *service.AccountUsageService
 	accountTestService      *service.AccountTestService
-	concurrencyService      *service.ConcurrencyService
 	crsSyncService          *service.CRSSyncService
 	sessionLimitCache       service.SessionLimitCache
 	rpmCache                service.RPMCache
@@ -66,7 +65,6 @@ func NewAccountHandler(
 	rateLimitService *service.RateLimitService,
 	accountUsageService *service.AccountUsageService,
 	accountTestService *service.AccountTestService,
-	concurrencyService *service.ConcurrencyService,
 	crsSyncService *service.CRSSyncService,
 	sessionLimitCache service.SessionLimitCache,
 	rpmCache service.RPMCache,
@@ -80,7 +78,6 @@ func NewAccountHandler(
 		rateLimitService:   rateLimitService,
 		accountUsageService: accountUsageService,
 		accountTestService: accountTestService,
-		concurrencyService: concurrencyService,
 		crsSyncService:     crsSyncService,
 		sessionLimitCache:  sessionLimitCache,
 		rpmCache:           rpmCache,
@@ -97,7 +94,6 @@ type CreateAccountRequest struct {
 	Credentials             map[string]any `json:"credentials" binding:"required"`
 	Extra                   map[string]any `json:"extra"`
 	ProxyID                 *int64         `json:"proxy_id"`
-	Concurrency             int            `json:"concurrency"`
 	Priority           int      `json:"priority"`
 	LoadFactor         *int    `json:"load_factor"`
 	GroupIDs           []int64 `json:"group_ids"`
@@ -115,7 +111,6 @@ type UpdateAccountRequest struct {
 	Credentials             map[string]any `json:"credentials"`
 	Extra                   map[string]any `json:"extra"`
 	ProxyID                 *int64         `json:"proxy_id"`
-	Concurrency             *int           `json:"concurrency"`
 	Priority                *int           `json:"priority"`
 	LoadFactor              *int           `json:"load_factor"`
 	Status                  string         `json:"status" binding:"omitempty,oneof=active inactive error"`
@@ -130,7 +125,6 @@ type BulkUpdateAccountsRequest struct {
 	AccountIDs              []int64        `json:"account_ids" binding:"required,min=1"`
 	Name                    string         `json:"name"`
 	ProxyID                 *int64         `json:"proxy_id"`
-	Concurrency             *int           `json:"concurrency"`
 	Priority    *int    `json:"priority"`
 	LoadFactor  *int    `json:"load_factor"`
 	Status      string  `json:"status" binding:"omitempty,oneof=active inactive error"`
@@ -148,11 +142,9 @@ type CheckMixedChannelRequest struct {
 	AccountID *int64  `json:"account_id"`
 }
 
-// AccountWithConcurrency extends Account with real-time concurrency info
-type AccountWithConcurrency struct {
+// AccountWithRuntime extends Account with real-time info
+type AccountWithRuntime struct {
 	*dto.Account
-	CurrentConcurrency int `json:"current_concurrency"`
-	// 以下字段仅对 Anthropic OAuth/SetupToken 账号有效，且仅在启用相应功能时返回
 	CurrentWindowCost *float64 `json:"current_window_cost,omitempty"` // 当前窗口费用
 	ActiveSessions    *int     `json:"active_sessions,omitempty"`     // 当前活跃会话数
 	CurrentRPM        *int     `json:"current_rpm,omitempty"`         // 当前分钟 RPM 计数
@@ -160,19 +152,12 @@ type AccountWithConcurrency struct {
 
 const accountListGroupUngroupedQueryValue = "ungrouped"
 
-func (h *AccountHandler) buildAccountResponseWithRuntime(ctx context.Context, account *service.Account) AccountWithConcurrency {
-	item := AccountWithConcurrency{
-		Account:            dto.AccountFromService(account),
-		CurrentConcurrency: 0,
+func (h *AccountHandler) buildAccountResponseWithRuntime(ctx context.Context, account *service.Account) AccountWithRuntime {
+	item := AccountWithRuntime{
+		Account: dto.AccountFromService(account),
 	}
 	if account == nil {
 		return item
-	}
-
-	if h.concurrencyService != nil {
-		if counts, err := h.concurrencyService.GetAccountConcurrencyBatch(ctx, []int64{account.ID}); err == nil {
-			item.CurrentConcurrency = counts[account.ID]
-		}
 	}
 
 	if account.IsAnthropicOAuthOrSetupToken() {
@@ -250,17 +235,9 @@ func (h *AccountHandler) List(c *gin.Context) {
 		accountIDs[i] = acc.ID
 	}
 
-	concurrencyCounts := make(map[int64]int)
 	var windowCosts map[int64]float64
 	var activeSessions map[int64]int
 	var rpmCounts map[int64]int
-
-	// 始终获取并发数（Redis ZCARD，极低开销）
-	if h.concurrencyService != nil {
-		if cc, ccErr := h.concurrencyService.GetAccountConcurrencyBatch(c.Request.Context(), accountIDs); ccErr == nil && cc != nil {
-			concurrencyCounts = cc
-		}
-	}
 
 	// 识别需要查询窗口费用、会话数和 RPM 的账号（Anthropic OAuth/SetupToken 且启用了相应功能）
 	windowCostAccountIDs := make([]int64, 0)
@@ -327,13 +304,12 @@ func (h *AccountHandler) List(c *gin.Context) {
 		_ = g.Wait()
 	}
 
-	// Build response with concurrency info
-	result := make([]AccountWithConcurrency, len(accounts))
+	// Build response with runtime info
+	result := make([]AccountWithRuntime, len(accounts))
 	for i := range accounts {
 		acc := &accounts[i]
-		item := AccountWithConcurrency{
-			Account:            dto.AccountFromService(acc),
-			CurrentConcurrency: concurrencyCounts[acc.ID],
+		item := AccountWithRuntime{
+			Account: dto.AccountFromService(acc),
 		}
 
 		// 添加窗口费用（仅当启用时）
@@ -374,7 +350,7 @@ func (h *AccountHandler) List(c *gin.Context) {
 }
 
 func buildAccountsListETag(
-	items []AccountWithConcurrency,
+	items []AccountWithRuntime,
 	total int64,
 	page, pageSize int,
 	platform, accountType, status, search string,
@@ -389,7 +365,7 @@ func buildAccountsListETag(
 		Status      string                   `json:"status"`
 		Search      string                   `json:"search"`
 		Lite        bool                     `json:"lite"`
-		Items       []AccountWithConcurrency `json:"items"`
+		Items       []AccountWithRuntime `json:"items"`
 	}{
 		Total:       total,
 		Page:        page,
@@ -513,7 +489,6 @@ func (h *AccountHandler) Create(c *gin.Context) {
 			Credentials: req.Credentials,
 			Extra:       req.Extra,
 			ProxyID:     req.ProxyID,
-			Concurrency: req.Concurrency,
 			Priority:    req.Priority,
 			LoadFactor:  req.LoadFactor,
 			GroupIDs:              req.GroupIDs,
@@ -580,7 +555,6 @@ func (h *AccountHandler) Update(c *gin.Context) {
 		Credentials: req.Credentials,
 		Extra:       req.Extra,
 		ProxyID:     req.ProxyID,
-		Concurrency: req.Concurrency, // 指针类型，nil 表示未提供
 		Priority:    req.Priority,    // 指针类型，nil 表示未提供
 		LoadFactor:  req.LoadFactor,
 		Status:                req.Status,
@@ -1120,7 +1094,6 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 				Credentials: item.Credentials,
 				Extra:       item.Extra,
 				ProxyID:     item.ProxyID,
-				Concurrency: item.Concurrency,
 				Priority:    item.Priority,
 				GroupIDs:    item.GroupIDs,
 				ExpiresAt:             item.ExpiresAt,
@@ -1278,7 +1251,6 @@ func (h *AccountHandler) BulkUpdate(c *gin.Context) {
 
 	hasUpdates := req.Name != "" ||
 		req.ProxyID != nil ||
-		req.Concurrency != nil ||
 		req.Priority != nil ||
 		req.LoadFactor != nil ||
 		req.Status != "" ||
@@ -1296,7 +1268,6 @@ func (h *AccountHandler) BulkUpdate(c *gin.Context) {
 		AccountIDs:  req.AccountIDs,
 		Name:        req.Name,
 		ProxyID:     req.ProxyID,
-		Concurrency: req.Concurrency,
 		Priority:    req.Priority,
 		LoadFactor:  req.LoadFactor,
 		Status:                req.Status,

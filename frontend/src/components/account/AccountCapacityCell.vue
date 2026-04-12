@@ -1,22 +1,5 @@
 <template>
   <div class="flex flex-col gap-1.5">
-    <!-- 并发槽位 -->
-    <div class="flex items-center gap-1.5">
-      <span
-        :class="[
-          'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium',
-          concurrencyClass
-        ]"
-      >
-        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-        </svg>
-        <span class="font-mono">{{ currentConcurrency }}</span>
-        <span class="text-gray-400 dark:text-gray-500">/</span>
-        <span class="font-mono">{{ account.concurrency }}</span>
-      </span>
-    </div>
-
     <!-- 5h窗口费用限制（仅 Anthropic OAuth/SetupToken 且启用时显示） -->
     <div v-if="showWindowCost" class="flex items-center gap-1">
       <span
@@ -91,9 +74,6 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-// 当前并发数
-const currentConcurrency = computed(() => props.account.current_concurrency || 0)
-
 // 是否为 Anthropic OAuth/SetupToken 账号
 const isAnthropicOAuthOrSetupToken = computed(() => {
   return (
@@ -127,20 +107,6 @@ const showSessionLimit = computed(() => {
 
 // 当前活跃会话数
 const activeSessions = computed(() => props.account.active_sessions ?? 0)
-
-// 并发状态样式
-const concurrencyClass = computed(() => {
-  const current = currentConcurrency.value
-  const max = props.account.concurrency
-
-  if (current >= max) {
-    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-  }
-  if (current > 0) {
-    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-  }
-  return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-})
 
 // 窗口费用状态样式
 const windowCostClass = computed(() => {

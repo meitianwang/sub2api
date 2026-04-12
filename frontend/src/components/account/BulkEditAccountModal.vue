@@ -513,37 +513,8 @@
         </div>
       </div>
 
-      <!-- Concurrency & Priority -->
+      <!-- Load Factor & Priority -->
       <div class="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 dark:border-dark-600 lg:grid-cols-4">
-        <div>
-          <div class="mb-3 flex items-center justify-between">
-            <label
-              id="bulk-edit-concurrency-label"
-              class="input-label mb-0"
-              for="bulk-edit-concurrency-enabled"
-            >
-              {{ t('admin.accounts.concurrency') }}
-            </label>
-            <input
-              v-model="enableConcurrency"
-              id="bulk-edit-concurrency-enabled"
-              type="checkbox"
-              aria-controls="bulk-edit-concurrency"
-              class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-          </div>
-          <input
-            v-model.number="concurrency"
-            id="bulk-edit-concurrency"
-            type="number"
-            min="1"
-            :disabled="!enableConcurrency"
-            class="input"
-            :class="!enableConcurrency && 'cursor-not-allowed opacity-50'"
-            aria-labelledby="bulk-edit-concurrency-label"
-            @input="concurrency = Math.max(1, concurrency || 1)"
-          />
-        </div>
         <div>
           <div class="mb-3 flex items-center justify-between">
             <label
@@ -973,7 +944,6 @@ const enableModelRestriction = ref(false)
 const enableCustomErrorCodes = ref(false)
 const enableInterceptWarmup = ref(false)
 const enableProxy = ref(false)
-const enableConcurrency = ref(false)
 const enableLoadFactor = ref(false)
 const enablePriority = ref(false)
 const enableStatus = ref(false)
@@ -995,7 +965,6 @@ const selectedErrorCodes = ref<number[]>([])
 const customErrorCodeInput = ref<number | null>(null)
 const interceptWarmupRequests = ref(false)
 const proxyId = ref<number | null>(null)
-const concurrency = ref(1)
 const loadFactor = ref<number | null>(null)
 const priority = ref(1)
 const status = ref<'active' | 'inactive'>('active')
@@ -1134,10 +1103,6 @@ const buildUpdatePayload = (): Record<string, unknown> | null => {
   if (enableProxy.value) {
     // 后端期望 proxy_id: 0 表示清除代理，而不是 null
     updates.proxy_id = proxyId.value === null ? 0 : proxyId.value
-  }
-
-  if (enableConcurrency.value) {
-    updates.concurrency = concurrency.value
   }
 
   if (enableLoadFactor.value) {
@@ -1300,7 +1265,6 @@ const handleSubmit = async () => {
     enableCustomErrorCodes.value ||
     enableInterceptWarmup.value ||
     enableProxy.value ||
-    enableConcurrency.value ||
     enableLoadFactor.value ||
     enablePriority.value ||
     enableStatus.value ||
@@ -1391,7 +1355,6 @@ watch(
       enableCustomErrorCodes.value = false
       enableInterceptWarmup.value = false
       enableProxy.value = false
-      enableConcurrency.value = false
       enableLoadFactor.value = false
       enablePriority.value = false
       enableStatus.value = false
@@ -1410,7 +1373,6 @@ watch(
       customErrorCodeInput.value = null
       interceptWarmupRequests.value = false
       proxyId.value = null
-      concurrency.value = 1
       loadFactor.value = null
       priority.value = 1
       status.value = 'active'

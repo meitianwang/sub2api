@@ -20,7 +20,6 @@ function makeAccount(overrides: Partial<Account>): Account {
     platform: 'anthropic',
     type: 'oauth',
     proxy_id: null,
-    concurrency: 1,
     priority: 1,
     status: 'active',
     error_message: null,

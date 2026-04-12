@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/Wei-Shaw/sub2api/internal/repository"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -24,18 +23,9 @@ import (
 
 // Config paths
 const (
-	ConfigFileName             = "config.yaml"
-	InstallLockFile            = ".installed"
-	defaultUserConcurrency     = 5
-	simpleModeAdminConcurrency = 30
+	ConfigFileName  = "config.yaml"
+	InstallLockFile = ".installed"
 )
-
-func setupDefaultAdminConcurrency() int {
-	if strings.EqualFold(strings.TrimSpace(os.Getenv("RUN_MODE")), config.RunModeSimple) {
-		return simpleModeAdminConcurrency
-	}
-	return defaultUserConcurrency
-}
 
 // GetDataDir returns the data directory for storing config and lock files.
 // Priority: DATA_DIR env > /app/data (if exists and writable) > current directory
@@ -396,13 +386,12 @@ func createAdminUser(cfg *SetupConfig) (bool, string, error) {
 	}
 
 	admin := &service.User{
-		Email:       cfg.Admin.Email,
-		Role:        service.RoleAdmin,
-		Status:      service.StatusActive,
-		Balance:     0,
-		Concurrency: setupDefaultAdminConcurrency(),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Email:     cfg.Admin.Email,
+		Role:      service.RoleAdmin,
+		Status:    service.StatusActive,
+		Balance:   0,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	if err := admin.SetPassword(cfg.Admin.Password); err != nil {
@@ -411,13 +400,12 @@ func createAdminUser(cfg *SetupConfig) (bool, string, error) {
 
 	_, err = db.ExecContext(
 		ctx,
-		`INSERT INTO users (email, password_hash, role, balance, concurrency, status, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		`INSERT INTO users (email, password_hash, role, balance, status, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		admin.Email,
 		admin.PasswordHash,
 		admin.Role,
 		admin.Balance,
-		admin.Concurrency,
 		admin.Status,
 		admin.CreatedAt,
 		admin.UpdatedAt,
@@ -445,9 +433,8 @@ func writeConfigFile(cfg *SetupConfig) error {
 			ExpireHour int    `yaml:"expire_hour"`
 		} `yaml:"jwt"`
 		Default struct {
-			UserConcurrency int     `yaml:"user_concurrency"`
-			UserBalance     float64 `yaml:"user_balance"`
-			APIKeyPrefix    string  `yaml:"api_key_prefix"`
+			UserBalance  float64 `yaml:"user_balance"`
+			APIKeyPrefix string  `yaml:"api_key_prefix"`
 		} `yaml:"default"`
 		RateLimit struct {
 			RequestsPerMinute int `yaml:"requests_per_minute"`
@@ -466,13 +453,11 @@ func writeConfigFile(cfg *SetupConfig) error {
 			ExpireHour: cfg.JWT.ExpireHour,
 		},
 		Default: struct {
-			UserConcurrency int     `yaml:"user_concurrency"`
-			UserBalance     float64 `yaml:"user_balance"`
-			APIKeyPrefix    string  `yaml:"api_key_prefix"`
+			UserBalance  float64 `yaml:"user_balance"`
+			APIKeyPrefix string  `yaml:"api_key_prefix"`
 		}{
-			UserConcurrency: defaultUserConcurrency,
-			UserBalance:     0,
-			APIKeyPrefix:    "sk-",
+			UserBalance:  0,
+			APIKeyPrefix: "sk-",
 		},
 		RateLimit: struct {
 			RequestsPerMinute int `yaml:"requests_per_minute"`

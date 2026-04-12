@@ -76,46 +76,8 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 
 	subscription, _ := middleware.GetSubscriptionFromContext(c)
 
-	// Concurrency: no ping frames for Gemini native
-	geminiConcurrency := NewConcurrencyHelper(h.concurrencyHelper.concurrencyService, SSEPingFormatNone, 0)
-
-	// Wait queue check
-	maxWait := service.CalculateMaxWait(authSubject.Concurrency)
-	canWait, err := geminiConcurrency.IncrementWaitCount(c.Request.Context(), authSubject.UserID, maxWait)
-	waitCounted := false
-	if err != nil {
-		reqLog.Warn("gemini.user_wait_counter_increment_failed", zap.Error(err))
-	} else if !canWait {
-		googleError(c, http.StatusTooManyRequests, "Too many pending requests, please retry later")
-		return
-	}
-	if err == nil && canWait {
-		waitCounted = true
-	}
-	defer func() {
-		if waitCounted {
-			geminiConcurrency.DecrementWaitCount(c.Request.Context(), authSubject.UserID)
-		}
-	}()
-
-	// User concurrency slot
-	requestStart := time.Now()
-	streamStarted := false
-	userReleaseFunc, err := geminiConcurrency.AcquireUserSlotWithWait(c, authSubject.UserID, authSubject.Concurrency, stream, &streamStarted)
-	if err != nil {
-		h.handleConcurrencyError(c, err, "user", streamStarted)
-		return
-	}
-	if waitCounted {
-		geminiConcurrency.DecrementWaitCount(c.Request.Context(), authSubject.UserID)
-		waitCounted = false
-	}
-	userReleaseFunc = wrapReleaseOnDone(c.Request.Context(), userReleaseFunc)
-	if userReleaseFunc != nil {
-		defer userReleaseFunc()
-	}
-
 	// Billing check
+	requestStart := time.Now()
 	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
 		status, _, message := billingErrorDetails(err)
 		googleError(c, status, message)
@@ -166,20 +128,11 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 		account := selection.Account
 		setOpsSelectedAccount(c, account.ID, account.Platform)
 
-		// Account concurrency slot
+		// Account already selected, proceed directly
 		accountReleaseFunc := selection.ReleaseFunc
 		if !selection.Acquired {
-			if selection.WaitPlan == nil {
-				googleError(c, http.StatusServiceUnavailable, "No available accounts")
-				return
-			}
-			accountReleaseFunc, err = geminiConcurrency.AcquireAccountSlotWithWaitTimeout(
-				c, account.ID, selection.WaitPlan.MaxConcurrency, selection.WaitPlan.Timeout, stream, &streamStarted,
-			)
-			if err != nil {
-				h.handleConcurrencyError(c, err, "account", streamStarted)
-				return
-			}
+			googleError(c, http.StatusServiceUnavailable, "No available accounts")
+			return
 		}
 		accountReleaseFunc = wrapReleaseOnDone(c.Request.Context(), accountReleaseFunc)
 

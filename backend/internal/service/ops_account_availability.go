@@ -3,8 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
+
+	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 )
+
+const opsAccountsPageSize = 100
 
 // GetAccountAvailabilityStats returns current account availability stats.
 //
@@ -190,4 +195,41 @@ func (s *OpsService) GetAccountAvailability(ctx context.Context, platformFilter 
 		Accounts:    accountStats,
 		CollectedAt: collectedAt,
 	}, nil
+}
+
+func (s *OpsService) listAllAccountsForOps(ctx context.Context, platformFilter string) ([]Account, error) {
+	if s == nil || s.accountRepo == nil {
+		return []Account{}, nil
+	}
+
+	out := make([]Account, 0, 128)
+	page := 1
+	for {
+		accounts, pageInfo, err := s.accountRepo.ListWithFilters(ctx, pagination.PaginationParams{
+			Page:     page,
+			PageSize: opsAccountsPageSize,
+		}, platformFilter, "", "", "", 0, "")
+		if err != nil {
+			return nil, err
+		}
+		if len(accounts) == 0 {
+			break
+		}
+
+		out = append(out, accounts...)
+		if pageInfo != nil && int64(len(out)) >= pageInfo.Total {
+			break
+		}
+		if len(accounts) < opsAccountsPageSize {
+			break
+		}
+
+		page++
+		if page > 10_000 {
+			log.Printf("[Ops] listAllAccountsForOps: aborting after too many pages (platform=%q)", platformFilter)
+			break
+		}
+	}
+
+	return out, nil
 }

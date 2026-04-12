@@ -74,7 +74,6 @@ export async function create(userData: {
   email: string
   password: string
   balance?: number
-  concurrency?: number
   allowed_groups?: number[] | null
 }): Promise<AdminUser> {
   const { data } = await apiClient.post<AdminUser>('/admin/users', userData)
@@ -122,16 +121,6 @@ export async function updateBalance(
     notes: notes || ''
   })
   return data
-}
-
-/**
- * Update user concurrency
- * @param id - User ID
- * @param concurrency - New concurrency limit
- * @returns Updated user
- */
-export async function updateConcurrency(id: number, concurrency: number): Promise<AdminUser> {
-  return update(id, { concurrency })
 }
 
 /**
@@ -203,11 +192,11 @@ export interface BalanceHistoryResponse extends PaginatedResponse<BalanceHistory
 }
 
 /**
- * Get user's balance/concurrency change history
+ * Get user's balance change history
  * @param id - User ID
  * @param page - Page number
  * @param pageSize - Items per page
- * @param type - Optional type filter (balance, admin_balance, concurrency, admin_concurrency, subscription)
+ * @param type - Optional type filter (balance, admin_balance, subscription)
  * @returns Paginated balance history with total_recharged
  */
 export async function getUserBalanceHistory(
@@ -251,7 +240,6 @@ export const usersAPI = {
   update,
   delete: deleteUser,
   updateBalance,
-  updateConcurrency,
   toggleStatus,
   getUserApiKeys,
   getUserUsageStats,

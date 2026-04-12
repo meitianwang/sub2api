@@ -7,38 +7,33 @@ import (
 
 // GroupCapacitySummary holds aggregated capacity for a single group.
 type GroupCapacitySummary struct {
-	GroupID         int64 `json:"group_id"`
-	ConcurrencyUsed int   `json:"concurrency_used"`
-	ConcurrencyMax  int   `json:"concurrency_max"`
-	SessionsUsed    int   `json:"sessions_used"`
-	SessionsMax     int   `json:"sessions_max"`
-	RPMUsed         int   `json:"rpm_used"`
-	RPMMax          int   `json:"rpm_max"`
+	GroupID      int64 `json:"group_id"`
+	SessionsUsed int   `json:"sessions_used"`
+	SessionsMax  int   `json:"sessions_max"`
+	RPMUsed      int   `json:"rpm_used"`
+	RPMMax       int   `json:"rpm_max"`
 }
 
 // GroupCapacityService aggregates per-group capacity from runtime data.
 type GroupCapacityService struct {
-	accountRepo        AccountRepository
-	groupRepo          GroupRepository
-	concurrencyService *ConcurrencyService
-	sessionLimitCache  SessionLimitCache
-	rpmCache           RPMCache
+	accountRepo       AccountRepository
+	groupRepo         GroupRepository
+	sessionLimitCache SessionLimitCache
+	rpmCache          RPMCache
 }
 
 // NewGroupCapacityService creates a new GroupCapacityService.
 func NewGroupCapacityService(
 	accountRepo AccountRepository,
 	groupRepo GroupRepository,
-	concurrencyService *ConcurrencyService,
 	sessionLimitCache SessionLimitCache,
 	rpmCache RPMCache,
 ) *GroupCapacityService {
 	return &GroupCapacityService{
-		accountRepo:        accountRepo,
-		groupRepo:          groupRepo,
-		concurrencyService: concurrencyService,
-		sessionLimitCache:  sessionLimitCache,
-		rpmCache:           rpmCache,
+		accountRepo:       accountRepo,
+		groupRepo:         groupRepo,
+		sessionLimitCache: sessionLimitCache,
+		rpmCache:          rpmCache,
 	}
 }
 
@@ -74,12 +69,11 @@ func (s *GroupCapacityService) getGroupCapacity(ctx context.Context, groupID int
 	// Collect account IDs and config values
 	accountIDs := make([]int64, 0, len(accounts))
 	sessionTimeouts := make(map[int64]time.Duration)
-	var concurrencyMax, sessionsMax, rpmMax int
+	var sessionsMax, rpmMax int
 
 	for i := range accounts {
 		acc := &accounts[i]
 		accountIDs = append(accountIDs, acc.ID)
-		concurrencyMax += acc.Concurrency
 
 		if ms := acc.GetMaxSessions(); ms > 0 {
 			sessionsMax += ms
@@ -96,8 +90,6 @@ func (s *GroupCapacityService) getGroupCapacity(ctx context.Context, groupID int
 	}
 
 	// Batch query runtime data from Redis
-	concurrencyMap, _ := s.concurrencyService.GetAccountConcurrencyBatch(ctx, accountIDs)
-
 	var sessionsMap map[int64]int
 	if sessionsMax > 0 && s.sessionLimitCache != nil {
 		sessionsMap, _ = s.sessionLimitCache.GetActiveSessionCountBatch(ctx, accountIDs, sessionTimeouts)
@@ -109,9 +101,8 @@ func (s *GroupCapacityService) getGroupCapacity(ctx context.Context, groupID int
 	}
 
 	// Aggregate
-	var concurrencyUsed, sessionsUsed, rpmUsed int
+	var sessionsUsed, rpmUsed int
 	for _, id := range accountIDs {
-		concurrencyUsed += concurrencyMap[id]
 		if sessionsMap != nil {
 			sessionsUsed += sessionsMap[id]
 		}
@@ -121,11 +112,9 @@ func (s *GroupCapacityService) getGroupCapacity(ctx context.Context, groupID int
 	}
 
 	return GroupCapacitySummary{
-		ConcurrencyUsed: concurrencyUsed,
-		ConcurrencyMax:  concurrencyMax,
-		SessionsUsed:    sessionsUsed,
-		SessionsMax:     sessionsMax,
-		RPMUsed:         rpmUsed,
-		RPMMax:          rpmMax,
+		SessionsUsed: sessionsUsed,
+		SessionsMax:  sessionsMax,
+		RPMUsed:      rpmUsed,
+		RPMMax:       rpmMax,
 	}, nil
 }

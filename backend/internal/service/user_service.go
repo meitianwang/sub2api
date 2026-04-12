@@ -42,7 +42,6 @@ type UserRepository interface {
 
 	UpdateBalance(ctx context.Context, id int64, amount float64) error
 	DeductBalance(ctx context.Context, id int64, amount float64) error
-	UpdateConcurrency(ctx context.Context, id int64, amount int) error
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error)
 	// AddGroupToAllowedGroups 将指定分组增量添加到用户的 allowed_groups（幂等，冲突忽略）
@@ -58,9 +57,8 @@ type UserRepository interface {
 
 // UpdateProfileRequest 更新用户资料请求
 type UpdateProfileRequest struct {
-	Email       *string `json:"email"`
-	Username    *string `json:"username"`
-	Concurrency *int    `json:"concurrency"`
+	Email    *string `json:"email"`
+	Username *string `json:"username"`
 }
 
 // ChangePasswordRequest 修改密码请求
@@ -109,8 +107,6 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, req Updat
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
-	oldConcurrency := user.Concurrency
-
 	// 更新字段
 	if req.Email != nil {
 		// 检查新邮箱是否已被使用
@@ -128,15 +124,8 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, req Updat
 		user.Username = *req.Username
 	}
 
-	if req.Concurrency != nil {
-		user.Concurrency = *req.Concurrency
-	}
-
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, fmt.Errorf("update user: %w", err)
-	}
-	if s.authCacheInvalidator != nil && user.Concurrency != oldConcurrency {
-		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 	}
 
 	return user, nil
@@ -204,17 +193,6 @@ func (s *UserService) UpdateBalance(ctx context.Context, userID int64, amount fl
 				log.Printf("invalidate user balance cache failed: user_id=%d err=%v", userID, err)
 			}
 		}()
-	}
-	return nil
-}
-
-// UpdateConcurrency 更新用户并发数（管理员功能）
-func (s *UserService) UpdateConcurrency(ctx context.Context, userID int64, concurrency int) error {
-	if err := s.userRepo.UpdateConcurrency(ctx, userID, concurrency); err != nil {
-		return fmt.Errorf("update concurrency: %w", err)
-	}
-	if s.authCacheInvalidator != nil {
-		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 	}
 	return nil
 }
