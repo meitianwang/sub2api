@@ -5,9 +5,6 @@ package ctxkey
 type Key string
 
 const (
-	// ForcePlatform 强制平台，由 middleware.ForcePlatform 设置
-	ForcePlatform Key = "ctx_force_platform"
-
 	// RequestID 为服务端生成/透传的请求 ID。
 	RequestID Key = "ctx_request_id"
 

@@ -86,9 +86,6 @@ type Group struct {
 	// 无效请求兜底分组
 	FallbackGroupIDOnInvalidRequest *int64 `json:"fallback_group_id_on_invalid_request"`
 
-	// OpenAI Messages 调度开关（用户侧需要此字段判断是否展示 Claude Code 教程）
-	AllowMessagesDispatch bool `json:"allow_messages_dispatch"`
-
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -108,8 +105,6 @@ type AdminGroup struct {
 	// MCP XML 协议注入
 	MCPXMLInject bool `json:"mcp_xml_inject"`
 
-	// OpenAI Messages 调度配置（仅 openai 平台使用）
-	DefaultMappedModel string `json:"default_mapped_model"`
 	AccountGroups           []AccountGroup `json:"account_groups,omitempty"`
 	AccountCount            int64          `json:"account_count,omitempty"`
 	ActiveAccountCount      int64          `json:"active_account_count,omitempty"`

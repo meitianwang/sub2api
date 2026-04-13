@@ -677,10 +677,7 @@ func (s *GatewayService) SelectAccountForModel(ctx context.Context, groupID *int
 // SelectAccountForModelWithExclusions selects an account supporting the requested model while excluding specified accounts.
 func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context, groupID *int64, sessionHash string, requestedModel string, excludedIDs map[int64]struct{}) (*Account, error) {
 	var platform string
-	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
-	if hasForcePlatform && forcePlatform != "" {
-		platform = forcePlatform
-	} else if groupID != nil {
+	if groupID != nil {
 		group, resolvedGroupID, err := s.resolveGatewayGroup(ctx, groupID)
 		if err != nil {
 			return nil, err
@@ -859,11 +856,7 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 		return nil, groupID, nil
 	}
 
-	// 强制平台模式不检查 Claude Code 限制
-	if forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string); hasForcePlatform && forcePlatform != "" {
-		return nil, groupID, nil
-	}
-
+	// 强制平台模式已移除，直接检查 Claude Code 限制
 	group, resolvedID, err := s.resolveGatewayGroup(ctx, groupID)
 	if err != nil {
 		return nil, nil, err
@@ -873,10 +866,6 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 }
 
 func (s *GatewayService) resolvePlatform(ctx context.Context) (string, bool, error) {
-	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
-	if hasForcePlatform && forcePlatform != "" {
-		return forcePlatform, true, nil
-	}
 	return PlatformAnthropic, false, nil
 }
 
@@ -1452,12 +1441,8 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 		}
 
 		// 2) Select an account from the routed candidates.
-		forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
-		if hasForcePlatform && forcePlatform == "" {
-			hasForcePlatform = false
-		}
 		var err error
-		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, hasForcePlatform)
+		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, false)
 		if err != nil {
 			return nil, fmt.Errorf("query accounts failed: %w", err)
 		}
@@ -1563,12 +1548,8 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 
 	// 2. 获取可调度账号列表（单平台）
 	if !accountsLoaded {
-		forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
-		if hasForcePlatform && forcePlatform == "" {
-			hasForcePlatform = false
-		}
 		var err error
-		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, hasForcePlatform)
+		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, false)
 		if err != nil {
 			return nil, fmt.Errorf("query accounts failed: %w", err)
 		}

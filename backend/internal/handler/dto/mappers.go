@@ -136,7 +136,6 @@ func GroupFromServiceAdmin(g *service.Group) *AdminGroup {
 		ModelRouting:        g.ModelRouting,
 		ModelRoutingEnabled: g.ModelRoutingEnabled,
 		MCPXMLInject:        g.MCPXMLInject,
-		DefaultMappedModel:  g.DefaultMappedModel,
 		AccountCount:            g.AccountCount,
 		ActiveAccountCount:      g.ActiveAccountCount,
 		RateLimitedAccountCount: g.RateLimitedAccountCount,
@@ -169,7 +168,6 @@ func groupFromServiceBase(g *service.Group) Group {
 		ClaudeCodeOnly:                  g.ClaudeCodeOnly,
 		FallbackGroupID:                 g.FallbackGroupID,
 		FallbackGroupIDOnInvalidRequest: g.FallbackGroupIDOnInvalidRequest,
-		AllowMessagesDispatch:           g.AllowMessagesDispatch,
 		CreatedAt:                       g.CreatedAt,
 		UpdatedAt:                       g.UpdatedAt,
 	}

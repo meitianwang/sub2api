@@ -159,8 +159,6 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 				group.FieldModelRouting,
 				group.FieldModelPricing,
 				group.FieldMcpXMLInject,
-				group.FieldAllowMessagesDispatch,
-				group.FieldDefaultMappedModel,
 			)
 		}).
 		Only(ctx)
@@ -645,8 +643,6 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		MCPXMLInject:                    g.McpXMLInject,
 		SupportedModelScopes:            g.SupportedModelScopes,
 		SortOrder:                       g.SortOrder,
-		AllowMessagesDispatch:           g.AllowMessagesDispatch,
-		DefaultMappedModel:              g.DefaultMappedModel,
 		CreatedAt:                       g.CreatedAt,
 		UpdatedAt:                       g.UpdatedAt,
 	}

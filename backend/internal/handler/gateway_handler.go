@@ -15,12 +15,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
 	pkgerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	pkghttputil "github.com/Wei-Shaw/sub2api/internal/pkg/httputil"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -395,9 +393,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 							h.handleStreamingAwareError(c, status, code, message, streamStarted)
 							return
 						}
-						// 兜底重试按"直接请求兜底分组"处理：清除强制平台，允许按分组平台调度
-						ctx := context.WithValue(c.Request.Context(), ctxkey.ForcePlatform, "")
-						c.Request = c.Request.WithContext(ctx)
+						// 兜底重试按"直接请求兜底分组"处理
 						currentAPIKey = fallbackAPIKey
 						currentSubscription = nil
 						fallbackUsed = true
@@ -531,16 +527,6 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"object": "list",
 			"data":   models,
-		})
-		return
-	}
-
-	// Fallback to default models
-	forcedPlatform, _ := middleware2.GetForcePlatformFromContext(c)
-	if forcedPlatform == "openai" {
-		c.JSON(http.StatusOK, gin.H{
-			"object": "list",
-			"data":   openai.DefaultModels,
 		})
 		return
 	}

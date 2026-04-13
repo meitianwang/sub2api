@@ -239,8 +239,6 @@ func (s *APIKeyService) snapshotFromAPIKey(apiKey *APIKey) *APIKeyAuthSnapshot {
 			ModelPricing:                    apiKey.Group.ModelPricing,
 			MCPXMLInject:                    apiKey.Group.MCPXMLInject,
 			SupportedModelScopes:            apiKey.Group.SupportedModelScopes,
-			AllowMessagesDispatch:           apiKey.Group.AllowMessagesDispatch,
-			DefaultMappedModel:              apiKey.Group.DefaultMappedModel,
 		}
 	}
 	return snapshot
@@ -292,8 +290,6 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			ModelPricing:                    snapshot.Group.ModelPricing,
 			MCPXMLInject:                    snapshot.Group.MCPXMLInject,
 			SupportedModelScopes:            snapshot.Group.SupportedModelScopes,
-			AllowMessagesDispatch:           snapshot.Group.AllowMessagesDispatch,
-			DefaultMappedModel:              snapshot.Group.DefaultMappedModel,
 		}
 	}
 	s.compileAPIKeyIPRules(apiKey)
