@@ -1706,6 +1706,7 @@ const syncFormFromAccount = (newAccount: Account | null) => {
   if (newAccount.type === 'apikey' && newAccount.credentials) {
     const credentials = newAccount.credentials as Record<string, unknown>
     editBaseUrl.value = (credentials.base_url as string) || 'https://api.anthropic.com'
+    editApiKey.value = (credentials.api_key as string) || ''
 
     // Load model mappings and detect mode
     const existingMappings = credentials.model_mapping as Record<string, string> | undefined
@@ -1750,8 +1751,10 @@ const syncFormFromAccount = (newAccount: Account | null) => {
   } else if (newAccount.type === 'upstream' && newAccount.credentials) {
     const credentials = newAccount.credentials as Record<string, unknown>
     editBaseUrl.value = (credentials.base_url as string) || ''
+    editApiKey.value = (credentials.api_key as string) || ''
   } else {
     editBaseUrl.value = 'https://api.anthropic.com'
+    editApiKey.value = ''
 
     modelRestrictionMode.value = 'whitelist'
     modelMappings.value = []
@@ -1761,7 +1764,6 @@ const syncFormFromAccount = (newAccount: Account | null) => {
     customErrorCodesEnabled.value = false
     selectedErrorCodes.value = []
   }
-  editApiKey.value = ''
 }
 
 watch(
