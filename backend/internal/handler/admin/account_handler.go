@@ -19,8 +19,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -736,58 +734,28 @@ func (h *AccountHandler) refreshSingleAccount(ctx context.Context, account *serv
 		return nil, "", infraerrors.BadRequest("NOT_OAUTH", "cannot refresh non-OAuth account")
 	}
 
-	var newCredentials map[string]any
+	// All accounts are anthropic - use Claude OAuth service to refresh token
+	tokenInfo, err := h.oauthService.RefreshAccountToken(ctx, account)
+	if err != nil {
+		return nil, "", err
+	}
 
-	if account.IsOpenAI() {
-		tokenInfo, err := h.openaiOAuthService.RefreshAccountToken(ctx, account)
-		if err != nil {
-			// 刷新失败但 access_token 可能仍有效，尝试设置隐私
-			h.adminService.EnsureOpenAIPrivacy(ctx, account)
-			return nil, "", err
-		}
+	// Copy existing credentials to preserve non-token settings (e.g., intercept_warmup_requests)
+	newCredentials := make(map[string]any)
+	for k, v := range account.Credentials {
+		newCredentials[k] = v
+	}
 
-		newCredentials = h.openaiOAuthService.BuildAccountCredentials(tokenInfo)
-		for k, v := range account.Credentials {
-			if _, exists := newCredentials[k]; !exists {
-				newCredentials[k] = v
-			}
-		}
-	} else if account.Platform == service.PlatformGemini {
-		tokenInfo, err := h.geminiOAuthService.RefreshAccountToken(ctx, account)
-		if err != nil {
-			return nil, "", fmt.Errorf("failed to refresh credentials: %w", err)
-		}
-
-		newCredentials = h.geminiOAuthService.BuildAccountCredentials(tokenInfo)
-		for k, v := range account.Credentials {
-			if _, exists := newCredentials[k]; !exists {
-				newCredentials[k] = v
-			}
-		}
-	} else {
-		// Use Anthropic/Claude OAuth service to refresh token
-		tokenInfo, err := h.oauthService.RefreshAccountToken(ctx, account)
-		if err != nil {
-			return nil, "", err
-		}
-
-		// Copy existing credentials to preserve non-token settings (e.g., intercept_warmup_requests)
-		newCredentials = make(map[string]any)
-		for k, v := range account.Credentials {
-			newCredentials[k] = v
-		}
-
-		// Update token-related fields
-		newCredentials["access_token"] = tokenInfo.AccessToken
-		newCredentials["token_type"] = tokenInfo.TokenType
-		newCredentials["expires_in"] = strconv.FormatInt(tokenInfo.ExpiresIn, 10)
-		newCredentials["expires_at"] = strconv.FormatInt(tokenInfo.ExpiresAt, 10)
-		if strings.TrimSpace(tokenInfo.RefreshToken) != "" {
-			newCredentials["refresh_token"] = tokenInfo.RefreshToken
-		}
-		if strings.TrimSpace(tokenInfo.Scope) != "" {
-			newCredentials["scope"] = tokenInfo.Scope
-		}
+	// Update token-related fields
+	newCredentials["access_token"] = tokenInfo.AccessToken
+	newCredentials["token_type"] = tokenInfo.TokenType
+	newCredentials["expires_in"] = strconv.FormatInt(tokenInfo.ExpiresIn, 10)
+	newCredentials["expires_at"] = strconv.FormatInt(tokenInfo.ExpiresAt, 10)
+	if strings.TrimSpace(tokenInfo.RefreshToken) != "" {
+		newCredentials["refresh_token"] = tokenInfo.RefreshToken
+	}
+	if strings.TrimSpace(tokenInfo.Scope) != "" {
+		newCredentials["scope"] = tokenInfo.Scope
 	}
 
 	updatedAccount, err := h.adminService.UpdateAccount(ctx, account.ID, &service.UpdateAccountInput{
@@ -1109,10 +1077,7 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 				})
 				continue
 			}
-			// 收集需要异步设置隐私的 OAuth 账号
-			if account.Type == service.AccountTypeOAuth && account.Platform == service.PlatformOpenAI {
-				openaiPrivacyAccounts = append(openaiPrivacyAccounts, account)
-			}
+			// OpenAI privacy setting removed (all accounts are anthropic)
 			success++
 			results = append(results, gin.H{
 				"name":    item.Name,
@@ -1665,82 +1630,6 @@ func (h *AccountHandler) GetAvailableModels(c *gin.Context) {
 		return
 	}
 
-	// Handle OpenAI accounts
-	if account.IsOpenAI() {
-		// OpenAI 自动透传会绕过常规模型改写，测试/模型列表也应回落到默认模型集。
-		if account.IsOpenAIPassthroughEnabled() {
-			response.Success(c, openai.DefaultModels)
-			return
-		}
-
-		mapping := account.GetModelMapping()
-		if len(mapping) == 0 {
-			response.Success(c, openai.DefaultModels)
-			return
-		}
-
-		// Return mapped models
-		var models []openai.Model
-		for requestedModel := range mapping {
-			var found bool
-			for _, dm := range openai.DefaultModels {
-				if dm.ID == requestedModel {
-					models = append(models, dm)
-					found = true
-					break
-				}
-			}
-			if !found {
-				models = append(models, openai.Model{
-					ID:          requestedModel,
-					Object:      "model",
-					Type:        "model",
-					DisplayName: requestedModel,
-				})
-			}
-		}
-		response.Success(c, models)
-		return
-	}
-
-	// Handle Gemini accounts
-	if account.IsGemini() {
-		// For OAuth accounts: return default Gemini models
-		if account.IsOAuth() {
-			response.Success(c, geminicli.DefaultModels)
-			return
-		}
-
-		// For API Key accounts: return models based on model_mapping
-		mapping := account.GetModelMapping()
-		if len(mapping) == 0 {
-			response.Success(c, geminicli.DefaultModels)
-			return
-		}
-
-		var models []geminicli.Model
-		for requestedModel := range mapping {
-			var found bool
-			for _, dm := range geminicli.DefaultModels {
-				if dm.ID == requestedModel {
-					models = append(models, dm)
-					found = true
-					break
-				}
-			}
-			if !found {
-				models = append(models, geminicli.Model{
-					ID:          requestedModel,
-					Type:        "model",
-					DisplayName: requestedModel,
-					CreatedAt:   "",
-				})
-			}
-		}
-		response.Success(c, models)
-		return
-	}
-
 	// For non-APIKey accounts: return default Claude models
 	if account.Type != service.AccountTypeAPIKey {
 		response.Success(c, claude.DefaultModels)
@@ -1794,34 +1683,9 @@ func (h *AccountHandler) SetPrivacy(c *gin.Context) {
 		response.NotFound(c, "Account not found")
 		return
 	}
-	if account.Type != service.AccountTypeOAuth {
-		response.BadRequest(c, "Only OAuth accounts support privacy setting")
-		return
-	}
-	var mode string
-	switch account.Platform {
-	case service.PlatformOpenAI:
-		mode = h.adminService.ForceOpenAIPrivacy(c.Request.Context(), account)
-	default:
-		response.BadRequest(c, "Only OpenAI OAuth accounts support privacy setting")
-		return
-	}
-	if mode == "" {
-		response.BadRequest(c, "Cannot set privacy: missing access_token")
-		return
-	}
-	// 从 DB 重新读取以确保返回最新状态
-	updated, err := h.adminService.GetAccount(c.Request.Context(), accountID)
-	if err != nil {
-		// 隐私已设置成功但读取失败，回退到内存更新
-		if account.Extra == nil {
-			account.Extra = make(map[string]any)
-		}
-		account.Extra["privacy_mode"] = mode
-		response.Success(c, h.buildAccountResponseWithRuntime(c.Request.Context(), account))
-		return
-	}
-	response.Success(c, h.buildAccountResponseWithRuntime(c.Request.Context(), updated))
+	// Privacy setting was only supported for OpenAI OAuth accounts (removed)
+	_ = account
+	response.BadRequest(c, "Privacy setting is no longer supported")
 }
 
 // RefreshTier handles refreshing Google One tier for a single account
@@ -1840,39 +1704,9 @@ func (h *AccountHandler) RefreshTier(c *gin.Context) {
 		return
 	}
 
-	if account.Platform != service.PlatformGemini || account.Type != service.AccountTypeOAuth {
-		response.BadRequest(c, "Only Gemini OAuth accounts support tier refresh")
-		return
-	}
-
-	oauthType, _ := account.Credentials["oauth_type"].(string)
-	if oauthType != "google_one" {
-		response.BadRequest(c, "Only google_one OAuth accounts support tier refresh")
-		return
-	}
-
-	tierID, extra, creds, err := h.geminiOAuthService.RefreshAccountGoogleOneTier(ctx, account)
-	if err != nil {
-		response.ErrorFrom(c, err)
-		return
-	}
-
-	_, updateErr := h.adminService.UpdateAccount(ctx, accountID, &service.UpdateAccountInput{
-		Credentials: creds,
-		Extra:       extra,
-	})
-	if updateErr != nil {
-		response.ErrorFrom(c, updateErr)
-		return
-	}
-
-	response.Success(c, gin.H{
-		"tier_id":             tierID,
-		"storage_info":        extra,
-		"drive_storage_limit": extra["drive_storage_limit"],
-		"drive_storage_usage": extra["drive_storage_usage"],
-		"updated_at":          extra["drive_tier_updated_at"],
-	})
+	// All accounts are anthropic - Gemini tier refresh is no longer applicable
+	_ = account
+	response.BadRequest(c, "Only Gemini OAuth accounts support tier refresh")
 }
 
 // BatchRefreshTierRequest represents batch tier refresh request
@@ -1915,7 +1749,8 @@ func (h *AccountHandler) BatchRefreshTier(c *gin.Context) {
 			if acc == nil {
 				continue
 			}
-			if acc.Platform != service.PlatformGemini || acc.Type != service.AccountTypeOAuth {
+			// All accounts are anthropic - skip non-OAuth
+			if acc.Type != service.AccountTypeOAuth {
 				continue
 			}
 			oauthType, _ := acc.Credentials["oauth_type"].(string)

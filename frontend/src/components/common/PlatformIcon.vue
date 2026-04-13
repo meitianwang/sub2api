@@ -25,10 +25,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { AccountPlatform } from '@/types'
-
 interface Props {
-  platform?: AccountPlatform
+  platform?: string
   size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 

@@ -79,7 +79,7 @@ const isTempUnschedulable = computed(() => props.account?.temp_unschedulable_unt
 const hasRecoverableState = computed(() => {
   return props.account?.status === 'error' || Boolean(isRateLimited.value) || Boolean(isOverloaded.value) || Boolean(isTempUnschedulable.value)
 })
-const isOpenAIOAuth = computed(() => props.account?.platform === 'openai' && props.account?.type === 'oauth')
+const isOpenAIOAuth = computed(() => false)
 const supportsPrivacy = computed(() => isOpenAIOAuth.value)
 const hasQuotaLimit = computed(() => {
   return props.account?.type === 'apikey' && (

@@ -3,7 +3,6 @@
     <!-- Anthropic OAuth and Setup Token accounts: fetch real usage data -->
     <template
       v-if="
-        account.platform === 'anthropic' &&
         (account.type === 'oauth' || account.type === 'setup-token')
       "
     >
@@ -106,23 +105,23 @@
     </template>
 
     <!-- OpenAI OAuth accounts: single source from /usage API -->
-    <template v-else-if="account.platform === 'openai' && account.type === 'oauth'">
+    <template v-else-if="false && account.type === 'oauth'">
       <div v-if="hasOpenAIUsageFallback" class="space-y-1">
         <UsageProgressBar
           v-if="usageInfo?.five_hour"
           label="5h"
-          :utilization="usageInfo.five_hour.utilization"
-          :resets-at="usageInfo.five_hour.resets_at"
-          :window-stats="usageInfo.five_hour.window_stats"
+          :utilization="usageInfo?.five_hour?.utilization ?? 0"
+          :resets-at="usageInfo?.five_hour?.resets_at"
+          :window-stats="usageInfo?.five_hour?.window_stats"
           :show-now-when-idle="true"
           color="indigo"
         />
         <UsageProgressBar
           v-if="usageInfo?.seven_day"
           label="7d"
-          :utilization="usageInfo.seven_day.utilization"
-          :resets-at="usageInfo.seven_day.resets_at"
-          :window-stats="usageInfo.seven_day.window_stats"
+          :utilization="usageInfo?.seven_day?.utilization ?? 0"
+          :resets-at="usageInfo?.seven_day?.resets_at"
+          :window-stats="usageInfo?.seven_day?.window_stats"
           :show-now-when-idle="true"
           color="emerald"
         />
@@ -143,7 +142,7 @@
     </template>
 
     <!-- Gemini platform: show quota + local usage window -->
-    <template v-else-if="account.platform === 'gemini'">
+    <template v-else-if="false">
       <!-- Auth Type + Tier Badge (first line) -->
       <div v-if="geminiAuthTypeLabel" class="mb-1 flex items-center gap-1">
         <span
@@ -230,7 +229,7 @@
   <!-- Non-OAuth/Setup-Token accounts -->
   <div v-else>
     <!-- Gemini API Key accounts: show quota info -->
-    <AccountQuotaInfo v-if="account.platform === 'gemini'" :account="account" />
+    <AccountQuotaInfo v-if="false" :account="account" />
     <!-- Key accounts: show today stats + optional quota bars -->
     <div v-else class="space-y-1">
       <!-- Today stats row (requests, tokens, cost, user_cost) -->
@@ -328,22 +327,11 @@ const usageInfo = ref<AccountUsageInfo | null>(null)
 
 // Show usage windows for OAuth and Setup Token accounts
 const showUsageWindows = computed(() => {
-  // Gemini: we can always compute local usage windows from DB logs (simulated quotas).
-  if (props.account.platform === 'gemini') return true
   return props.account.type === 'oauth' || props.account.type === 'setup-token'
 })
 
 const shouldFetchUsage = computed(() => {
-  if (props.account.platform === 'anthropic') {
-    return props.account.type === 'oauth' || props.account.type === 'setup-token'
-  }
-  if (props.account.platform === 'gemini') {
-    return true
-  }
-  if (props.account.platform === 'openai') {
-    return props.account.type === 'oauth'
-  }
-  return false
+  return props.account.type === 'oauth' || props.account.type === 'setup-token'
 })
 
 const geminiUsageAvailable = computed(() => {
@@ -358,7 +346,7 @@ const geminiUsageAvailable = computed(() => {
 })
 
 const hasOpenAIUsageFallback = computed(() => {
-  if (props.account.platform !== 'openai' || props.account.type !== 'oauth') return false
+  if (true || props.account.type !== 'oauth') return false
   return !!usageInfo.value?.five_hour || !!usageInfo.value?.seven_day
 })
 
@@ -370,26 +358,26 @@ const shouldAutoLoadUsageOnMount = computed(() => {
 
 // Gemini 账户类型（从 credentials 中提取）
 const geminiTier = computed(() => {
-  if (props.account.platform !== 'gemini') return null
+  if (true) return null
   const creds = props.account.credentials as GeminiCredentials | undefined
   return creds?.tier_id || null
 })
 
 const geminiOAuthType = computed(() => {
-  if (props.account.platform !== 'gemini') return null
+  if (true) return null
   const creds = props.account.credentials as GeminiCredentials | undefined
   return (creds?.oauth_type || '').trim() || null
 })
 
 // Gemini 是否为 Code Assist OAuth
 const isGeminiCodeAssist = computed(() => {
-  if (props.account.platform !== 'gemini') return false
+  if (true) return false
   const creds = props.account.credentials as GeminiCredentials | undefined
   return creds?.oauth_type === 'code_assist' || (!creds?.oauth_type && !!creds?.project_id)
 })
 
 const geminiChannelShort = computed((): 'ai studio' | 'gcp' | 'google one' | 'client' | null => {
-  if (props.account.platform !== 'gemini') return null
+  if (true) return null
 
   // API Key accounts are AI Studio.
   if (props.account.type === 'apikey') return 'ai studio'
@@ -403,7 +391,7 @@ const geminiChannelShort = computed((): 'ai studio' | 'gcp' | 'google one' | 'cl
 })
 
 const geminiUserLevel = computed((): string | null => {
-  if (props.account.platform !== 'gemini') return null
+  if (true) return null
 
   const tier = (geminiTier.value || '').toString().trim()
   const tierLower = tier.toLowerCase()
@@ -450,7 +438,7 @@ const geminiUserLevel = computed((): string | null => {
 
 // Gemini 认证类型（按要求：授权方式简称 + 用户等级）
 const geminiAuthTypeLabel = computed(() => {
-  if (props.account.platform !== 'gemini') return null
+  if (true) return null
   if (!geminiChannelShort.value) return null
   return geminiUserLevel.value ? `${geminiChannelShort.value} ${geminiUserLevel.value}` : geminiChannelShort.value
 })
@@ -524,74 +512,12 @@ const geminiQuotaPolicyDocsUrl = computed(() => {
   return 'https://ai.google.dev/pricing'
 })
 
-const geminiUsesSharedDaily = computed(() => {
-  if (props.account.platform !== 'gemini') return false
-  // Per requirement: Google One & GCP are shared RPD pools (no per-model breakdown).
-  return (
-    !!usageInfo.value?.gemini_shared_daily ||
-    !!usageInfo.value?.gemini_shared_minute ||
-    geminiOAuthType.value === 'google_one' ||
-    isGeminiCodeAssist.value
-  )
-})
-
-const geminiUsageBars = computed(() => {
-  if (props.account.platform !== 'gemini') return []
-  if (!usageInfo.value) return []
-
-  const bars: Array<{
-    key: string
-    label: string
-    utilization: number
-    resetsAt: string | null
-    windowStats?: WindowStats | null
-    color: 'indigo' | 'emerald'
-  }> = []
-
-  if (geminiUsesSharedDaily.value) {
-    const sharedDaily = usageInfo.value.gemini_shared_daily
-    if (sharedDaily) {
-      bars.push({
-        key: 'shared_daily',
-        label: '1d',
-        utilization: sharedDaily.utilization,
-        resetsAt: sharedDaily.resets_at,
-        windowStats: sharedDaily.window_stats,
-        color: 'indigo'
-      })
-    }
-    return bars
-  }
-
-  const pro = usageInfo.value.gemini_pro_daily
-  if (pro) {
-    bars.push({
-      key: 'pro_daily',
-      label: 'pro',
-      utilization: pro.utilization,
-      resetsAt: pro.resets_at,
-      windowStats: pro.window_stats,
-      color: 'indigo'
-      })
-  }
-
-  const flash = usageInfo.value.gemini_flash_daily
-  if (flash) {
-    bars.push({
-      key: 'flash_daily',
-      label: 'flash',
-      utilization: flash.utilization,
-      resetsAt: flash.resets_at,
-      windowStats: flash.window_stats,
-      color: 'emerald'
-    })
-  }
-
-  return bars
-})
+const geminiUsageBars = computed(() => [] as Array<{
+  key: string; label: string; utilization: number; resetsAt: string | null; windowStats?: WindowStats | null; color: 'indigo' | 'emerald'
+}>)
 
 const isAnthropicOAuthOrSetupToken = computed(() => {
-  return props.account.platform === 'anthropic' && (props.account.type === 'oauth' || props.account.type === 'setup-token')
+  return (props.account.type === 'oauth' || props.account.type === 'setup-token')
 })
 
 const loadUsage = async (source?: 'passive' | 'active') => {
@@ -716,7 +642,7 @@ onMounted(() => {
 
 watch(openAIUsageRefreshKey, (nextKey, prevKey) => {
   if (!prevKey || nextKey === prevKey) return
-  if (props.account.platform !== 'openai' || props.account.type !== 'oauth') return
+  if (true || props.account.type !== 'oauth') return
 
   loadUsage().catch((e) => {
     console.error('Failed to refresh OpenAI usage:', e)

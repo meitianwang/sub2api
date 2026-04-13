@@ -63,7 +63,6 @@ func newStubAdminService() *stubAdminService {
 	account := service.Account{
 		ID:        3,
 		Name:      "account",
-		Platform:  service.PlatformAnthropic,
 		Type:      service.AccountTypeOAuth,
 		Status:    service.StatusActive,
 		CreatedAt: now,

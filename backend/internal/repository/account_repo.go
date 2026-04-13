@@ -84,7 +84,6 @@ func (r *accountRepository) Create(ctx context.Context, account *service.Account
 	builder := r.client.Account.Create().
 		SetName(account.Name).
 		SetNillableNotes(account.Notes).
-		SetPlatform(account.Platform).
 		SetType(account.Type).
 		SetCredentials(normalizeJSONMap(account.Credentials)).
 		SetExtra(normalizeJSONMap(account.Extra)).
@@ -318,7 +317,6 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 	builder := r.client.Account.UpdateOneID(account.ID).
 		SetName(account.Name).
 		SetNillableNotes(account.Notes).
-		SetPlatform(account.Platform).
 		SetType(account.Type).
 		SetCredentials(normalizeJSONMap(account.Credentials)).
 		SetExtra(normalizeJSONMap(account.Extra)).
@@ -454,9 +452,8 @@ func (r *accountRepository) List(ctx context.Context, params pagination.Paginati
 func (r *accountRepository) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string) ([]service.Account, *pagination.PaginationResult, error) {
 	q := r.client.Account.Query()
 
-	if platform != "" {
-		q = q.Where(dbaccount.PlatformEQ(platform))
-	}
+	// platform filter removed (all accounts are anthropic)
+	_ = platform
 	if accountType != "" {
 		q = q.Where(dbaccount.TypeEQ(accountType))
 	}
@@ -542,9 +539,9 @@ func (r *accountRepository) ListActive(ctx context.Context) ([]service.Account, 
 }
 
 func (r *accountRepository) ListByPlatform(ctx context.Context, platform string) ([]service.Account, error) {
+	_ = platform // platform filter removed (all accounts are anthropic)
 	accounts, err := r.client.Account.Query().
 		Where(
-			dbaccount.PlatformEQ(platform),
 			dbaccount.StatusEQ(service.StatusActive),
 		).
 		Order(dbent.Asc(dbaccount.FieldPriority)).
@@ -834,10 +831,10 @@ func (r *accountRepository) ListSchedulableByGroupID(ctx context.Context, groupI
 }
 
 func (r *accountRepository) ListSchedulableByPlatform(ctx context.Context, platform string) ([]service.Account, error) {
+	_ = platform // platform filter removed (all accounts are anthropic)
 	now := time.Now()
 	accounts, err := r.client.Account.Query().
 		Where(
-			dbaccount.PlatformEQ(platform),
 			dbaccount.StatusEQ(service.StatusActive),
 			dbaccount.SchedulableEQ(true),
 			tempUnschedulablePredicate(),
@@ -869,9 +866,9 @@ func (r *accountRepository) ListSchedulableByPlatforms(ctx context.Context, plat
 	// 仅返回可调度的活跃账号，并过滤处于过载/限流窗口的账号。
 	// 代理与分组信息统一在 accountsToService 中批量加载，避免 N+1 查询。
 	now := time.Now()
+	// platform filter removed (all accounts are anthropic)
 	accounts, err := r.client.Account.Query().
 		Where(
-			dbaccount.PlatformIn(platforms...),
 			dbaccount.StatusEQ(service.StatusActive),
 			dbaccount.SchedulableEQ(true),
 			tempUnschedulablePredicate(),
@@ -908,10 +905,10 @@ func (r *accountRepository) ListSchedulableUngrouped(ctx context.Context) ([]ser
 }
 
 func (r *accountRepository) ListSchedulableUngroupedByPlatform(ctx context.Context, platform string) ([]service.Account, error) {
+	_ = platform // platform filter removed (all accounts are anthropic)
 	now := time.Now()
 	accounts, err := r.client.Account.Query().
 		Where(
-			dbaccount.PlatformEQ(platform),
 			dbaccount.StatusEQ(service.StatusActive),
 			dbaccount.SchedulableEQ(true),
 			dbaccount.Not(dbaccount.HasAccountGroups()),
@@ -932,10 +929,10 @@ func (r *accountRepository) ListSchedulableUngroupedByPlatforms(ctx context.Cont
 	if len(platforms) == 0 {
 		return nil, nil
 	}
+	// platform filter removed (all accounts are anthropic)
 	now := time.Now()
 	accounts, err := r.client.Account.Query().
 		Where(
-			dbaccount.PlatformIn(platforms...),
 			dbaccount.StatusEQ(service.StatusActive),
 			dbaccount.SchedulableEQ(true),
 			dbaccount.Not(dbaccount.HasAccountGroups()),
@@ -1380,9 +1377,8 @@ func (r *accountRepository) queryAccountsByGroup(ctx context.Context, groupID in
 	if opts.status != "" {
 		preds = append(preds, dbaccount.StatusEQ(opts.status))
 	}
-	if len(opts.platforms) > 0 {
-		preds = append(preds, dbaccount.PlatformIn(opts.platforms...))
-	}
+	// platform filter removed (all accounts are anthropic)
+	_ = opts.platforms
 	if opts.schedulable {
 		now := time.Now()
 		preds = append(preds,
@@ -1610,7 +1606,6 @@ func accountEntityToService(m *dbent.Account) *service.Account {
 		ID:                      m.ID,
 		Name:                    m.Name,
 		Notes:                   m.Notes,
-		Platform:                m.Platform,
 		Type:                    m.Type,
 		Credentials:             copyJSONMap(m.Credentials),
 		Extra:                   copyJSONMap(m.Extra),

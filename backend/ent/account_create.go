@@ -87,12 +87,6 @@ func (_c *AccountCreate) SetNillableNotes(v *string) *AccountCreate {
 	return _c
 }
 
-// SetPlatform sets the "platform" field.
-func (_c *AccountCreate) SetPlatform(v string) *AccountCreate {
-	_c.mutation.SetPlatform(v)
-	return _c
-}
-
 // SetType sets the "type" field.
 func (_c *AccountCreate) SetType(v string) *AccountCreate {
 	_c.mutation.SetType(v)
@@ -520,14 +514,6 @@ func (_c *AccountCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.Platform(); !ok {
-		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required field "Account.platform"`)}
-	}
-	if v, ok := _c.mutation.Platform(); ok {
-		if err := account.PlatformValidator(v); err != nil {
-			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Account.platform": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Account.type"`)}
 	}
@@ -616,10 +602,6 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Notes(); ok {
 		_spec.SetField(account.FieldNotes, field.TypeString, value)
 		_node.Notes = &value
-	}
-	if value, ok := _c.mutation.Platform(); ok {
-		_spec.SetField(account.FieldPlatform, field.TypeString, value)
-		_node.Platform = value
 	}
 	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(account.FieldType, field.TypeString, value)
@@ -867,18 +849,6 @@ func (u *AccountUpsert) UpdateNotes() *AccountUpsert {
 // ClearNotes clears the value of the "notes" field.
 func (u *AccountUpsert) ClearNotes() *AccountUpsert {
 	u.SetNull(account.FieldNotes)
-	return u
-}
-
-// SetPlatform sets the "platform" field.
-func (u *AccountUpsert) SetPlatform(v string) *AccountUpsert {
-	u.Set(account.FieldPlatform, v)
-	return u
-}
-
-// UpdatePlatform sets the "platform" field to the value that was provided on create.
-func (u *AccountUpsert) UpdatePlatform() *AccountUpsert {
-	u.SetExcluded(account.FieldPlatform)
 	return u
 }
 
@@ -1360,20 +1330,6 @@ func (u *AccountUpsertOne) UpdateNotes() *AccountUpsertOne {
 func (u *AccountUpsertOne) ClearNotes() *AccountUpsertOne {
 	return u.Update(func(s *AccountUpsert) {
 		s.ClearNotes()
-	})
-}
-
-// SetPlatform sets the "platform" field.
-func (u *AccountUpsertOne) SetPlatform(v string) *AccountUpsertOne {
-	return u.Update(func(s *AccountUpsert) {
-		s.SetPlatform(v)
-	})
-}
-
-// UpdatePlatform sets the "platform" field to the value that was provided on create.
-func (u *AccountUpsertOne) UpdatePlatform() *AccountUpsertOne {
-	return u.Update(func(s *AccountUpsert) {
-		s.UpdatePlatform()
 	})
 }
 
@@ -2082,20 +2038,6 @@ func (u *AccountUpsertBulk) UpdateNotes() *AccountUpsertBulk {
 func (u *AccountUpsertBulk) ClearNotes() *AccountUpsertBulk {
 	return u.Update(func(s *AccountUpsert) {
 		s.ClearNotes()
-	})
-}
-
-// SetPlatform sets the "platform" field.
-func (u *AccountUpsertBulk) SetPlatform(v string) *AccountUpsertBulk {
-	return u.Update(func(s *AccountUpsert) {
-		s.SetPlatform(v)
-	})
-}
-
-// UpdatePlatform sets the "platform" field to the value that was provided on create.
-func (u *AccountUpsertBulk) UpdatePlatform() *AccountUpsertBulk {
-	return u.Update(func(s *AccountUpsert) {
-		s.UpdatePlatform()
 	})
 }
 

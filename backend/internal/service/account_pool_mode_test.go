@@ -19,7 +19,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "default_when_not_pool_mode",
 			account: &Account{
 				Type:        AccountTypeAPIKey,
-				Platform:    PlatformOpenAI,
 				Credentials: map[string]any{},
 			},
 			expected: defaultPoolModeRetryCount,
@@ -28,7 +27,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "default_when_missing_retry_count",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode": true,
 				},
@@ -39,7 +37,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "supports_float64_from_json_credentials",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": float64(5),
@@ -51,7 +48,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "supports_json_number",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": json.Number("4"),
@@ -63,7 +59,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "supports_string_value",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": "2",
@@ -75,7 +70,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "negative_value_is_clamped_to_zero",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": -1,
@@ -87,7 +81,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "oversized_value_is_clamped_to_max",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": 99,
@@ -99,7 +92,6 @@ func TestGetPoolModeRetryCount(t *testing.T) {
 			name: "invalid_value_falls_back_to_default",
 			account: &Account{
 				Type:     AccountTypeAPIKey,
-				Platform: PlatformOpenAI,
 				Credentials: map[string]any{
 					"pool_mode":             true,
 					"pool_mode_retry_count": "oops",

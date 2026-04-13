@@ -18,7 +18,6 @@ type Account struct {
 	ID          int64
 	Name        string
 	Notes       *string
-	Platform    string
 	Type        string
 	Credentials map[string]any
 	Extra       map[string]any
@@ -117,26 +116,6 @@ func (a *Account) IsOverloaded() bool {
 
 func (a *Account) IsOAuth() bool {
 	return a.Type == AccountTypeOAuth || a.Type == AccountTypeSetupToken
-}
-
-func (a *Account) IsGemini() bool {
-	return a.Platform == PlatformGemini
-}
-
-func (a *Account) GeminiOAuthType() string {
-	if a.Platform != PlatformGemini || a.Type != AccountTypeOAuth {
-		return ""
-	}
-	oauthType := strings.TrimSpace(a.GetCredential("oauth_type"))
-	if oauthType == "" && strings.TrimSpace(a.GetCredential("project_id")) != "" {
-		return "code_assist"
-	}
-	return oauthType
-}
-
-func (a *Account) GeminiTierID() string {
-	tierID := strings.TrimSpace(a.GetCredential("tier_id"))
-	return tierID
 }
 
 func (a *Account) CanGetUsage() bool {
@@ -426,18 +405,8 @@ func modelMappingSignature(rawMapping map[string]any) uint64 {
 	return h.Sum64()
 }
 
-func normalizeRequestedModelForLookup(platform, requestedModel string) string {
-	trimmed := strings.TrimSpace(requestedModel)
-	if trimmed == "" {
-		return ""
-	}
-	if platform != PlatformGemini {
-		return trimmed
-	}
-	if trimmed == "gemini-3.1-pro-preview-customtools" {
-		return "gemini-3.1-pro-preview"
-	}
-	return trimmed
+func normalizeRequestedModelForLookup(requestedModel string) string {
+	return strings.TrimSpace(requestedModel)
 }
 
 func mappingSupportsRequestedModel(mapping map[string]string, requestedModel string) bool {
@@ -475,7 +444,7 @@ func (a *Account) IsModelSupported(requestedModel string) bool {
 	if mappingSupportsRequestedModel(mapping, requestedModel) {
 		return true
 	}
-	normalized := normalizeRequestedModelForLookup(a.Platform, requestedModel)
+	normalized := normalizeRequestedModelForLookup(requestedModel)
 	return normalized != requestedModel && mappingSupportsRequestedModel(mapping, normalized)
 }
 
@@ -496,7 +465,7 @@ func (a *Account) ResolveMappedModel(requestedModel string) (mappedModel string,
 	if mappedModel, matched := resolveRequestedModelInMapping(mapping, requestedModel); matched {
 		return mappedModel, true
 	}
-	normalized := normalizeRequestedModelForLookup(a.Platform, requestedModel)
+	normalized := normalizeRequestedModelForLookup(requestedModel)
 	if normalized != requestedModel {
 		if mappedModel, matched := resolveRequestedModelInMapping(mapping, normalized); matched {
 			return mappedModel, true
@@ -712,37 +681,9 @@ func (a *Account) IsAPIKey() bool {
 	return a.Type == AccountTypeAPIKey
 }
 
-func (a *Account) IsOpenAI() bool {
-	return a.Platform == PlatformOpenAI
-}
-
-func (a *Account) IsAnthropic() bool {
-	return a.Platform == PlatformAnthropic
-}
-
-// IsOpenAIPassthroughEnabled 返回 OpenAI 账号是否启用“自动透传（仅替换认证）”。
-//
-// 新字段：accounts.extra.openai_passthrough。
-// 兼容字段：accounts.extra.openai_oauth_passthrough（历史 OAuth 开关）。
-// 字段缺失或类型不正确时，按 false（关闭）处理。
-func (a *Account) IsOpenAIPassthroughEnabled() bool {
-	if a == nil || !a.IsOpenAI() || a.Extra == nil {
-		return false
-	}
-	if enabled, ok := a.Extra["openai_passthrough"].(bool); ok {
-		return enabled
-	}
-	if enabled, ok := a.Extra["openai_oauth_passthrough"].(bool); ok {
-		return enabled
-	}
-	return false
-}
-
-// IsAnthropicAPIKeyPassthroughEnabled 返回 Anthropic API Key 账号是否启用“自动透传（仅替换认证）”。
-// 字段：accounts.extra.anthropic_passthrough。
-// 字段缺失或类型不正确时，按 false（关闭）处理。
+// IsAnthropicAPIKeyPassthroughEnabled 返回 API Key 账号是否启用"自动透传（仅替换认证）"。
 func (a *Account) IsAnthropicAPIKeyPassthroughEnabled() bool {
-	if a == nil || a.Platform != PlatformAnthropic || a.Type != AccountTypeAPIKey || a.Extra == nil {
+	if a == nil || a.Type != AccountTypeAPIKey || a.Extra == nil {
 		return false
 	}
 	enabled, ok := a.Extra["anthropic_passthrough"].(bool)
@@ -764,7 +705,7 @@ const (
 // IsAnthropicOAuthOrSetupToken 判断是否为 Anthropic OAuth 或 SetupToken 类型账号
 // 仅这两类账号支持 5h 窗口额度控制和会话数量控制
 func (a *Account) IsAnthropicOAuthOrSetupToken() bool {
-	return a.Platform == PlatformAnthropic && (a.Type == AccountTypeOAuth || a.Type == AccountTypeSetupToken)
+	return a.Type == AccountTypeOAuth || a.Type == AccountTypeSetupToken
 }
 
 // IsTLSFingerprintEnabled 检查是否启用 TLS 指纹伪装

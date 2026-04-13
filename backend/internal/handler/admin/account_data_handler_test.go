@@ -99,7 +99,6 @@ func TestExportDataIncludesSecrets(t *testing.T) {
 		{
 			ID:          21,
 			Name:        "account",
-			Platform:    service.PlatformOpenAI,
 			Type:        service.AccountTypeOAuth,
 			Credentials: map[string]any{"token": "secret"},
 			Extra:       map[string]any{"note": "x"},
@@ -145,7 +144,6 @@ func TestExportDataWithoutProxies(t *testing.T) {
 		{
 			ID:          21,
 			Name:        "account",
-			Platform:    service.PlatformOpenAI,
 			Type:        service.AccountTypeOAuth,
 			Credentials: map[string]any{"token": "secret"},
 			ProxyID:     &proxyID,
@@ -202,7 +200,7 @@ func TestImportDataReusesProxyAndSkipsDefaultGroup(t *testing.T) {
 			"accounts": []map[string]any{
 				{
 					"name":        "acc",
-					"platform":    service.PlatformOpenAI,
+					"platform":    "openai",
 					"type":        service.AccountTypeOAuth,
 					"credentials": map[string]any{"token": "x"},
 					"proxy_key":   "socks5|1.2.3.4|1080|u|p",

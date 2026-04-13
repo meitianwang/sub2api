@@ -30,17 +30,7 @@ const MatchModeAny = "any"
 // MatchModeAll 表示所有条件都必须匹配
 const MatchModeAll = "all"
 
-// 支持的平台常量
-const (
-	PlatformAnthropic = "anthropic"
-	PlatformOpenAI    = "openai"
-	PlatformGemini    = "gemini"
-)
 
-// AllPlatforms 返回所有支持的平台列表
-func AllPlatforms() []string {
-	return []string{PlatformAnthropic, PlatformOpenAI, PlatformGemini}
-}
 
 // Validate 验证规则配置的有效性
 func (r *ErrorPassthroughRule) Validate() error {

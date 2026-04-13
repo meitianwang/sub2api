@@ -33,14 +33,13 @@ func setupAvailableModelsRouter(adminSvc service.AdminService) *gin.Engine {
 	return router
 }
 
-func TestAccountHandlerGetAvailableModels_OpenAIOAuthUsesExplicitModelMapping(t *testing.T) {
+func TestAccountHandlerGetAvailableModels_APIKeyUsesExplicitModelMapping(t *testing.T) {
 	svc := &availableModelsAdminService{
 		stubAdminService: newStubAdminService(),
 		account: service.Account{
 			ID:       42,
-			Name:     "openai-oauth",
-			Platform: service.PlatformOpenAI,
-			Type:     service.AccountTypeOAuth,
+			Name:     "apikey-account",
+			Type:     service.AccountTypeAPIKey,
 			Status:   service.StatusActive,
 			Credentials: map[string]any{
 				"model_mapping": map[string]any{
@@ -73,7 +72,6 @@ func TestAccountHandlerGetAvailableModels_OpenAIOAuthPassthroughFallsBackToDefau
 		account: service.Account{
 			ID:       43,
 			Name:     "openai-oauth-passthrough",
-			Platform: service.PlatformOpenAI,
 			Type:     service.AccountTypeOAuth,
 			Status:   service.StatusActive,
 			Credentials: map[string]any{

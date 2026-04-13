@@ -843,7 +843,7 @@
             <tr v-for="account in proxyAccounts" :key="account.id">
               <td class="px-4 py-2 font-medium text-gray-900 dark:text-white">{{ account.name }}</td>
               <td class="px-4 py-2">
-                <PlatformTypeBadge :platform="account.platform" :type="account.type" />
+                <PlatformTypeBadge :type="account.type" />
               </td>
               <td class="px-4 py-2 text-gray-600 dark:text-gray-300">
                 {{ account.notes || '-' }}

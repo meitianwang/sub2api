@@ -230,10 +230,10 @@ const addMethod = ref<AddMethod>('oauth')
 const geminiOAuthType = ref<'code_assist' | 'google_one' | 'ai_studio'>('code_assist')
 
 // Computed - check platform
-const isOpenAI = computed(() => props.account?.platform === 'openai')
-const isOpenAILike = computed(() => isOpenAI.value)
-const isGemini = computed(() => props.account?.platform === 'gemini')
-const isAnthropic = computed(() => props.account?.platform === 'anthropic')
+const isOpenAI = computed(() => false)
+const isOpenAILike = computed(() => false)
+const isGemini = computed(() => false)
+const isAnthropic = computed(() => true)
 
 // Computed - current OAuth state based on platform
 const currentAuthUrl = computed(() => {

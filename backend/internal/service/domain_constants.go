@@ -18,13 +18,6 @@ const (
 	RoleUser  = domain.RoleUser
 )
 
-// Platform constants
-const (
-	PlatformAnthropic = domain.PlatformAnthropic
-	PlatformOpenAI    = domain.PlatformOpenAI
-	PlatformGemini    = domain.PlatformGemini
-)
-
 // Account type constants
 const (
 	AccountTypeOAuth      = domain.AccountTypeOAuth      // OAuth类型账号（full scope: profile + inference）

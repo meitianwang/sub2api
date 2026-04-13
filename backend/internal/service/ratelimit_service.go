@@ -147,7 +147,7 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 			if err := persistAccountCredentials(ctx, s.accountRepo, account, account.Credentials); err != nil {
 				slog.Warn("oauth_401_force_refresh_update_failed", "account_id", account.ID, "error", err)
 			} else {
-				slog.Info("oauth_401_force_refresh_set", "account_id", account.ID, "platform", account.Platform)
+				slog.Info("oauth_401_force_refresh_set", "account_id", account.ID)
 			}
 			// 3. 临时不可调度，替代 SetError（保持 status=active 让刷新服务能拾取）
 			msg := "Authentication failed (401): invalid or expired credentials"
@@ -185,7 +185,7 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 			"service.ratelimit",
 			"[HandleUpstreamErrorRaw] account_id=%d platform=%s type=%s status=403 request_id=%s cf_ray=%s upstream_msg=%s raw_body=%s",
 			account.ID,
-			account.Platform,
+			"anthropic",
 			account.Type,
 			strings.TrimSpace(headers.Get("x-request-id")),
 			strings.TrimSpace(headers.Get("cf-ray")),
@@ -280,7 +280,7 @@ func (s *RateLimitService) handle429(ctx context.Context, account *Account, head
 	if resetTimestamp == "" {
 		slog.Warn("rate_limit_429_no_reset_time_skipped",
 			"account_id", account.ID,
-			"platform", account.Platform,
+			"platform", "anthropic",
 			"reason", "no rate limit reset time in headers, likely not a real rate limit")
 		return
 	}

@@ -57,7 +57,6 @@ func TestAdminService_ClearAccountError_AlsoClearsRecoverableRuntimeState(t *tes
 	repo := &accountRepoStubForClearAccountError{
 		account: &Account{
 			ID:                     31,
-			Platform:               PlatformOpenAI,
 			Type:                   AccountTypeOAuth,
 			Status:                 StatusError,
 			ErrorMessage:           "refresh failed",

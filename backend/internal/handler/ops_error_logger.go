@@ -1051,9 +1051,9 @@ func guessPlatformFromPath(path string) string {
 	p := strings.ToLower(path)
 	switch {
 	case strings.HasPrefix(p, "/v1beta/"):
-		return service.PlatformGemini
+		return "gemini"
 	case strings.Contains(p, "/responses"):
-		return service.PlatformOpenAI
+		return "openai"
 	default:
 		return ""
 	}

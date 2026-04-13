@@ -521,7 +521,6 @@ export interface UpdateGroupRequest {
 
 // ==================== Account & Proxy Types ====================
 
-export type AccountPlatform = 'anthropic' | 'openai' | 'gemini'
 export type AccountType = 'oauth' | 'setup-token' | 'apikey' | 'upstream'
 export type OAuthAddMethod = 'oauth' | 'setup-token'
 export type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks5h'
@@ -564,7 +563,6 @@ export interface Proxy {
 export interface ProxyAccountSummary {
   id: number
   name: string
-  platform: AccountPlatform
   type: AccountType
   notes?: string | null
 }
@@ -648,7 +646,6 @@ export interface Account {
   id: number
   name: string
   notes?: string | null
-  platform: AccountPlatform
   type: AccountType
   credentials?: Record<string, unknown>
   extra?: (CodexUsageSnapshot & Record<string, unknown>)
@@ -812,7 +809,6 @@ export interface CodexUsageSnapshot {
 export interface CreateAccountRequest {
   name: string
   notes?: string | null
-  platform: AccountPlatform
   type: AccountType
   credentials: Record<string, unknown>
   extra?: Record<string, unknown>
@@ -843,7 +839,6 @@ export interface UpdateAccountRequest {
 }
 
 export interface CheckMixedChannelRequest {
-  platform: AccountPlatform
   group_ids: number[]
   account_id?: number
 }
@@ -851,8 +846,6 @@ export interface CheckMixedChannelRequest {
 export interface MixedChannelWarningDetails {
   group_id: number
   group_name: string
-  current_platform: string
-  other_platform: string
 }
 
 export interface CheckMixedChannelResponse {
@@ -903,7 +896,6 @@ export interface AdminDataProxy {
 export interface AdminDataAccount {
   name: string
   notes?: string | null
-  platform: AccountPlatform
   type: AccountType
   credentials: Record<string, unknown>
   extra?: Record<string, unknown>

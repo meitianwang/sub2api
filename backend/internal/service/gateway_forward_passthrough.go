@@ -178,7 +178,7 @@ func (s *GatewayService) ForwardPassthrough(
 			safeErr := sanitizeUpstreamErrorMessage(err.Error())
 			setOpsUpstreamError(c, 0, safeErr, "")
 			appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
-				Platform:    account.Platform,
+				Platform:    "anthropic",
 				AccountID:   account.ID,
 				AccountName: account.Name,
 				Kind:        "network",
@@ -245,7 +245,7 @@ func (s *GatewayService) ForwardPassthrough(
 
 			s.handleFailoverSideEffects(ctx, resp, account)
 			appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
-				Platform:           account.Platform,
+				Platform:           "anthropic",
 				AccountID:          account.ID,
 				AccountName:        account.Name,
 				UpstreamStatusCode: resp.StatusCode,
@@ -329,7 +329,7 @@ func (s *GatewayService) handlePassthroughErrorResponse(
 
 	setOpsUpstreamError(c, resp.StatusCode, extractUpstreamErrorMessage(body), "")
 	appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
-		Platform:           account.Platform,
+		Platform:           "anthropic",
 		AccountID:          account.ID,
 		AccountName:        account.Name,
 		UpstreamStatusCode: resp.StatusCode,

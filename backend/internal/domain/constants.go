@@ -16,13 +16,6 @@ const (
 	RoleUser  = "user"
 )
 
-// Platform constants
-const (
-	PlatformAnthropic   = "anthropic"
-	PlatformOpenAI      = "openai"
-	PlatformGemini = "gemini"
-)
-
 // Account type constants
 const (
 	AccountTypeOAuth      = "oauth"       // OAuth类型账号（full scope: profile + inference）

@@ -187,7 +187,7 @@ func TestAccountIsModelSupported(t *testing.T) {
 		},
 		{
 			name:     "gemini customtools alias matches normalized mapping",
-			platform: PlatformGemini,
+			platform: "gemini",
 			credentials: map[string]any{
 				"model_mapping": map[string]any{
 					"gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
@@ -239,7 +239,7 @@ func TestAccountGetMappedModel(t *testing.T) {
 		},
 		{
 			name:           "no mapping preserves gemini customtools model",
-			platform:       PlatformGemini,
+			platform:       "gemini",
 			credentials:    nil,
 			requestedModel: "gemini-3.1-pro-preview-customtools",
 			expected:       "gemini-3.1-pro-preview-customtools",
@@ -273,7 +273,7 @@ func TestAccountGetMappedModel(t *testing.T) {
 		// 无匹配返回原始模型
 		{
 			name:     "gemini customtools alias resolves through normalized mapping",
-			platform: PlatformGemini,
+			platform: "gemini",
 			credentials: map[string]any{
 				"model_mapping": map[string]any{
 					"gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
@@ -284,7 +284,7 @@ func TestAccountGetMappedModel(t *testing.T) {
 		},
 		{
 			name:     "gemini customtools exact mapping wins over normalized fallback",
-			platform: PlatformGemini,
+			platform: "gemini",
 			credentials: map[string]any{
 				"model_mapping": map[string]any{
 					"gemini-3.1-pro-preview":             "gemini-3.1-pro-preview",
@@ -360,7 +360,7 @@ func TestAccountResolveMappedModel(t *testing.T) {
 		},
 		{
 			name:     "gemini customtools alias reports normalized match",
-			platform: PlatformGemini,
+			platform: "gemini",
 			credentials: map[string]any{
 				"model_mapping": map[string]any{
 					"gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
@@ -372,7 +372,7 @@ func TestAccountResolveMappedModel(t *testing.T) {
 		},
 		{
 			name:     "gemini customtools exact mapping reports exact match",
-			platform: PlatformGemini,
+			platform: "gemini",
 			credentials: map[string]any{
 				"model_mapping": map[string]any{
 					"gemini-3.1-pro-preview":             "gemini-3.1-pro-preview",
@@ -412,7 +412,6 @@ func TestAccountResolveMappedModel(t *testing.T) {
 
 func TestAccountGetModelMapping_AnthropicEnsuresGeminiDefaultPassthroughs(t *testing.T) {
 	account := &Account{
-		Platform: PlatformAnthropic,
 		Credentials: map[string]any{
 			"model_mapping": map[string]any{
 				"gemini-3-pro-high": "gemini-3.1-pro-high",
@@ -434,7 +433,6 @@ func TestAccountGetModelMapping_AnthropicEnsuresGeminiDefaultPassthroughs(t *tes
 
 func TestAccountGetModelMapping_AnthropicRespectsWildcardOverride(t *testing.T) {
 	account := &Account{
-		Platform: PlatformAnthropic,
 		Credentials: map[string]any{
 			"model_mapping": map[string]any{
 				"gemini-3*": "gemini-3.1-pro-high",

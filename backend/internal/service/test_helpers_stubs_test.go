@@ -36,10 +36,10 @@ func (m *mockAccountRepoForGemini) ExistsByID(_ context.Context, id int64) (bool
 	_, ok := m.accountsByID[id]
 	return ok, nil
 }
-func (m *mockAccountRepoForGemini) ListSchedulableByPlatform(_ context.Context, platform string) ([]Account, error) {
+func (m *mockAccountRepoForGemini) ListSchedulableByPlatform(_ context.Context, _ string) ([]Account, error) {
 	var result []Account
 	for _, acc := range m.accounts {
-		if acc.Platform == platform && acc.IsSchedulable() {
+		if acc.IsSchedulable() {
 			result = append(result, acc)
 		}
 	}
@@ -88,14 +88,10 @@ func (m *mockAccountRepoForGemini) ListSchedulable(_ context.Context) ([]Account
 func (m *mockAccountRepoForGemini) ListSchedulableByGroupID(_ context.Context, _ int64) ([]Account, error) {
 	return nil, nil
 }
-func (m *mockAccountRepoForGemini) ListSchedulableByPlatforms(_ context.Context, platforms []string) ([]Account, error) {
-	platformSet := make(map[string]bool)
-	for _, p := range platforms {
-		platformSet[p] = true
-	}
+func (m *mockAccountRepoForGemini) ListSchedulableByPlatforms(_ context.Context, _ []string) ([]Account, error) {
 	var result []Account
 	for _, acc := range m.accounts {
-		if platformSet[acc.Platform] && acc.IsSchedulable() {
+		if acc.IsSchedulable() {
 			result = append(result, acc)
 		}
 	}

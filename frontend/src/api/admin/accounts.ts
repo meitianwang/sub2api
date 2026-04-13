@@ -31,7 +31,6 @@ export async function list(
   page: number = 1,
   pageSize: number = 20,
   filters?: {
-    platform?: string
     type?: string
     status?: string
     group?: string
@@ -64,7 +63,6 @@ export async function listWithEtag(
   page: number = 1,
   pageSize: number = 20,
   filters?: {
-    platform?: string
     type?: string
     status?: string
     group?: string
@@ -451,7 +449,6 @@ export interface CRSPreviewAccount {
   crs_account_id: string
   kind: string
   name: string
-  platform: string
   type: string
 }
 
@@ -507,7 +504,6 @@ export async function syncFromCrs(params: {
 export async function exportData(options?: {
   ids?: number[]
   filters?: {
-    platform?: string
     type?: string
     status?: string
     search?: string
@@ -518,8 +514,7 @@ export async function exportData(options?: {
   if (options?.ids && options.ids.length > 0) {
     params.ids = options.ids.join(',')
   } else if (options?.filters) {
-    const { platform, type, status, search } = options.filters
-    if (platform) params.platform = platform
+    const { type, status, search } = options.filters
     if (type) params.type = type
     if (status) params.status = status
     if (search) params.search = search

@@ -21,15 +21,6 @@
         </p>
       </div>
 
-      <!-- Mixed platform warning -->
-      <div v-if="isMixedPlatform" class="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
-        <p class="text-sm text-amber-700 dark:text-amber-400">
-          <svg class="mr-1.5 inline h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          {{ t('admin.accounts.bulkEdit.mixedPlatformWarning', { platforms: selectedPlatforms.join(', ') }) }}
-        </p>
-      </div>
 
       <!-- OpenAI passthrough -->
       <div
@@ -227,7 +218,7 @@
 
               <ModelWhitelistSelector
                 v-model="allowedModels"
-                :platforms="selectedPlatforms"
+                platform="anthropic"
               />
 
               <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -849,7 +840,7 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
-import type { Proxy as ProxyConfig, AdminGroup, AccountPlatform, AccountType } from '@/types'
+import type { Proxy as ProxyConfig, AdminGroup, AccountType } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import Select from '@/components/common/Select.vue'
@@ -871,7 +862,6 @@ import type { OpenAIWSMode } from '@/utils/openaiWsMode'
 interface Props {
   show: boolean
   accountIds: number[]
-  selectedPlatforms: AccountPlatform[]
   selectedTypes: AccountType[]
   proxies: ProxyConfig[]
   groups: AdminGroup[]
@@ -886,46 +876,22 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const appStore = useAppStore()
 
-// Platform awareness
-const isMixedPlatform = computed(() => props.selectedPlatforms.length > 1)
+// Platform awareness (all accounts are anthropic)
+const allOpenAIPassthroughCapable = computed(() => false)
 
-const allOpenAIPassthroughCapable = computed(() => {
-  return (
-    props.selectedPlatforms.length === 1 &&
-    props.selectedPlatforms[0] === 'openai' &&
-    props.selectedTypes.length > 0 &&
-    props.selectedTypes.every(t => t === 'oauth' || t === 'apikey')
-  )
-})
-
-const allOpenAIOAuth = computed(() => {
-  return (
-    props.selectedPlatforms.length === 1 &&
-    props.selectedPlatforms[0] === 'openai' &&
-    props.selectedTypes.length > 0 &&
-    props.selectedTypes.every(t => t === 'oauth')
-  )
-})
+const allOpenAIOAuth = computed(() => false)
 
 // 是否全部为 Anthropic OAuth/SetupToken（RPM 配置仅在此条件下显示）
 const allAnthropicOAuthOrSetupToken = computed(() => {
-  return (
-    props.selectedPlatforms.length === 1 &&
-    props.selectedPlatforms[0] === 'anthropic' &&
-    props.selectedTypes.every(t => t === 'oauth' || t === 'setup-token')
-  )
+  return props.selectedTypes.every(t => t === 'oauth' || t === 'setup-token')
 })
 
 const filteredPresets = computed(() => {
-  if (props.selectedPlatforms.length === 0) return []
-
   const dedupedPresets = new Map<string, ReturnType<typeof getPresetMappingsByPlatform>[number]>()
-  for (const platform of props.selectedPlatforms) {
-    for (const preset of getPresetMappingsByPlatform(platform)) {
-      const key = `${preset.from}=>${preset.to}`
-      if (!dedupedPresets.has(key)) {
-        dedupedPresets.set(key, preset)
-      }
+  for (const preset of getPresetMappingsByPlatform('anthropic')) {
+    const key = `${preset.from}=>${preset.to}`
+    if (!dedupedPresets.has(key)) {
+      dedupedPresets.set(key, preset)
     }
   }
 
@@ -1218,9 +1184,7 @@ const mixedChannelConfirmed = ref(false)
 // 多平台混合的情况由 submitBulkUpdate 的 409 catch 兜底
 const canPreCheck = () =>
   enableGroups.value &&
-  groupIds.value.length > 0 &&
-  props.selectedPlatforms.length === 1 &&
-  props.selectedPlatforms[0] === 'anthropic'
+  groupIds.value.length > 0
 
 const handleClose = () => {
   showMixedChannelWarning.value = false
@@ -1237,7 +1201,6 @@ const preCheckMixedChannelRisk = async (built: Record<string, unknown>): Promise
 
   try {
     const result = await adminAPI.accounts.checkMixedChannelRisk({
-      platform: props.selectedPlatforms[0],
       group_ids: groupIds.value
     })
     if (!result.has_risk) return true

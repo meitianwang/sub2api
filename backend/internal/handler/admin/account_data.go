@@ -147,7 +147,7 @@ func (h *AccountHandler) ExportData(c *gin.Context) {
 		dataAccounts = append(dataAccounts, DataAccount{
 			Name:               acc.Name,
 			Notes:              acc.Notes,
-			Platform:           acc.Platform,
+			Platform:           "anthropic",
 			Type:               acc.Type,
 			Credentials:        acc.Credentials,
 			Extra:              acc.Extra,
@@ -538,7 +538,7 @@ func enrichCredentialsFromIDToken(item *DataAccount) {
 		return
 	}
 	platform := strings.ToLower(strings.TrimSpace(item.Platform))
-	if platform != service.PlatformOpenAI {
+	if platform != "openai" {
 		return
 	}
 	if strings.ToLower(strings.TrimSpace(item.Type)) != service.AccountTypeOAuth {

@@ -1558,8 +1558,7 @@ const accountSearchRunner = useKeyedDebouncedSearch<SimpleAccount[]>({
       1,
       20,
       {
-        search: keyword,
-        platform: 'anthropic'
+        search: keyword
       },
       { signal }
     )

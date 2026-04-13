@@ -126,7 +126,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 			}
 		}
 		account := selection.Account
-		setOpsSelectedAccount(c, account.ID, account.Platform)
+		setOpsSelectedAccount(c, account.ID, "anthropic")
 
 		// Account already selected, proceed directly
 		accountReleaseFunc := selection.ReleaseFunc
@@ -151,7 +151,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 					googleError(c, http.StatusBadGateway, "Upstream error after partial response")
 					return
 				}
-				action := fs.HandleFailoverError(c.Request.Context(), h.gatewayService, account.ID, account.Platform, failoverErr)
+				action := fs.HandleFailoverError(c.Request.Context(), h.gatewayService, account.ID, "anthropic", failoverErr)
 				switch action {
 				case FailoverContinue:
 					continue
@@ -171,7 +171,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 		clientIP := ip.GetClientIP(c)
 		requestPayloadHash := service.HashUsageRequestPayload(body)
 		inboundEndpoint := GetInboundEndpoint(c)
-		upstreamEndpoint := GetUpstreamEndpoint(c, account.Platform)
+		upstreamEndpoint := GetUpstreamEndpoint(c, "anthropic")
 
 		h.submitUsageRecordTask(func(ctx context.Context) {
 			if err := h.gatewayService.RecordUsage(ctx, &service.RecordUsageInput{

@@ -346,7 +346,6 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformAnthropic,
 				Type:        targetType,
 				Credentials: credentials,
 				Extra:       extra,
@@ -377,7 +376,6 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 		// Update existing
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformAnthropic
 		existing.Type = targetType
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -464,7 +462,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformAnthropic,
+
 				Type:        AccountTypeAPIKey,
 				Credentials: credentials,
 				Extra:       extra,
@@ -488,7 +486,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformAnthropic
+
 		existing.Type = AccountTypeAPIKey
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -591,7 +589,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformOpenAI,
+
 				Type:        AccountTypeOAuth,
 				Credentials: credentials,
 				Extra:       extra,
@@ -619,7 +617,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformOpenAI
+
 		existing.Type = AccountTypeOAuth
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -714,7 +712,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformOpenAI,
+
 				Type:        AccountTypeAPIKey,
 				Credentials: credentials,
 				Extra:       extra,
@@ -738,7 +736,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformOpenAI
+
 		existing.Type = AccountTypeAPIKey
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -827,7 +825,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformGemini,
+
 				Type:        AccountTypeOAuth,
 				Credentials: credentials,
 				Extra:       extra,
@@ -854,7 +852,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformGemini
+
 		existing.Type = AccountTypeOAuth
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -941,7 +939,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 			}
 			account := &Account{
 				Name:        defaultName(src.Name, src.ID),
-				Platform:    PlatformGemini,
+
 				Type:        AccountTypeAPIKey,
 				Credentials: credentials,
 				Extra:       extra,
@@ -965,7 +963,7 @@ func (s *CRSSyncService) SyncFromCRS(ctx context.Context, input SyncFromCRSInput
 
 		existing.Extra = mergeMap(existing.Extra, extra)
 		existing.Name = defaultName(src.Name, src.ID)
-		existing.Platform = PlatformGemini
+
 		existing.Type = AccountTypeAPIKey
 		existing.Credentials = mergeMap(existing.Credentials, credentials)
 		if proxyID != nil {
@@ -1213,65 +1211,30 @@ func (s *CRSSyncService) refreshOAuthToken(ctx context.Context, account *Account
 	var newCredentials map[string]any
 	var err error
 
-	switch account.Platform {
-	case PlatformAnthropic:
-		if s.oauthService == nil {
-			return nil
-		}
-		tokenInfo, refreshErr := s.oauthService.RefreshAccountToken(ctx, account)
-		if refreshErr != nil {
-			err = refreshErr
-		} else {
-			// Preserve existing credentials
-			newCredentials = make(map[string]any)
-			for k, v := range account.Credentials {
-				newCredentials[k] = v
-			}
-			// Update token fields
-			newCredentials["access_token"] = tokenInfo.AccessToken
-			newCredentials["token_type"] = tokenInfo.TokenType
-			newCredentials["expires_in"] = tokenInfo.ExpiresIn
-			newCredentials["expires_at"] = tokenInfo.ExpiresAt
-			if tokenInfo.RefreshToken != "" {
-				newCredentials["refresh_token"] = tokenInfo.RefreshToken
-			}
-			if tokenInfo.Scope != "" {
-				newCredentials["scope"] = tokenInfo.Scope
-			}
-		}
-	case PlatformOpenAI:
-		if s.openaiOAuthService == nil {
-			return nil
-		}
-		tokenInfo, refreshErr := s.openaiOAuthService.RefreshAccountToken(ctx, account)
-		if refreshErr != nil {
-			err = refreshErr
-		} else {
-			newCredentials = s.openaiOAuthService.BuildAccountCredentials(tokenInfo)
-			// Preserve non-token settings from existing credentials
-			for k, v := range account.Credentials {
-				if _, exists := newCredentials[k]; !exists {
-					newCredentials[k] = v
-				}
-			}
-		}
-	case PlatformGemini:
-		if s.geminiOAuthService == nil {
-			return nil
-		}
-		tokenInfo, refreshErr := s.geminiOAuthService.RefreshAccountToken(ctx, account)
-		if refreshErr != nil {
-			err = refreshErr
-		} else {
-			newCredentials = s.geminiOAuthService.BuildAccountCredentials(tokenInfo)
-			for k, v := range account.Credentials {
-				if _, exists := newCredentials[k]; !exists {
-					newCredentials[k] = v
-				}
-			}
-		}
-	default:
+	// All accounts are anthropic
+	if s.oauthService == nil {
 		return nil
+	}
+	tokenInfo, refreshErr := s.oauthService.RefreshAccountToken(ctx, account)
+	if refreshErr != nil {
+		err = refreshErr
+	} else {
+		// Preserve existing credentials
+		newCredentials = make(map[string]any)
+		for k, v := range account.Credentials {
+			newCredentials[k] = v
+		}
+		// Update token fields
+		newCredentials["access_token"] = tokenInfo.AccessToken
+		newCredentials["token_type"] = tokenInfo.TokenType
+		newCredentials["expires_in"] = tokenInfo.ExpiresIn
+		newCredentials["expires_at"] = tokenInfo.ExpiresAt
+		if tokenInfo.RefreshToken != "" {
+			newCredentials["refresh_token"] = tokenInfo.RefreshToken
+		}
+		if tokenInfo.Scope != "" {
+			newCredentials["scope"] = tokenInfo.Scope
+		}
 	}
 
 	if err != nil {
@@ -1360,22 +1323,22 @@ func (s *CRSSyncService) PreviewFromCRS(ctx context.Context, input SyncFromCRSIn
 		if authType == "" {
 			authType = AccountTypeOAuth
 		}
-		classify(src.ID, src.Kind, src.Name, PlatformAnthropic, authType)
+		classify(src.ID, src.Kind, src.Name, "anthropic", authType)
 	}
 	for _, src := range exported.Data.ClaudeConsoleAccounts {
-		classify(src.ID, src.Kind, src.Name, PlatformAnthropic, AccountTypeAPIKey)
+		classify(src.ID, src.Kind, src.Name, "anthropic", AccountTypeAPIKey)
 	}
 	for _, src := range exported.Data.OpenAIOAuthAccounts {
-		classify(src.ID, src.Kind, src.Name, PlatformOpenAI, AccountTypeOAuth)
+		classify(src.ID, src.Kind, src.Name, "openai", AccountTypeOAuth)
 	}
 	for _, src := range exported.Data.OpenAIResponsesAccounts {
-		classify(src.ID, src.Kind, src.Name, PlatformOpenAI, AccountTypeAPIKey)
+		classify(src.ID, src.Kind, src.Name, "openai", AccountTypeAPIKey)
 	}
 	for _, src := range exported.Data.GeminiOAuthAccounts {
-		classify(src.ID, src.Kind, src.Name, PlatformGemini, AccountTypeOAuth)
+		classify(src.ID, src.Kind, src.Name, "gemini", AccountTypeOAuth)
 	}
 	for _, src := range exported.Data.GeminiAPIKeyAccounts {
-		classify(src.ID, src.Kind, src.Name, PlatformGemini, AccountTypeAPIKey)
+		classify(src.ID, src.Kind, src.Name, "gemini", AccountTypeAPIKey)
 	}
 
 	return result, nil

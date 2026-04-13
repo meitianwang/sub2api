@@ -72,13 +72,14 @@ func (s *OpsService) GetAccountAvailabilityStats(ctx context.Context, platformFi
 
 		isAvailable := acc.Status == StatusActive && acc.Schedulable && !isRateLimited && !isOverloaded && !isTempUnsched
 
-		if acc.Platform != "" {
-			if _, ok := platform[acc.Platform]; !ok {
-				platform[acc.Platform] = &PlatformAvailability{
-					Platform: acc.Platform,
+		{
+			const platformKey = "anthropic"
+			if _, ok := platform[platformKey]; !ok {
+				platform[platformKey] = &PlatformAvailability{
+					Platform: platformKey,
 				}
 			}
-			p := platform[acc.Platform]
+			p := platform[platformKey]
 			p.TotalAccounts++
 			if isAvailable {
 				p.AvailableCount++
@@ -124,7 +125,7 @@ func (s *OpsService) GetAccountAvailabilityStats(ctx context.Context, platformFi
 		item := &AccountAvailability{
 			AccountID:   acc.ID,
 			AccountName: acc.Name,
-			Platform:    acc.Platform,
+			Platform:    "anthropic",
 			GroupID:     displayGroupID,
 			GroupName:   displayGroupName,
 			Status:      acc.Status,

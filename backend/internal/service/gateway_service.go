@@ -872,7 +872,7 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 				slog.Debug("account_scheduling_account_detail",
 					"account_id", acc.ID,
 					"name", acc.Name,
-					"platform", acc.Platform,
+					"platform", "anthropic",
 					"type", acc.Type,
 					"status", acc.Status,
 					"tls_fingerprint", acc.IsTLSFingerprintEnabled())
@@ -903,7 +903,7 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 		slog.Debug("account_scheduling_account_detail",
 			"account_id", acc.ID,
 			"name", acc.Name,
-			"platform", acc.Platform,
+			"platform", "anthropic",
 			"type", acc.Type,
 			"status", acc.Status,
 			"tls_fingerprint", acc.IsTLSFingerprintEnabled())
@@ -1768,7 +1768,7 @@ func (s *GatewayService) GetAccessToken(ctx context.Context, account *Account) (
 
 func (s *GatewayService) getOAuthToken(ctx context.Context, account *Account) (string, string, error) {
 	// 对于 Anthropic OAuth 账号，使用 ClaudeTokenProvider 获取缓存的 token
-	if account.Platform == PlatformAnthropic && account.Type == AccountTypeOAuth && s.claudeTokenProvider != nil {
+	if account.Type == AccountTypeOAuth && s.claudeTokenProvider != nil {
 		accessToken, err := s.claudeTokenProvider.GetAccessToken(ctx, account)
 		if err != nil {
 			return "", "", err

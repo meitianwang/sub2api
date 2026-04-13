@@ -57,7 +57,6 @@ func TestRateLimitService_HandleUpstreamError_OAuth401SetsTempUnschedulable(t *t
 		service.SetTokenCacheInvalidator(invalidator)
 		account := &Account{
 			ID:       100,
-			Platform: PlatformGemini,
 			Type:     AccountTypeOAuth,
 			Credentials: map[string]any{
 				"temp_unschedulable_enabled": true,
@@ -89,7 +88,6 @@ func TestRateLimitService_HandleUpstreamError_OAuth401SetsTempUnschedulable(t *t
 		service.SetTokenCacheInvalidator(invalidator)
 		account := &Account{
 			ID:       100,
-			Platform: PlatformAnthropic,
 			Type:     AccountTypeOAuth,
 		}
 
@@ -109,7 +107,6 @@ func TestRateLimitService_HandleUpstreamError_OAuth401InvalidatorError(t *testin
 	service.SetTokenCacheInvalidator(invalidator)
 	account := &Account{
 		ID:       101,
-		Platform: PlatformGemini,
 		Type:     AccountTypeOAuth,
 	}
 
@@ -129,7 +126,6 @@ func TestRateLimitService_HandleUpstreamError_NonOAuth401(t *testing.T) {
 	service.SetTokenCacheInvalidator(invalidator)
 	account := &Account{
 		ID:       102,
-		Platform: PlatformOpenAI,
 		Type:     AccountTypeAPIKey,
 	}
 
@@ -145,7 +141,6 @@ func TestRateLimitService_HandleUpstreamError_OAuth401UsesCredentialsUpdater(t *
 	service := NewRateLimitService(repo, nil, &config.Config{}, nil, nil)
 	account := &Account{
 		ID:       103,
-		Platform: PlatformOpenAI,
 		Type:     AccountTypeOAuth,
 		Credentials: map[string]any{
 			"access_token": "token",

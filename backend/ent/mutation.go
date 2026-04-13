@@ -2256,7 +2256,6 @@ type AccountMutation struct {
 	deleted_at                *time.Time
 	name                      *string
 	notes                     *string
-	platform                  *string
 	_type                     *string
 	credentials               *map[string]interface{}
 	extra                     *map[string]interface{}
@@ -2598,42 +2597,6 @@ func (m *AccountMutation) NotesCleared() bool {
 func (m *AccountMutation) ResetNotes() {
 	m.notes = nil
 	delete(m.clearedFields, account.FieldNotes)
-}
-
-// SetPlatform sets the "platform" field.
-func (m *AccountMutation) SetPlatform(s string) {
-	m.platform = &s
-}
-
-// Platform returns the value of the "platform" field in the mutation.
-func (m *AccountMutation) Platform() (r string, exists bool) {
-	v := m.platform
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldPlatform returns the old "platform" field's value of the Account entity.
-// If the Account object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccountMutation) OldPlatform(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPlatform requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
-	}
-	return oldValue.Platform, nil
-}
-
-// ResetPlatform resets all changes to the "platform" field.
-func (m *AccountMutation) ResetPlatform() {
-	m.platform = nil
 }
 
 // SetType sets the "type" field.
@@ -3847,7 +3810,7 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 28)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, account.FieldCreatedAt)
 	}
@@ -3862,9 +3825,6 @@ func (m *AccountMutation) Fields() []string {
 	}
 	if m.notes != nil {
 		fields = append(fields, account.FieldNotes)
-	}
-	if m.platform != nil {
-		fields = append(fields, account.FieldPlatform)
 	}
 	if m._type != nil {
 		fields = append(fields, account.FieldType)
@@ -3950,8 +3910,6 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case account.FieldNotes:
 		return m.Notes()
-	case account.FieldPlatform:
-		return m.Platform()
 	case account.FieldType:
 		return m.GetType()
 	case account.FieldCredentials:
@@ -4015,8 +3973,6 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldName(ctx)
 	case account.FieldNotes:
 		return m.OldNotes(ctx)
-	case account.FieldPlatform:
-		return m.OldPlatform(ctx)
 	case account.FieldType:
 		return m.OldType(ctx)
 	case account.FieldCredentials:
@@ -4104,13 +4060,6 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetNotes(v)
-		return nil
-	case account.FieldPlatform:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetPlatform(v)
 		return nil
 	case account.FieldType:
 		v, ok := value.(string)
@@ -4473,9 +4422,6 @@ func (m *AccountMutation) ResetField(name string) error {
 		return nil
 	case account.FieldNotes:
 		m.ResetNotes()
-		return nil
-	case account.FieldPlatform:
-		m.ResetPlatform()
 		return nil
 	case account.FieldType:
 		m.ResetType()

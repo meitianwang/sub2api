@@ -1093,13 +1093,13 @@ func (s *SettingService) GetFallbackModel(ctx context.Context, platform string) 
 	var defaultModel string
 
 	switch platform {
-	case PlatformAnthropic:
+	case "anthropic":
 		key = SettingKeyFallbackModelAnthropic
 		defaultModel = "claude-3-5-sonnet-20241022"
-	case PlatformOpenAI:
+	case "openai":
 		key = SettingKeyFallbackModelOpenAI
 		defaultModel = "gpt-4o"
-	case PlatformGemini:
+	case "gemini":
 		key = SettingKeyFallbackModelGemini
 		defaultModel = "gemini-2.5-pro"
 	default:

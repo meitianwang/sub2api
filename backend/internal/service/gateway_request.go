@@ -10,7 +10,6 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -123,7 +122,7 @@ func normalizeSessionUserAgentFallback(raw string) string {
 }
 
 // ParseGatewayRequest 解析网关请求体并返回结构化结果。
-// protocol 指定请求协议格式（domain.PlatformAnthropic / domain.PlatformGemini），
+// protocol 指定请求协议格式（"anthropic" / "gemini"），
 // 不同协议使用不同的 system/messages 字段名。
 func ParseGatewayRequest(body []byte, protocol string) (*ParsedRequest, error) {
 	// 保持与旧实现一致：请求体必须是合法 JSON。
@@ -188,7 +187,7 @@ func ParseGatewayRequest(body []byte, protocol string) (*ParsedRequest, error) {
 	// 使用 gjson 抽取目标字段的 Raw，再对该子树进行 Unmarshal。
 
 	switch protocol {
-	case domain.PlatformGemini:
+	case "gemini":
 		// Gemini 原生格式: systemInstruction.parts / contents
 		if sysParts := gjson.Get(jsonStr, "systemInstruction.parts"); sysParts.Exists() && sysParts.IsArray() {
 			var parts []any

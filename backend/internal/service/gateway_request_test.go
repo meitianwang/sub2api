@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -86,7 +85,7 @@ func TestParseGatewayRequest_GeminiContents(t *testing.T) {
 			{"role": "user", "parts": [{"text": "How are you?"}]}
 		]
 	}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.Len(t, parsed.Messages, 3, "should parse contents as Messages")
 	require.False(t, parsed.HasSystem, "Gemini format should not set HasSystem")
@@ -102,7 +101,7 @@ func TestParseGatewayRequest_GeminiSystemInstruction(t *testing.T) {
 			{"role": "user", "parts": [{"text": "Hello"}]}
 		]
 	}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.NotNil(t, parsed.System, "should parse systemInstruction.parts as System")
 	parts, ok := parsed.System.([]any)
@@ -119,7 +118,7 @@ func TestParseGatewayRequest_GeminiWithModel(t *testing.T) {
 		"model": "gemini-2.5-pro",
 		"contents": [{"role": "user", "parts": [{"text": "test"}]}]
 	}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.Equal(t, "gemini-2.5-pro", parsed.Model)
 	require.Len(t, parsed.Messages, 1)
@@ -132,7 +131,7 @@ func TestParseGatewayRequest_GeminiIgnoresAnthropicFields(t *testing.T) {
 		"messages": [{"role": "user", "content": "ignored"}],
 		"contents": [{"role": "user", "parts": [{"text": "real content"}]}]
 	}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.False(t, parsed.HasSystem, "Gemini protocol should not parse Anthropic system field")
 	require.Nil(t, parsed.System, "no systemInstruction = nil System")
@@ -141,14 +140,14 @@ func TestParseGatewayRequest_GeminiIgnoresAnthropicFields(t *testing.T) {
 
 func TestParseGatewayRequest_GeminiEmptyContents(t *testing.T) {
 	body := []byte(`{"contents": []}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.Empty(t, parsed.Messages)
 }
 
 func TestParseGatewayRequest_GeminiNoContents(t *testing.T) {
 	body := []byte(`{"model": "gemini-2.5-flash"}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformGemini)
+	parsed, err := ParseGatewayRequest(body, "gemini")
 	require.NoError(t, err)
 	require.Nil(t, parsed.Messages)
 	require.Equal(t, "gemini-2.5-flash", parsed.Model)
@@ -162,7 +161,7 @@ func TestParseGatewayRequest_AnthropicIgnoresGeminiFields(t *testing.T) {
 		"contents": [{"role": "user", "parts": [{"text": "ignored"}]}],
 		"systemInstruction": {"parts": [{"text": "ignored"}]}
 	}`)
-	parsed, err := ParseGatewayRequest(body, domain.PlatformAnthropic)
+	parsed, err := ParseGatewayRequest(body, "anthropic")
 	require.NoError(t, err)
 	require.True(t, parsed.HasSystem)
 	require.Equal(t, "real system", parsed.System)
@@ -1058,7 +1057,7 @@ func parseGatewayRequestOld(body []byte, protocol string) (*ParsedRequest, error
 
 	// system / messages（按协议分支）
 	switch protocol {
-	case domain.PlatformGemini:
+	case "gemini":
 		if sysInst, ok := req["systemInstruction"].(map[string]any); ok {
 			if parts, ok := sysInst["parts"].([]any); ok {
 				parsed.System = parts

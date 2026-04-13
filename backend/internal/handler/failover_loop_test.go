@@ -150,7 +150,7 @@ func TestHandleFailoverError_BasicSwitch(t *testing.T) {
 
 		err := newTestFailoverErr(500, false, false)
 		start := time.Now()
-		action := fs.HandleFailoverError(context.Background(), mock, 200, service.PlatformAnthropic, err)
+		action := fs.HandleFailoverError(context.Background(), mock, 200, "anthropic", err)
 		elapsed := time.Since(start)
 
 		require.Equal(t, FailoverContinue, action)
@@ -529,15 +529,15 @@ func TestHandleFailoverError_IntegrationScenario(t *testing.T) {
 		err := newTestFailoverErr(500, false, false)
 
 		// 第一次切换
-		action := fs.HandleFailoverError(context.Background(), mock, 100, service.PlatformAnthropic, err)
+		action := fs.HandleFailoverError(context.Background(), mock, 100, "anthropic", err)
 		require.Equal(t, FailoverContinue, action)
 
 		// 第二次切换
-		action = fs.HandleFailoverError(context.Background(), mock, 200, service.PlatformAnthropic, err)
+		action = fs.HandleFailoverError(context.Background(), mock, 200, "anthropic", err)
 		require.Equal(t, FailoverContinue, action)
 
 		// 第三次：耗尽
-		action = fs.HandleFailoverError(context.Background(), mock, 300, service.PlatformAnthropic, err)
+		action = fs.HandleFailoverError(context.Background(), mock, 300, "anthropic", err)
 		require.Equal(t, FailoverExhausted, action)
 	})
 

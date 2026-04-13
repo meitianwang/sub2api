@@ -91,20 +91,6 @@ func (_u *AccountUpdate) ClearNotes() *AccountUpdate {
 	return _u
 }
 
-// SetPlatform sets the "platform" field.
-func (_u *AccountUpdate) SetPlatform(v string) *AccountUpdate {
-	_u.mutation.SetPlatform(v)
-	return _u
-}
-
-// SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (_u *AccountUpdate) SetNillablePlatform(v *string) *AccountUpdate {
-	if v != nil {
-		_u.SetPlatform(*v)
-	}
-	return _u
-}
-
 // SetType sets the "type" field.
 func (_u *AccountUpdate) SetType(v string) *AccountUpdate {
 	_u.mutation.SetType(v)
@@ -640,11 +626,6 @@ func (_u *AccountUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Platform(); ok {
-		if err := account.PlatformValidator(v); err != nil {
-			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Account.platform": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := account.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Account.type": %w`, err)}
@@ -692,9 +673,6 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.NotesCleared() {
 		_spec.ClearField(account.FieldNotes, field.TypeString)
-	}
-	if value, ok := _u.mutation.Platform(); ok {
-		_spec.SetField(account.FieldPlatform, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(account.FieldType, field.TypeString, value)
@@ -1015,20 +993,6 @@ func (_u *AccountUpdateOne) SetNillableNotes(v *string) *AccountUpdateOne {
 // ClearNotes clears the value of the "notes" field.
 func (_u *AccountUpdateOne) ClearNotes() *AccountUpdateOne {
 	_u.mutation.ClearNotes()
-	return _u
-}
-
-// SetPlatform sets the "platform" field.
-func (_u *AccountUpdateOne) SetPlatform(v string) *AccountUpdateOne {
-	_u.mutation.SetPlatform(v)
-	return _u
-}
-
-// SetNillablePlatform sets the "platform" field if the given value is not nil.
-func (_u *AccountUpdateOne) SetNillablePlatform(v *string) *AccountUpdateOne {
-	if v != nil {
-		_u.SetPlatform(*v)
-	}
 	return _u
 }
 
@@ -1580,11 +1544,6 @@ func (_u *AccountUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Account.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Platform(); ok {
-		if err := account.PlatformValidator(v); err != nil {
-			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "Account.platform": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := account.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Account.type": %w`, err)}
@@ -1649,9 +1608,6 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 	}
 	if _u.mutation.NotesCleared() {
 		_spec.ClearField(account.FieldNotes, field.TypeString)
-	}
-	if value, ok := _u.mutation.Platform(); ok {
-		_spec.SetField(account.FieldPlatform, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(account.FieldType, field.TypeString, value)

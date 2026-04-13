@@ -181,7 +181,7 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 		ID:                      a.ID,
 		Name:                    a.Name,
 		Notes:                   a.Notes,
-		Platform:                a.Platform,
+		Platform:                "anthropic",
 		Type:                    a.Type,
 		Credentials:             a.Credentials,
 		Extra:                   a.Extra,

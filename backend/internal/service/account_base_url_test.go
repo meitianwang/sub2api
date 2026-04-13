@@ -16,7 +16,6 @@ func TestGetBaseURL(t *testing.T) {
 			name: "non-apikey type returns empty",
 			account: Account{
 				Type:     AccountTypeOAuth,
-				Platform: PlatformAnthropic,
 			},
 			expected: "",
 		},
@@ -24,7 +23,6 @@ func TestGetBaseURL(t *testing.T) {
 			name: "apikey without base_url returns default anthropic",
 			account: Account{
 				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAnthropic,
 				Credentials: map[string]any{},
 			},
 			expected: "https://api.anthropic.com",
@@ -33,7 +31,6 @@ func TestGetBaseURL(t *testing.T) {
 			name: "apikey with custom base_url",
 			account: Account{
 				Type:        AccountTypeAPIKey,
-				Platform:    PlatformAnthropic,
 				Credentials: map[string]any{"base_url": "https://custom.example.com"},
 			},
 			expected: "https://custom.example.com",

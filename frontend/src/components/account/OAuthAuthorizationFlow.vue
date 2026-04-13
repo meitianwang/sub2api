@@ -522,7 +522,6 @@ import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@/composables/useClipboard'
 import Icon from '@/components/icons/Icon.vue'
 import type { AddMethod, AuthInputMethod } from '@/composables/useAccountOAuth'
-import type { AccountPlatform } from '@/types'
 
 interface Props {
   addMethod: AddMethod
@@ -537,7 +536,7 @@ interface Props {
   showCookieOption?: boolean // Whether to show cookie auto-auth option
   showRefreshTokenOption?: boolean // Whether to show refresh token input option (OpenAI only)
   showMobileRefreshTokenOption?: boolean // Whether to show mobile refresh token option (OpenAI only)
-  platform?: AccountPlatform // Platform type for different UI/text
+  platform?: string // Platform type for different UI/text
   showProjectId?: boolean // New prop to control project ID visibility
 }
 

@@ -149,7 +149,6 @@ func (s *AccountService) Create(ctx context.Context, req CreateAccountRequest) (
 	account := &Account{
 		Name:        req.Name,
 		Notes:       normalizeAccountNotes(req.Notes),
-		Platform:    req.Platform,
 		Type:        req.Type,
 		Credentials: req.Credentials,
 		Extra:       req.Extra,
@@ -373,12 +372,7 @@ func (s *AccountService) TestCredentials(ctx context.Context, id int64) error {
 		return fmt.Errorf("get account: %w", err)
 	}
 
-	// 根据平台执行不同的测试逻辑
-	switch account.Platform {
-	case PlatformAnthropic:
-		// TODO: 测试Anthropic API凭证
-		return nil
-	default:
-		return fmt.Errorf("unsupported platform: %s", account.Platform)
-	}
+	// TODO: 测试Anthropic API凭证
+	_ = account
+	return nil
 }
