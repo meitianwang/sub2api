@@ -1,2 +1,2 @@
--- Migration 081: originally added require_oauth_only and require_privacy_set columns.
--- These columns have been removed. This migration is now a no-op.
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS require_oauth_only BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS require_privacy_set BOOLEAN NOT NULL DEFAULT false;
