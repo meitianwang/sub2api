@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"log/slog"
-	"strconv"
 )
 
 type TokenCacheInvalidator interface {
@@ -28,34 +27,9 @@ func (c *CompositeTokenCacheInvalidator) InvalidateToken(ctx context.Context, ac
 		return nil
 	}
 
-	var keysToDelete []string
-	accountIDKey := "account:" + strconv.FormatInt(account.ID, 10)
-
-	switch account.Platform {
-	case PlatformGemini:
-		// Gemini 可能有两种缓存键：project_id 或 account_id
-		// 首次获取 token 时可能没有 project_id，之后自动检测到 project_id 后会使用新 key
-		// 刷新时需要同时删除两种可能的 key，确保不会遗留旧缓存
-		keysToDelete = append(keysToDelete, GeminiTokenCacheKey(account))
-		keysToDelete = append(keysToDelete, "gemini:"+accountIDKey)
-	case PlatformOpenAI:
-		keysToDelete = append(keysToDelete, OpenAITokenCacheKey(account))
-	case PlatformAnthropic:
-		keysToDelete = append(keysToDelete, ClaudeTokenCacheKey(account))
-	default:
-		return nil
-	}
-
-	// 删除所有可能的缓存键（去重后）
-	seen := make(map[string]bool)
-	for _, key := range keysToDelete {
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-		if err := c.cache.DeleteAccessToken(ctx, key); err != nil {
-			slog.Warn("token_cache_delete_failed", "key", key, "account_id", account.ID, "error", err)
-		}
+	key := ClaudeTokenCacheKey(account)
+	if err := c.cache.DeleteAccessToken(ctx, key); err != nil {
+		slog.Warn("token_cache_delete_failed", "key", key, "account_id", account.ID, "error", err)
 	}
 
 	return nil

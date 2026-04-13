@@ -11,7 +11,6 @@ import (
 const (
 	SchedulerModeSingle = "single"
 	SchedulerModeMixed  = "mixed"
-	SchedulerModeForced = "forced"
 )
 
 type SchedulerBucket struct {

@@ -676,7 +676,6 @@ func (s *GatewayService) SelectAccountForModel(ctx context.Context, groupID *int
 
 // SelectAccountForModelWithExclusions selects an account supporting the requested model while excluding specified accounts.
 func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context, groupID *int64, sessionHash string, requestedModel string, excludedIDs map[int64]struct{}) (*Account, error) {
-	var platform string
 	if groupID != nil {
 		group, resolvedGroupID, err := s.resolveGatewayGroup(ctx, groupID)
 		if err != nil {
@@ -684,12 +683,9 @@ func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context
 		}
 		groupID = resolvedGroupID
 		ctx = s.withGroupContext(ctx, group)
-		platform = PlatformAnthropic
-	} else {
-		platform = PlatformAnthropic
 	}
 
-	return s.selectAccountForModelWithPlatform(ctx, groupID, sessionHash, requestedModel, excludedIDs, platform)
+	return s.selectAccount(ctx, groupID, sessionHash, requestedModel, excludedIDs)
 }
 
 // SelectAccountWithLoadAwareness selects account with load-awareness and wait plan.
@@ -799,14 +795,14 @@ func (s *GatewayService) ResolveGroupByID(ctx context.Context, groupID int64) (*
 	return s.resolveGroupByID(ctx, groupID)
 }
 
-func (s *GatewayService) routingAccountIDsForRequest(ctx context.Context, groupID *int64, requestedModel string, platform string) []int64 {
+func (s *GatewayService) routingAccountIDsForRequest(ctx context.Context, groupID *int64, requestedModel string) []int64 {
 	if groupID == nil || requestedModel == "" {
 		return nil
 	}
 	group, err := s.resolveGroupByID(ctx, *groupID)
 	if err != nil || group == nil {
 		if s.debugModelRoutingEnabled() {
-			logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] resolve group failed: group_id=%v model=%s platform=%s err=%v", derefGroupID(groupID), requestedModel, platform, err)
+			logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] resolve group failed: group_id=%v model=%s err=%v", derefGroupID(groupID), requestedModel, err)
 		}
 		return nil
 	}
@@ -865,18 +861,12 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 	return group, resolvedID, nil
 }
 
-func (s *GatewayService) resolvePlatform(ctx context.Context) (string, bool, error) {
-	return PlatformAnthropic, false, nil
-}
-
-func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *int64, platform string, hasForcePlatform bool) ([]Account, bool, error) {
+func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *int64) ([]Account, error) {
 	if s.schedulerSnapshot != nil {
-		accounts, useMixed, err := s.schedulerSnapshot.ListSchedulableAccounts(ctx, groupID, platform, hasForcePlatform)
+		accounts, err := s.schedulerSnapshot.ListSchedulableAccounts(ctx, groupID)
 		if err == nil {
 			slog.Debug("account_scheduling_list_snapshot",
 				"group_id", derefGroupID(groupID),
-				"platform", platform,
-				"use_mixed", useMixed,
 				"count", len(accounts))
 			for _, acc := range accounts {
 				slog.Debug("account_scheduling_account_detail",
@@ -888,17 +878,14 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 					"tls_fingerprint", acc.IsTLSFingerprintEnabled())
 			}
 		}
-		return accounts, useMixed, err
+		return accounts, err
 	}
-	const useMixed = false
 
 	var accounts []Account
 	var err error
 	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
 		accounts, err = s.accountRepo.ListSchedulable(ctx)
 	} else if groupID != nil {
-		// 透传模式：按分组查询全部可调度账号，不按 platform 过滤。
-		// 同一个上游 Key 支持多种协议，ForwardPassthrough 根据请求路径自动选择认证方式。
 		accounts, err = s.accountRepo.ListSchedulableByGroupID(ctx, *groupID)
 	} else {
 		accounts, err = s.accountRepo.ListSchedulableUngrouped(ctx)
@@ -906,13 +893,11 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 	if err != nil {
 		slog.Debug("account_scheduling_list_failed",
 			"group_id", derefGroupID(groupID),
-			"platform", platform,
 			"error", err)
-		return nil, useMixed, err
+		return nil, err
 	}
 	slog.Debug("account_scheduling_list",
 		"group_id", derefGroupID(groupID),
-		"platform", platform,
 		"count", len(accounts))
 	for _, acc := range accounts {
 		slog.Debug("account_scheduling_account_detail",
@@ -923,12 +908,7 @@ func (s *GatewayService) listSchedulableAccounts(ctx context.Context, groupID *i
 			"status", acc.Status,
 			"tls_fingerprint", acc.IsTLSFingerprintEnabled())
 	}
-	return accounts, useMixed, nil
-}
-
-func (s *GatewayService) isAccountAllowedForPlatform(account *Account, _ string, _ bool) bool {
-	// 透传模式：不按 platform 过滤，同一个上游 Key 支持多种协议。
-	return account != nil
+	return accounts, nil
 }
 
 func (s *GatewayService) isAccountSchedulableForSelection(account *Account) bool {
@@ -1402,10 +1382,8 @@ func shuffleWithinPriority(accounts []*Account) {
 	}
 }
 
-// selectAccountForModelWithPlatform 选择单平台账户（完全隔离）
-func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, groupID *int64, sessionHash string, requestedModel string, excludedIDs map[int64]struct{}, platform string) (*Account, error) {
-	preferOAuth := platform == PlatformGemini
-	routingAccountIDs := s.routingAccountIDsForRequest(ctx, groupID, requestedModel, platform)
+func (s *GatewayService) selectAccount(ctx context.Context, groupID *int64, sessionHash string, requestedModel string, excludedIDs map[int64]struct{}) (*Account, error) {
+	routingAccountIDs := s.routingAccountIDsForRequest(ctx, groupID, requestedModel)
 
 	var accounts []Account
 	accountsLoaded := false
@@ -1414,8 +1392,8 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 	// Model routing is honored so switching model can switch upstream account within the same sticky session.
 	if len(routingAccountIDs) > 0 {
 		if s.debugModelRoutingEnabled() {
-			logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] legacy routed begin: group_id=%v model=%s platform=%s session=%s routed_ids=%v",
-				derefGroupID(groupID), requestedModel, platform, shortSessionHash(sessionHash), routingAccountIDs)
+			logger.LegacyPrintf("service.gateway", "[ModelRoutingDebug] legacy routed begin: group_id=%v model=%s session=%s routed_ids=%v",
+				derefGroupID(groupID), requestedModel, shortSessionHash(sessionHash), routingAccountIDs)
 		}
 		// 1) Sticky session only applies if the bound account is within the routing set.
 		if sessionHash != "" && s.cache != nil {
@@ -1442,7 +1420,7 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 
 		// 2) Select an account from the routed candidates.
 		var err error
-		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, false)
+		accounts, err = s.listSchedulableAccounts(ctx, groupID)
 		if err != nil {
 			return nil, fmt.Errorf("query accounts failed: %w", err)
 		}
@@ -1501,9 +1479,7 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 				case acc.LastUsedAt != nil && selected.LastUsedAt == nil:
 					// keep selected (never used is preferred)
 				case acc.LastUsedAt == nil && selected.LastUsedAt == nil:
-					if preferOAuth && acc.Type != selected.Type && acc.Type == AccountTypeOAuth {
-						selected = acc
-					}
+					// both never used, keep first
 				default:
 					if acc.LastUsedAt.Before(*selected.LastUsedAt) {
 						selected = acc
@@ -1549,7 +1525,7 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 	// 2. 获取可调度账号列表（单平台）
 	if !accountsLoaded {
 		var err error
-		accounts, _, err = s.listSchedulableAccounts(ctx, groupID, platform, false)
+		accounts, err = s.listSchedulableAccounts(ctx, groupID)
 		if err != nil {
 			return nil, fmt.Errorf("query accounts failed: %w", err)
 		}
@@ -1599,9 +1575,7 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 			case acc.LastUsedAt != nil && selected.LastUsedAt == nil:
 				// keep selected (never used is preferred)
 			case acc.LastUsedAt == nil && selected.LastUsedAt == nil:
-				if preferOAuth && acc.Type != selected.Type && acc.Type == AccountTypeOAuth {
-					selected = acc
-				}
+				// both never used, keep first
 			default:
 				if acc.LastUsedAt.Before(*selected.LastUsedAt) {
 					selected = acc
@@ -1611,7 +1585,7 @@ func (s *GatewayService) selectAccountForModelWithPlatform(ctx context.Context, 
 	}
 
 	if selected == nil {
-		stats := s.logDetailedSelectionFailure(ctx, groupID, sessionHash, requestedModel, platform, accounts, excludedIDs, false)
+		stats := s.logDetailedSelectionFailure(ctx, groupID, sessionHash, requestedModel, accounts, excludedIDs)
 		if requestedModel != "" {
 			return nil, fmt.Errorf("%w supporting model: %s (%s)", ErrNoAvailableAccounts, requestedModel, summarizeSelectionFailureStats(stats))
 		}
@@ -1634,10 +1608,8 @@ type selectionFailureStats struct {
 	Eligible           int
 	Excluded           int
 	Unschedulable      int
-	PlatformFiltered   int
 	ModelUnsupported   int
 	ModelRateLimited   int
-	SamplePlatformIDs  []int64
 	SampleMappingIDs   []int64
 	SampleRateLimitIDs []string
 }
@@ -1652,27 +1624,22 @@ func (s *GatewayService) logDetailedSelectionFailure(
 	groupID *int64,
 	sessionHash string,
 	requestedModel string,
-	platform string,
 	accounts []Account,
 	excludedIDs map[int64]struct{},
-	allowMixedScheduling bool,
 ) selectionFailureStats {
-	stats := s.collectSelectionFailureStats(ctx, accounts, requestedModel, platform, excludedIDs, allowMixedScheduling)
+	stats := s.collectSelectionFailureStats(ctx, accounts, requestedModel, excludedIDs)
 	logger.LegacyPrintf(
 		"service.gateway",
-		"[SelectAccountDetailed] group_id=%v model=%s platform=%s session=%s total=%d eligible=%d excluded=%d unschedulable=%d platform_filtered=%d model_unsupported=%d model_rate_limited=%d sample_platform_filtered=%v sample_model_unsupported=%v sample_model_rate_limited=%v",
+		"[SelectAccountDetailed] group_id=%v model=%s session=%s total=%d eligible=%d excluded=%d unschedulable=%d model_unsupported=%d model_rate_limited=%d sample_model_unsupported=%v sample_model_rate_limited=%v",
 		derefGroupID(groupID),
 		requestedModel,
-		platform,
 		shortSessionHash(sessionHash),
 		stats.Total,
 		stats.Eligible,
 		stats.Excluded,
 		stats.Unschedulable,
-		stats.PlatformFiltered,
 		stats.ModelUnsupported,
 		stats.ModelRateLimited,
-		stats.SamplePlatformIDs,
 		stats.SampleMappingIDs,
 		stats.SampleRateLimitIDs,
 	)
@@ -1683,9 +1650,7 @@ func (s *GatewayService) collectSelectionFailureStats(
 	ctx context.Context,
 	accounts []Account,
 	requestedModel string,
-	platform string,
 	excludedIDs map[int64]struct{},
-	allowMixedScheduling bool,
 ) selectionFailureStats {
 	stats := selectionFailureStats{
 		Total: len(accounts),
@@ -1693,15 +1658,12 @@ func (s *GatewayService) collectSelectionFailureStats(
 
 	for i := range accounts {
 		acc := &accounts[i]
-		diagnosis := s.diagnoseSelectionFailure(ctx, acc, requestedModel, platform, excludedIDs, allowMixedScheduling)
+		diagnosis := s.diagnoseSelectionFailure(ctx, acc, requestedModel, excludedIDs)
 		switch diagnosis.Category {
 		case "excluded":
 			stats.Excluded++
 		case "unschedulable":
 			stats.Unschedulable++
-		case "platform_filtered":
-			stats.PlatformFiltered++
-			stats.SamplePlatformIDs = appendSelectionFailureSampleID(stats.SamplePlatformIDs, acc.ID)
 		case "model_unsupported":
 			stats.ModelUnsupported++
 			stats.SampleMappingIDs = appendSelectionFailureSampleID(stats.SampleMappingIDs, acc.ID)
@@ -1721,9 +1683,7 @@ func (s *GatewayService) diagnoseSelectionFailure(
 	ctx context.Context,
 	acc *Account,
 	requestedModel string,
-	platform string,
 	excludedIDs map[int64]struct{},
-	allowMixedScheduling bool,
 ) selectionFailureDiagnosis {
 	if acc == nil {
 		return selectionFailureDiagnosis{Category: "unschedulable", Detail: "account_nil"}
@@ -1733,12 +1693,6 @@ func (s *GatewayService) diagnoseSelectionFailure(
 	}
 	if !s.isAccountSchedulableForSelection(acc) {
 		return selectionFailureDiagnosis{Category: "unschedulable", Detail: "generic_unschedulable"}
-	}
-	if isPlatformFilteredForSelection(acc, platform, allowMixedScheduling) {
-		return selectionFailureDiagnosis{
-			Category: "platform_filtered",
-			Detail:   fmt.Sprintf("account_platform=%s requested_platform=%s", acc.Platform, strings.TrimSpace(platform)),
-		}
 	}
 	if requestedModel != "" && !s.isModelSupportedByAccountWithContext(ctx, acc, requestedModel) {
 		return selectionFailureDiagnosis{
@@ -1754,16 +1708,6 @@ func (s *GatewayService) diagnoseSelectionFailure(
 		}
 	}
 	return selectionFailureDiagnosis{Category: "eligible"}
-}
-
-func isPlatformFilteredForSelection(acc *Account, platform string, _ bool) bool {
-	if acc == nil {
-		return true
-	}
-	if strings.TrimSpace(platform) == "" {
-		return false
-	}
-	return acc.Platform != platform
 }
 
 func appendSelectionFailureSampleID(samples []int64, id int64) []int64 {
@@ -1784,12 +1728,11 @@ func appendSelectionFailureRateSample(samples []string, accountID int64, remaini
 
 func summarizeSelectionFailureStats(stats selectionFailureStats) string {
 	return fmt.Sprintf(
-		"total=%d eligible=%d excluded=%d unschedulable=%d platform_filtered=%d model_unsupported=%d model_rate_limited=%d",
+		"total=%d eligible=%d excluded=%d unschedulable=%d model_unsupported=%d model_rate_limited=%d",
 		stats.Total,
 		stats.Eligible,
 		stats.Excluded,
 		stats.Unschedulable,
-		stats.PlatformFiltered,
 		stats.ModelUnsupported,
 		stats.ModelRateLimited,
 	)

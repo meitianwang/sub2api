@@ -119,18 +119,6 @@ func (a *Account) IsOAuth() bool {
 	return a.Type == AccountTypeOAuth || a.Type == AccountTypeSetupToken
 }
 
-// IsPrivacySet 检查账号的 privacy 是否已成功设置。
-// OpenAI: privacy_mode == "training_off"
-// 其他平台: 无 privacy 概念，始终返回 true
-func (a *Account) IsPrivacySet() bool {
-	switch a.Platform {
-	case PlatformOpenAI:
-		return a.getExtraString("privacy_mode") == "training_off"
-	default:
-		return true
-	}
-}
-
 func (a *Account) IsGemini() bool {
 	return a.Platform == PlatformGemini
 }
@@ -149,17 +137,6 @@ func (a *Account) GeminiOAuthType() string {
 func (a *Account) GeminiTierID() string {
 	tierID := strings.TrimSpace(a.GetCredential("tier_id"))
 	return tierID
-}
-
-func (a *Account) IsGeminiCodeAssist() bool {
-	if a.Platform != PlatformGemini || a.Type != AccountTypeOAuth {
-		return false
-	}
-	oauthType := a.GeminiOAuthType()
-	if oauthType == "" {
-		return strings.TrimSpace(a.GetCredential("project_id")) != ""
-	}
-	return oauthType == "code_assist"
 }
 
 func (a *Account) CanGetUsage() bool {
@@ -535,15 +512,6 @@ func (a *Account) GetBaseURL() string {
 	return a.GetCredential("base_url")
 }
 
-// GetGeminiBaseURL 返回 Gemini 兼容端点的 base URL。
-func (a *Account) GetGeminiBaseURL(defaultBaseURL string) string {
-	baseURL := strings.TrimSpace(a.GetCredential("base_url"))
-	if baseURL == "" {
-		return defaultBaseURL
-	}
-	return baseURL
-}
-
 func (a *Account) GetExtraString(key string) string {
 	if a.Extra == nil {
 		return ""
@@ -752,98 +720,6 @@ func (a *Account) IsAnthropic() bool {
 	return a.Platform == PlatformAnthropic
 }
 
-func (a *Account) IsOpenAIOAuth() bool {
-	return a.IsOpenAI() && a.Type == AccountTypeOAuth
-}
-
-func (a *Account) IsOpenAIApiKey() bool {
-	return a.IsOpenAI() && a.Type == AccountTypeAPIKey
-}
-
-func (a *Account) GetOpenAIBaseURL() string {
-	if !a.IsOpenAI() {
-		return ""
-	}
-	if a.Type == AccountTypeAPIKey {
-		baseURL := a.GetCredential("base_url")
-		if baseURL != "" {
-			return baseURL
-		}
-	}
-	return "https://api.openai.com"
-}
-
-func (a *Account) GetOpenAIAccessToken() string {
-	if !a.IsOpenAI() {
-		return ""
-	}
-	return a.GetCredential("access_token")
-}
-
-func (a *Account) GetOpenAIRefreshToken() string {
-	if !a.IsOpenAIOAuth() {
-		return ""
-	}
-	return a.GetCredential("refresh_token")
-}
-
-func (a *Account) GetOpenAIIDToken() string {
-	if !a.IsOpenAIOAuth() {
-		return ""
-	}
-	return a.GetCredential("id_token")
-}
-
-func (a *Account) GetOpenAIApiKey() string {
-	if !a.IsOpenAIApiKey() {
-		return ""
-	}
-	return a.GetCredential("api_key")
-}
-
-func (a *Account) GetOpenAIUserAgent() string {
-	if !a.IsOpenAI() {
-		return ""
-	}
-	return a.GetCredential("user_agent")
-}
-
-func (a *Account) GetChatGPTAccountID() string {
-	if !a.IsOpenAIOAuth() {
-		return ""
-	}
-	return a.GetCredential("chatgpt_account_id")
-}
-
-func (a *Account) GetChatGPTUserID() string {
-	if !a.IsOpenAIOAuth() {
-		return ""
-	}
-	return a.GetCredential("chatgpt_user_id")
-}
-
-func (a *Account) GetOpenAIOrganizationID() string {
-	if !a.IsOpenAIOAuth() {
-		return ""
-	}
-	return a.GetCredential("organization_id")
-}
-
-func (a *Account) GetOpenAITokenExpiresAt() *time.Time {
-	if !a.IsOpenAIOAuth() {
-		return nil
-	}
-	return a.GetCredentialAsTime("expires_at")
-}
-
-func (a *Account) IsOpenAITokenExpired() bool {
-	expiresAt := a.GetOpenAITokenExpiresAt()
-	if expiresAt == nil {
-		return false
-	}
-	return time.Now().Add(60 * time.Second).After(*expiresAt)
-}
-
 // IsOpenAIPassthroughEnabled 返回 OpenAI 账号是否启用“自动透传（仅替换认证）”。
 //
 // 新字段：accounts.extra.openai_passthrough。
@@ -862,177 +738,6 @@ func (a *Account) IsOpenAIPassthroughEnabled() bool {
 	return false
 }
 
-// IsOpenAIResponsesWebSocketV2Enabled 返回 OpenAI 账号是否开启 Responses WebSocket v2。
-//
-// 分类型新字段：
-// - OAuth 账号：accounts.extra.openai_oauth_responses_websockets_v2_enabled
-// - API Key 账号：accounts.extra.openai_apikey_responses_websockets_v2_enabled
-//
-// 兼容字段：
-// - accounts.extra.responses_websockets_v2_enabled
-// - accounts.extra.openai_ws_enabled（历史开关）
-//
-// 优先级：
-// 1. 按账号类型读取分类型字段
-// 2. 分类型字段缺失时，回退兼容字段
-func (a *Account) IsOpenAIResponsesWebSocketV2Enabled() bool {
-	if a == nil || !a.IsOpenAI() || a.Extra == nil {
-		return false
-	}
-	if a.IsOpenAIOAuth() {
-		if enabled, ok := a.Extra["openai_oauth_responses_websockets_v2_enabled"].(bool); ok {
-			return enabled
-		}
-	}
-	if a.IsOpenAIApiKey() {
-		if enabled, ok := a.Extra["openai_apikey_responses_websockets_v2_enabled"].(bool); ok {
-			return enabled
-		}
-	}
-	if enabled, ok := a.Extra["responses_websockets_v2_enabled"].(bool); ok {
-		return enabled
-	}
-	if enabled, ok := a.Extra["openai_ws_enabled"].(bool); ok {
-		return enabled
-	}
-	return false
-}
-
-const (
-	OpenAIWSIngressModeOff         = "off"
-	OpenAIWSIngressModeShared      = "shared"
-	OpenAIWSIngressModeDedicated   = "dedicated"
-	OpenAIWSIngressModeCtxPool     = "ctx_pool"
-	OpenAIWSIngressModePassthrough = "passthrough"
-)
-
-func normalizeOpenAIWSIngressMode(mode string) string {
-	switch strings.ToLower(strings.TrimSpace(mode)) {
-	case OpenAIWSIngressModeOff:
-		return OpenAIWSIngressModeOff
-	case OpenAIWSIngressModeCtxPool:
-		return OpenAIWSIngressModeCtxPool
-	case OpenAIWSIngressModePassthrough:
-		return OpenAIWSIngressModePassthrough
-	case OpenAIWSIngressModeShared:
-		return OpenAIWSIngressModeShared
-	case OpenAIWSIngressModeDedicated:
-		return OpenAIWSIngressModeDedicated
-	default:
-		return ""
-	}
-}
-
-func normalizeOpenAIWSIngressDefaultMode(mode string) string {
-	if normalized := normalizeOpenAIWSIngressMode(mode); normalized != "" {
-		if normalized == OpenAIWSIngressModeShared || normalized == OpenAIWSIngressModeDedicated {
-			return OpenAIWSIngressModeCtxPool
-		}
-		return normalized
-	}
-	return OpenAIWSIngressModeCtxPool
-}
-
-// ResolveOpenAIResponsesWebSocketV2Mode 返回账号在 WSv2 ingress 下的有效模式（off/ctx_pool/passthrough）。
-//
-// 优先级：
-// 1. 分类型 mode 新字段（string）
-// 2. 分类型 enabled 旧字段（bool）
-// 3. 兼容 enabled 旧字段（bool）
-// 4. defaultMode（非法时回退 ctx_pool）
-func (a *Account) ResolveOpenAIResponsesWebSocketV2Mode(defaultMode string) string {
-	resolvedDefault := normalizeOpenAIWSIngressDefaultMode(defaultMode)
-	if a == nil || !a.IsOpenAI() {
-		return OpenAIWSIngressModeOff
-	}
-	if a.Extra == nil {
-		return resolvedDefault
-	}
-
-	resolveModeString := func(key string) (string, bool) {
-		raw, ok := a.Extra[key]
-		if !ok {
-			return "", false
-		}
-		mode, ok := raw.(string)
-		if !ok {
-			return "", false
-		}
-		normalized := normalizeOpenAIWSIngressMode(mode)
-		if normalized == "" {
-			return "", false
-		}
-		return normalized, true
-	}
-	resolveBoolMode := func(key string) (string, bool) {
-		raw, ok := a.Extra[key]
-		if !ok {
-			return "", false
-		}
-		enabled, ok := raw.(bool)
-		if !ok {
-			return "", false
-		}
-		if enabled {
-			return OpenAIWSIngressModeCtxPool, true
-		}
-		return OpenAIWSIngressModeOff, true
-	}
-
-	if a.IsOpenAIOAuth() {
-		if mode, ok := resolveModeString("openai_oauth_responses_websockets_v2_mode"); ok {
-			return mode
-		}
-		if mode, ok := resolveBoolMode("openai_oauth_responses_websockets_v2_enabled"); ok {
-			return mode
-		}
-	}
-	if a.IsOpenAIApiKey() {
-		if mode, ok := resolveModeString("openai_apikey_responses_websockets_v2_mode"); ok {
-			return mode
-		}
-		if mode, ok := resolveBoolMode("openai_apikey_responses_websockets_v2_enabled"); ok {
-			return mode
-		}
-	}
-	if mode, ok := resolveBoolMode("responses_websockets_v2_enabled"); ok {
-		return mode
-	}
-	if mode, ok := resolveBoolMode("openai_ws_enabled"); ok {
-		return mode
-	}
-	// 兼容旧值：shared/dedicated 语义都归并到 ctx_pool。
-	if resolvedDefault == OpenAIWSIngressModeShared || resolvedDefault == OpenAIWSIngressModeDedicated {
-		return OpenAIWSIngressModeCtxPool
-	}
-	return resolvedDefault
-}
-
-// IsOpenAIWSForceHTTPEnabled 返回账号级“强制 HTTP”开关。
-// 字段：accounts.extra.openai_ws_force_http。
-func (a *Account) IsOpenAIWSForceHTTPEnabled() bool {
-	if a == nil || !a.IsOpenAI() || a.Extra == nil {
-		return false
-	}
-	enabled, ok := a.Extra["openai_ws_force_http"].(bool)
-	return ok && enabled
-}
-
-// IsOpenAIWSAllowStoreRecoveryEnabled 返回账号级 store 恢复开关。
-// 字段：accounts.extra.openai_ws_allow_store_recovery。
-func (a *Account) IsOpenAIWSAllowStoreRecoveryEnabled() bool {
-	if a == nil || !a.IsOpenAI() || a.Extra == nil {
-		return false
-	}
-	enabled, ok := a.Extra["openai_ws_allow_store_recovery"].(bool)
-	return ok && enabled
-}
-
-// IsOpenAIOAuthPassthroughEnabled 兼容旧接口，等价于 OAuth 账号的 IsOpenAIPassthroughEnabled。
-func (a *Account) IsOpenAIOAuthPassthroughEnabled() bool {
-	return a != nil && a.IsOpenAIOAuth() && a.IsOpenAIPassthroughEnabled()
-}
-
 // IsAnthropicAPIKeyPassthroughEnabled 返回 Anthropic API Key 账号是否启用“自动透传（仅替换认证）”。
 // 字段：accounts.extra.anthropic_passthrough。
 // 字段缺失或类型不正确时，按 false（关闭）处理。
@@ -1041,17 +746,6 @@ func (a *Account) IsAnthropicAPIKeyPassthroughEnabled() bool {
 		return false
 	}
 	enabled, ok := a.Extra["anthropic_passthrough"].(bool)
-	return ok && enabled
-}
-
-// IsCodexCLIOnlyEnabled 返回 OpenAI OAuth 账号是否启用“仅允许 Codex 官方客户端”。
-// 字段：accounts.extra.codex_cli_only。
-// 字段缺失或类型不正确时，按 false（关闭）处理。
-func (a *Account) IsCodexCLIOnlyEnabled() bool {
-	if a == nil || !a.IsOpenAIOAuth() || a.Extra == nil {
-		return false
-	}
-	enabled, ok := a.Extra["codex_cli_only"].(bool)
 	return ok && enabled
 }
 

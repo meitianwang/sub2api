@@ -159,13 +159,12 @@ func ProvideRateLimitService(
 	accountRepo AccountRepository,
 	usageRepo UsageLogRepository,
 	cfg *config.Config,
-	geminiQuotaService *GeminiQuotaService,
 	tempUnschedCache TempUnschedCache,
 	timeoutCounterCache TimeoutCounterCache,
 	settingService *SettingService,
 	tokenCacheInvalidator TokenCacheInvalidator,
 ) *RateLimitService {
-	svc := NewRateLimitService(accountRepo, usageRepo, cfg, geminiQuotaService, tempUnschedCache)
+	svc := NewRateLimitService(accountRepo, usageRepo, cfg, tempUnschedCache)
 	svc.SetTimeoutCounterCache(timeoutCounterCache)
 	svc.SetSettingService(settingService)
 	svc.SetTokenCacheInvalidator(tokenCacheInvalidator)
@@ -356,7 +355,6 @@ var ProviderSet = wire.NewSet(
 	NewOAuthService,
 	NewOpenAIOAuthService,
 	NewGeminiOAuthService,
-	NewGeminiQuotaService,
 	NewCompositeTokenCacheInvalidator,
 	wire.Bind(new(TokenCacheInvalidator), new(*CompositeTokenCacheInvalidator)),
 	NewOAuthRefreshAPI,

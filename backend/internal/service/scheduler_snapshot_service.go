@@ -96,30 +96,28 @@ func (s *SchedulerSnapshotService) Stop() {
 	s.wg.Wait()
 }
 
-func (s *SchedulerSnapshotService) ListSchedulableAccounts(ctx context.Context, groupID *int64, platform string, hasForcePlatform bool) ([]Account, bool, error) {
-	const useMixed = false
-	mode := s.resolveMode(platform, hasForcePlatform)
-	bucket := s.bucketFor(groupID, platform, mode)
+func (s *SchedulerSnapshotService) ListSchedulableAccounts(ctx context.Context, groupID *int64) ([]Account, error) {
+	bucket := s.bucketFor(groupID)
 
 	if s.cache != nil {
 		cached, hit, err := s.cache.GetSnapshot(ctx, bucket)
 		if err != nil {
 			logger.LegacyPrintf("service.scheduler_snapshot", "[Scheduler] cache read failed: bucket=%s err=%v", bucket.String(), err)
 		} else if hit {
-			return derefAccounts(cached), useMixed, nil
+			return derefAccounts(cached), nil
 		}
 	}
 
 	if err := s.guardFallback(ctx); err != nil {
-		return nil, useMixed, err
+		return nil, err
 	}
 
 	fallbackCtx, cancel := s.withFallbackTimeout(ctx)
 	defer cancel()
 
-	accounts, err := s.loadAccountsFromDB(fallbackCtx, bucket, useMixed)
+	accounts, err := s.loadAccountsFromDB(fallbackCtx, bucket, false)
 	if err != nil {
-		return nil, useMixed, err
+		return nil, err
 	}
 
 	if s.cache != nil {
@@ -128,7 +126,7 @@ func (s *SchedulerSnapshotService) ListSchedulableAccounts(ctx context.Context, 
 		}
 	}
 
-	return accounts, useMixed, nil
+	return accounts, nil
 }
 
 func (s *SchedulerSnapshotService) GetAccount(ctx context.Context, accountID int64) (*Account, error) {
@@ -456,9 +454,6 @@ func (s *SchedulerSnapshotService) rebuildBucketsForGroupIDs(ctx context.Context
 		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: "_all", Mode: SchedulerModeSingle}, reason); err != nil && firstErr == nil {
 			firstErr = err
 		}
-		if err := s.rebuildBucket(ctx, SchedulerBucket{GroupID: gid, Platform: "_all", Mode: SchedulerModeForced}, reason); err != nil && firstErr == nil {
-			firstErr = err
-		}
 	}
 	return firstErr
 }
@@ -591,11 +586,11 @@ func (s *SchedulerSnapshotService) loadAccountsFromDB(ctx context.Context, bucke
 	return s.accountRepo.ListSchedulableUngrouped(ctx)
 }
 
-func (s *SchedulerSnapshotService) bucketFor(groupID *int64, _ string, mode string) SchedulerBucket {
+func (s *SchedulerSnapshotService) bucketFor(groupID *int64) SchedulerBucket {
 	return SchedulerBucket{
 		GroupID:  s.normalizeGroupID(groupID),
 		Platform: "_all",
-		Mode:     mode,
+		Mode:     SchedulerModeSingle,
 	}
 }
 
@@ -634,12 +629,6 @@ func (s *SchedulerSnapshotService) normalizeGroupIDs(groupIDs []int64) []int64 {
 	return out
 }
 
-func (s *SchedulerSnapshotService) resolveMode(_ string, hasForcePlatform bool) string {
-	if hasForcePlatform {
-		return SchedulerModeForced
-	}
-	return SchedulerModeSingle
-}
 
 func (s *SchedulerSnapshotService) guardFallback(ctx context.Context) error {
 	if s.cfg == nil || s.cfg.Gateway.Scheduling.DbFallbackEnabled {
@@ -697,7 +686,6 @@ func (s *SchedulerSnapshotService) fullRebuildInterval() time.Duration {
 func (s *SchedulerSnapshotService) defaultBuckets(ctx context.Context) ([]SchedulerBucket, error) {
 	buckets := []SchedulerBucket{
 		{GroupID: 0, Platform: "_all", Mode: SchedulerModeSingle},
-		{GroupID: 0, Platform: "_all", Mode: SchedulerModeForced},
 	}
 
 	if s.isRunModeSimple() || s.groupRepo == nil {
@@ -710,7 +698,6 @@ func (s *SchedulerSnapshotService) defaultBuckets(ctx context.Context) ([]Schedu
 	}
 	for _, group := range groups {
 		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: "_all", Mode: SchedulerModeSingle})
-		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: "_all", Mode: SchedulerModeForced})
 	}
 	return dedupeBuckets(buckets), nil
 }

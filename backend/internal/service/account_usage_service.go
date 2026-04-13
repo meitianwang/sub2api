@@ -1,20 +1,16 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
 	"math/rand/v2"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	httppool "github.com/Wei-Shaw/sub2api/internal/pkg/httpclient"
-	openaipkg "github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/tlsfingerprint"
@@ -98,12 +94,10 @@ type windowStatsCache struct {
 }
 
 const (
-	apiCacheTTL             = 3 * time.Minute
-	apiErrorCacheTTL        = 1 * time.Minute        // 负缓存 TTL：429 等错误缓存 1 分钟
-	apiQueryMaxJitter       = 800 * time.Millisecond // 用量查询最大随机延迟
-	windowStatsCacheTTL     = 1 * time.Minute
-	openAIProbeCacheTTL     = 10 * time.Minute
-	openAICodexProbeVersion = "0.104.0"
+	apiCacheTTL         = 3 * time.Minute
+	apiErrorCacheTTL    = 1 * time.Minute        // 负缓存 TTL：429 等错误缓存 1 分钟
+	apiQueryMaxJitter   = 800 * time.Millisecond // 用量查询最大随机延迟
+	windowStatsCacheTTL = 1 * time.Minute
 )
 
 // UsageCache 封装账户使用量相关的缓存
@@ -111,7 +105,6 @@ type UsageCache struct {
 	apiCache         sync.Map           // accountID -> *apiUsageCache
 	windowStatsCache sync.Map           // accountID -> *windowStatsCache
 	apiFlight        singleflight.Group // 防止同一账号的并发请求击穿缓存（Anthropic）
-	openAIProbeCache sync.Map           // accountID -> time.Time
 }
 
 // NewUsageCache 创建 UsageCache 实例
@@ -149,13 +142,6 @@ type UsageInfo struct {
 	FiveHour           *UsageProgress `json:"five_hour"`                      // 5小时窗口
 	SevenDay           *UsageProgress `json:"seven_day,omitempty"`            // 7天窗口
 	SevenDaySonnet     *UsageProgress `json:"seven_day_sonnet,omitempty"`     // 7天Sonnet窗口
-	GeminiSharedDaily  *UsageProgress `json:"gemini_shared_daily,omitempty"`  // Gemini shared pool RPD (Google One / Code Assist)
-	GeminiProDaily     *UsageProgress `json:"gemini_pro_daily,omitempty"`     // Gemini Pro 日配额
-	GeminiFlashDaily   *UsageProgress `json:"gemini_flash_daily,omitempty"`   // Gemini Flash 日配额
-	GeminiSharedMinute *UsageProgress `json:"gemini_shared_minute,omitempty"` // Gemini shared pool RPM (Google One / Code Assist)
-	GeminiProMinute    *UsageProgress `json:"gemini_pro_minute,omitempty"`    // Gemini Pro RPM
-	GeminiFlashMinute  *UsageProgress `json:"gemini_flash_minute,omitempty"`  // Gemini Flash RPM
-
 	// 账号是否被上游禁止 (HTTP 403)
 	IsForbidden     bool   `json:"is_forbidden,omitempty"`
 	ForbiddenReason string `json:"forbidden_reason,omitempty"`
@@ -208,13 +194,12 @@ type ClaudeUsageFetcher interface {
 
 // AccountUsageService 账号使用量查询服务
 type AccountUsageService struct {
-	accountRepo        AccountRepository
-	usageLogRepo       UsageLogRepository
-	usageFetcher       ClaudeUsageFetcher
-	geminiQuotaService *GeminiQuotaService
-	cache              *UsageCache
-	identityCache           IdentityCache
-	tlsFPProfileService     *TLSFingerprintProfileService
+	accountRepo         AccountRepository
+	usageLogRepo        UsageLogRepository
+	usageFetcher        ClaudeUsageFetcher
+	cache               *UsageCache
+	identityCache       IdentityCache
+	tlsFPProfileService *TLSFingerprintProfileService
 }
 
 // NewAccountUsageService 创建AccountUsageService实例
@@ -222,18 +207,16 @@ func NewAccountUsageService(
 	accountRepo AccountRepository,
 	usageLogRepo UsageLogRepository,
 	usageFetcher ClaudeUsageFetcher,
-	geminiQuotaService *GeminiQuotaService,
 	cache *UsageCache,
 	identityCache IdentityCache,
 	tlsFPProfileService *TLSFingerprintProfileService,
 ) *AccountUsageService {
 	return &AccountUsageService{
-		accountRepo:        accountRepo,
-		usageLogRepo:       usageLogRepo,
-		usageFetcher:       usageFetcher,
-		geminiQuotaService: geminiQuotaService,
-		cache:              cache,
-		identityCache:      identityCache,
+		accountRepo:         accountRepo,
+		usageLogRepo:        usageLogRepo,
+		usageFetcher:        usageFetcher,
+		cache:               cache,
+		identityCache:       identityCache,
 		tlsFPProfileService: tlsFPProfileService,
 	}
 }
@@ -246,22 +229,6 @@ func (s *AccountUsageService) GetUsage(ctx context.Context, accountID int64) (*U
 	account, err := s.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("get account failed: %w", err)
-	}
-
-	if account.Platform == PlatformOpenAI && account.Type == AccountTypeOAuth {
-		usage, err := s.getOpenAIUsage(ctx, account)
-		if err == nil {
-			s.tryClearRecoverableAccountError(ctx, account)
-		}
-		return usage, err
-	}
-
-	if account.Platform == PlatformGemini {
-		usage, err := s.getGeminiUsage(ctx, account)
-		if err == nil {
-			s.tryClearRecoverableAccountError(ctx, account)
-		}
-		return usage, err
 	}
 
 	// 只有oauth类型账号可以通过API获取usage（有profile scope）
@@ -428,288 +395,6 @@ func (s *AccountUsageService) syncActiveToPassive(ctx context.Context, accountID
 			slog.Warn("sync_active_to_passive_failed", "account_id", accountID, "error", err)
 		}
 	}
-}
-
-func (s *AccountUsageService) getOpenAIUsage(ctx context.Context, account *Account) (*UsageInfo, error) {
-	now := time.Now()
-	usage := &UsageInfo{UpdatedAt: &now}
-
-	if account == nil {
-		return usage, nil
-	}
-	syncOpenAICodexRateLimitFromExtra(ctx, s.accountRepo, account, now)
-
-	if progress := buildCodexUsageProgressFromExtra(account.Extra, "5h", now); progress != nil {
-		usage.FiveHour = progress
-	}
-	if progress := buildCodexUsageProgressFromExtra(account.Extra, "7d", now); progress != nil {
-		usage.SevenDay = progress
-	}
-
-	if shouldRefreshOpenAICodexSnapshot(account, usage, now) && s.shouldProbeOpenAICodexSnapshot(account.ID, now) {
-		if updates, resetAt, err := s.probeOpenAICodexSnapshot(ctx, account); err == nil && (len(updates) > 0 || resetAt != nil) {
-			mergeAccountExtra(account, updates)
-			if resetAt != nil {
-				account.RateLimitResetAt = resetAt
-			}
-			if usage.UpdatedAt == nil {
-				usage.UpdatedAt = &now
-			}
-			if progress := buildCodexUsageProgressFromExtra(account.Extra, "5h", now); progress != nil {
-				usage.FiveHour = progress
-			}
-			if progress := buildCodexUsageProgressFromExtra(account.Extra, "7d", now); progress != nil {
-				usage.SevenDay = progress
-			}
-		}
-	}
-
-	if s.usageLogRepo == nil {
-		return usage, nil
-	}
-
-	if stats, err := s.usageLogRepo.GetAccountWindowStats(ctx, account.ID, now.Add(-5*time.Hour)); err == nil {
-		if usage.FiveHour == nil {
-			usage.FiveHour = &UsageProgress{Utilization: 0}
-		}
-		usage.FiveHour.WindowStats = windowStatsFromAccountStats(stats)
-	}
-
-	if stats, err := s.usageLogRepo.GetAccountWindowStats(ctx, account.ID, now.Add(-7*24*time.Hour)); err == nil {
-		if usage.SevenDay == nil {
-			usage.SevenDay = &UsageProgress{Utilization: 0}
-		}
-		usage.SevenDay.WindowStats = windowStatsFromAccountStats(stats)
-	}
-
-	return usage, nil
-}
-
-func shouldRefreshOpenAICodexSnapshot(account *Account, usage *UsageInfo, now time.Time) bool {
-	if account == nil {
-		return false
-	}
-	if usage == nil {
-		return true
-	}
-	if usage.FiveHour == nil || usage.SevenDay == nil {
-		return true
-	}
-	if account.IsRateLimited() {
-		return true
-	}
-	return isOpenAICodexSnapshotStale(account, now)
-}
-
-func isOpenAICodexSnapshotStale(account *Account, now time.Time) bool {
-	if account == nil || !account.IsOpenAIOAuth() || !account.IsOpenAIResponsesWebSocketV2Enabled() {
-		return false
-	}
-	if account.Extra == nil {
-		return true
-	}
-	raw, ok := account.Extra["codex_usage_updated_at"]
-	if !ok {
-		return true
-	}
-	ts, err := parseTime(fmt.Sprint(raw))
-	if err != nil {
-		return true
-	}
-	return now.Sub(ts) >= openAIProbeCacheTTL
-}
-
-func (s *AccountUsageService) shouldProbeOpenAICodexSnapshot(accountID int64, now time.Time) bool {
-	if s == nil || s.cache == nil || accountID <= 0 {
-		return true
-	}
-	if cached, ok := s.cache.openAIProbeCache.Load(accountID); ok {
-		if ts, ok := cached.(time.Time); ok && now.Sub(ts) < openAIProbeCacheTTL {
-			return false
-		}
-	}
-	s.cache.openAIProbeCache.Store(accountID, now)
-	return true
-}
-
-func (s *AccountUsageService) probeOpenAICodexSnapshot(ctx context.Context, account *Account) (map[string]any, *time.Time, error) {
-	if account == nil || !account.IsOAuth() {
-		return nil, nil, nil
-	}
-	accessToken := account.GetOpenAIAccessToken()
-	if accessToken == "" {
-		return nil, nil, fmt.Errorf("no access token available")
-	}
-	modelID := openaipkg.DefaultTestModel
-	payload := createOpenAITestPayload(modelID, true)
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, nil, fmt.Errorf("marshal openai probe payload: %w", err)
-	}
-
-	reqCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodPost, chatgptCodexURL, bytes.NewReader(payloadBytes))
-	if err != nil {
-		return nil, nil, fmt.Errorf("create openai probe request: %w", err)
-	}
-	req.Host = "chatgpt.com"
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("OpenAI-Beta", "responses=experimental")
-	req.Header.Set("Originator", "codex_cli_rs")
-	req.Header.Set("Version", openAICodexProbeVersion)
-	req.Header.Set("User-Agent", codexCLIUserAgent)
-	if s.identityCache != nil {
-		if fp, fpErr := s.identityCache.GetFingerprint(reqCtx, account.ID); fpErr == nil && fp != nil && strings.TrimSpace(fp.UserAgent) != "" {
-			req.Header.Set("User-Agent", strings.TrimSpace(fp.UserAgent))
-		}
-	}
-	if chatgptAccountID := account.GetChatGPTAccountID(); chatgptAccountID != "" {
-		req.Header.Set("chatgpt-account-id", chatgptAccountID)
-	}
-
-	proxyURL := ""
-	if account.ProxyID != nil && account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
-	}
-	client, err := httppool.GetClient(httppool.Options{
-		ProxyURL:              proxyURL,
-		Timeout:               15 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("build openai probe client: %w", err)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, nil, fmt.Errorf("openai codex probe request failed: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	updates, resetAt, err := extractOpenAICodexProbeSnapshot(resp)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(updates) > 0 || resetAt != nil {
-		s.persistOpenAICodexProbeSnapshot(account.ID, updates, resetAt)
-		return updates, resetAt, nil
-	}
-	return nil, nil, nil
-}
-
-func (s *AccountUsageService) persistOpenAICodexProbeSnapshot(accountID int64, updates map[string]any, resetAt *time.Time) {
-	if s == nil || s.accountRepo == nil || accountID <= 0 {
-		return
-	}
-	if len(updates) == 0 && resetAt == nil {
-		return
-	}
-
-	go func() {
-		updateCtx, updateCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer updateCancel()
-		if len(updates) > 0 {
-			_ = s.accountRepo.UpdateExtra(updateCtx, accountID, updates)
-		}
-		if resetAt != nil {
-			_ = s.accountRepo.SetRateLimited(updateCtx, accountID, *resetAt)
-		}
-	}()
-}
-
-func extractOpenAICodexProbeSnapshot(resp *http.Response) (map[string]any, *time.Time, error) {
-	if resp == nil {
-		return nil, nil, nil
-	}
-	if snapshot := ParseCodexRateLimitHeaders(resp.Header); snapshot != nil {
-		baseTime := time.Now()
-		updates := buildCodexUsageExtraUpdates(snapshot, baseTime)
-		resetAt := codexRateLimitResetAtFromSnapshot(snapshot, baseTime)
-		if len(updates) > 0 {
-			return updates, resetAt, nil
-		}
-		return nil, resetAt, nil
-	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, nil, fmt.Errorf("openai codex probe returned status %d", resp.StatusCode)
-	}
-	return nil, nil, nil
-}
-
-func extractOpenAICodexProbeUpdates(resp *http.Response) (map[string]any, error) {
-	updates, _, err := extractOpenAICodexProbeSnapshot(resp)
-	return updates, err
-}
-
-func mergeAccountExtra(account *Account, updates map[string]any) {
-	if account == nil || len(updates) == 0 {
-		return
-	}
-	if account.Extra == nil {
-		account.Extra = make(map[string]any, len(updates))
-	}
-	for k, v := range updates {
-		account.Extra[k] = v
-	}
-}
-
-func (s *AccountUsageService) getGeminiUsage(ctx context.Context, account *Account) (*UsageInfo, error) {
-	now := time.Now()
-	usage := &UsageInfo{
-		UpdatedAt: &now,
-	}
-
-	if s.geminiQuotaService == nil || s.usageLogRepo == nil {
-		return usage, nil
-	}
-
-	quota, ok := s.geminiQuotaService.QuotaForAccount(ctx, account)
-	if !ok {
-		return usage, nil
-	}
-
-	dayStart := geminiDailyWindowStart(now)
-	stats, err := s.usageLogRepo.GetModelStatsWithFilters(ctx, dayStart, now, 0, 0, account.ID, 0, nil, nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("get gemini usage stats failed: %w", err)
-	}
-
-	dayTotals := geminiAggregateUsage(stats)
-	dailyResetAt := geminiDailyResetTime(now)
-
-	// Daily window (RPD)
-	if quota.SharedRPD > 0 {
-		totalReq := dayTotals.ProRequests + dayTotals.FlashRequests
-		totalTokens := dayTotals.ProTokens + dayTotals.FlashTokens
-		totalCost := dayTotals.ProCost + dayTotals.FlashCost
-		usage.GeminiSharedDaily = buildGeminiUsageProgress(totalReq, quota.SharedRPD, dailyResetAt, totalTokens, totalCost, now)
-	} else {
-		usage.GeminiProDaily = buildGeminiUsageProgress(dayTotals.ProRequests, quota.ProRPD, dailyResetAt, dayTotals.ProTokens, dayTotals.ProCost, now)
-		usage.GeminiFlashDaily = buildGeminiUsageProgress(dayTotals.FlashRequests, quota.FlashRPD, dailyResetAt, dayTotals.FlashTokens, dayTotals.FlashCost, now)
-	}
-
-	// Minute window (RPM) - fixed-window approximation: current minute [truncate(now), truncate(now)+1m)
-	minuteStart := now.Truncate(time.Minute)
-	minuteResetAt := minuteStart.Add(time.Minute)
-	minuteStats, err := s.usageLogRepo.GetModelStatsWithFilters(ctx, minuteStart, now, 0, 0, account.ID, 0, nil, nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("get gemini minute usage stats failed: %w", err)
-	}
-	minuteTotals := geminiAggregateUsage(minuteStats)
-
-	if quota.SharedRPM > 0 {
-		totalReq := minuteTotals.ProRequests + minuteTotals.FlashRequests
-		totalTokens := minuteTotals.ProTokens + minuteTotals.FlashTokens
-		totalCost := minuteTotals.ProCost + minuteTotals.FlashCost
-		usage.GeminiSharedMinute = buildGeminiUsageProgress(totalReq, quota.SharedRPM, minuteResetAt, totalTokens, totalCost, now)
-	} else {
-		usage.GeminiProMinute = buildGeminiUsageProgress(minuteTotals.ProRequests, quota.ProRPM, minuteResetAt, minuteTotals.ProTokens, minuteTotals.ProCost, now)
-		usage.GeminiFlashMinute = buildGeminiUsageProgress(minuteTotals.FlashRequests, quota.FlashRPM, minuteResetAt, minuteTotals.FlashTokens, minuteTotals.FlashCost, now)
-	}
-
-	return usage, nil
 }
 
 // addWindowStats 为 usage 数据添加窗口期统计
@@ -1101,31 +786,6 @@ func (s *AccountUsageService) estimateSetupTokenUsage(account *Account) *UsageIn
 
 	// Setup Token无法获取7d数据
 	return info
-}
-
-func buildGeminiUsageProgress(used, limit int64, resetAt time.Time, tokens int64, cost float64, now time.Time) *UsageProgress {
-	// limit <= 0 means "no local quota window" (unknown or unlimited).
-	if limit <= 0 {
-		return nil
-	}
-	utilization := (float64(used) / float64(limit)) * 100
-	remainingSeconds := int(resetAt.Sub(now).Seconds())
-	if remainingSeconds < 0 {
-		remainingSeconds = 0
-	}
-	resetCopy := resetAt
-	return &UsageProgress{
-		Utilization:      utilization,
-		ResetsAt:         &resetCopy,
-		RemainingSeconds: remainingSeconds,
-		UsedRequests:     used,
-		LimitRequests:    limit,
-		WindowStats: &WindowStats{
-			Requests: used,
-			Tokens:   tokens,
-			Cost:     cost,
-		},
-	}
 }
 
 // GetAccountWindowStats 获取账号在指定时间窗口内的使用统计

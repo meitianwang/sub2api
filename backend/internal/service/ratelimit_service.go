@@ -7,12 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
-	"github.com/tidwall/gjson"
 )
 
 // RateLimitService 处理限流和过载状态管理
@@ -20,13 +18,10 @@ type RateLimitService struct {
 	accountRepo           AccountRepository
 	usageRepo             UsageLogRepository
 	cfg                   *config.Config
-	geminiQuotaService    *GeminiQuotaService
 	tempUnschedCache      TempUnschedCache
 	timeoutCounterCache   TimeoutCounterCache
 	settingService        *SettingService
 	tokenCacheInvalidator TokenCacheInvalidator
-	usageCacheMu          sync.RWMutex
-	usageCache            map[int64]*geminiUsageCacheEntry
 }
 
 // SuccessfulTestRecoveryResult 表示测试成功后恢复了哪些运行时状态。
@@ -40,27 +35,13 @@ type AccountRecoveryOptions struct {
 	InvalidateToken bool
 }
 
-type geminiUsageCacheEntry struct {
-	windowStart time.Time
-	cachedAt    time.Time
-	totals      GeminiUsageTotals
-}
-
-type geminiUsageTotalsBatchProvider interface {
-	GetGeminiUsageTotalsBatch(ctx context.Context, accountIDs []int64, startTime, endTime time.Time) (map[int64]GeminiUsageTotals, error)
-}
-
-const geminiPrecheckCacheTTL = time.Minute
-
 // NewRateLimitService 创建RateLimitService实例
-func NewRateLimitService(accountRepo AccountRepository, usageRepo UsageLogRepository, cfg *config.Config, geminiQuotaService *GeminiQuotaService, tempUnschedCache TempUnschedCache) *RateLimitService {
+func NewRateLimitService(accountRepo AccountRepository, usageRepo UsageLogRepository, cfg *config.Config, tempUnschedCache TempUnschedCache) *RateLimitService {
 	return &RateLimitService{
-		accountRepo:        accountRepo,
-		usageRepo:          usageRepo,
-		cfg:                cfg,
-		geminiQuotaService: geminiQuotaService,
-		tempUnschedCache:   tempUnschedCache,
-		usageCache:         make(map[int64]*geminiUsageCacheEntry),
+		accountRepo:      accountRepo,
+		usageRepo:        usageRepo,
+		cfg:              cfg,
+		tempUnschedCache: tempUnschedCache,
 	}
 }
 
@@ -150,27 +131,6 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 		}
 		// 其他 400 错误（如参数问题）不处理，不禁用账号
 	case 401:
-		// OpenAI: token_invalidated / token_revoked 表示 token 被永久作废（非过期），直接标记 error
-		openai401Code := extractUpstreamErrorCode(responseBody)
-		if account.Platform == PlatformOpenAI && (openai401Code == "token_invalidated" || openai401Code == "token_revoked") {
-			msg := "Token revoked (401): account authentication permanently revoked"
-			if upstreamMsg != "" {
-				msg = "Token revoked (401): " + upstreamMsg
-			}
-			s.handleAuthError(ctx, account, msg)
-			shouldDisable = true
-			break
-		}
-		// OpenAI: {"detail":"Unauthorized"} 表示 token 完全无效（非标准 OpenAI 错误格式），直接标记 error
-		if account.Platform == PlatformOpenAI && gjson.GetBytes(responseBody, "detail").String() == "Unauthorized" {
-			msg := "Unauthorized (401): account authentication failed permanently"
-			if upstreamMsg != "" {
-				msg = "Unauthorized (401): " + upstreamMsg
-			}
-			s.handleAuthError(ctx, account, msg)
-			shouldDisable = true
-			break
-		}
 		// OAuth 账号在 401 错误时临时不可调度（给 token 刷新窗口）；非 OAuth 账号保持原有 SetError 行为。
 		if account.Type == AccountTypeOAuth {
 			// 1. 失效缓存
@@ -213,13 +173,6 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 			shouldDisable = true
 		}
 	case 402:
-		// OpenAI: deactivated_workspace 表示工作区已停用，直接标记 error
-		if account.Platform == PlatformOpenAI && gjson.GetBytes(responseBody, "detail.code").String() == "deactivated_workspace" {
-			msg := "Workspace deactivated (402): workspace has been deactivated"
-			s.handleAuthError(ctx, account, msg)
-			shouldDisable = true
-			break
-		}
 		// 支付要求：余额不足或计费问题，停止调度
 		msg := "Payment required (402): insufficient balance or billing issue"
 		if upstreamMsg != "" {
@@ -265,375 +218,6 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 	return shouldDisable
 }
 
-// PreCheckUsage proactively checks local quota before dispatching a request.
-// Returns false when the account should be skipped.
-func (s *RateLimitService) PreCheckUsage(ctx context.Context, account *Account, requestedModel string) (bool, error) {
-	if account == nil || account.Platform != PlatformGemini {
-		return true, nil
-	}
-	if s.usageRepo == nil || s.geminiQuotaService == nil {
-		return true, nil
-	}
-
-	quota, ok := s.geminiQuotaService.QuotaForAccount(ctx, account)
-	if !ok {
-		return true, nil
-	}
-
-	now := time.Now()
-	modelClass := geminiModelClassFromName(requestedModel)
-
-	// 1) Daily quota precheck (RPD; resets at PST midnight)
-	{
-		var limit int64
-		if quota.SharedRPD > 0 {
-			limit = quota.SharedRPD
-		} else {
-			switch modelClass {
-			case geminiModelFlash:
-				limit = quota.FlashRPD
-			default:
-				limit = quota.ProRPD
-			}
-		}
-
-		if limit > 0 {
-			start := geminiDailyWindowStart(now)
-			totals, ok := s.getGeminiUsageTotals(account.ID, start, now)
-			if !ok {
-				stats, err := s.usageRepo.GetModelStatsWithFilters(ctx, start, now, 0, 0, account.ID, 0, nil, nil, nil)
-				if err != nil {
-					return true, err
-				}
-				totals = geminiAggregateUsage(stats)
-				s.setGeminiUsageTotals(account.ID, start, now, totals)
-			}
-
-			var used int64
-			if quota.SharedRPD > 0 {
-				used = totals.ProRequests + totals.FlashRequests
-			} else {
-				switch modelClass {
-				case geminiModelFlash:
-					used = totals.FlashRequests
-				default:
-					used = totals.ProRequests
-				}
-			}
-
-			if used >= limit {
-				resetAt := geminiDailyResetTime(now)
-				// NOTE:
-				// - This is a local precheck to reduce upstream 429s.
-				// - Do NOT mark the account as rate-limited here; rate_limit_reset_at should reflect real upstream 429s.
-				slog.Info("gemini_precheck_daily_quota_reached", "account_id", account.ID, "used", used, "limit", limit, "reset_at", resetAt)
-				return false, nil
-			}
-		}
-	}
-
-	// 2) Minute quota precheck (RPM; fixed window current minute)
-	{
-		var limit int64
-		if quota.SharedRPM > 0 {
-			limit = quota.SharedRPM
-		} else {
-			switch modelClass {
-			case geminiModelFlash:
-				limit = quota.FlashRPM
-			default:
-				limit = quota.ProRPM
-			}
-		}
-
-		if limit > 0 {
-			start := now.Truncate(time.Minute)
-			stats, err := s.usageRepo.GetModelStatsWithFilters(ctx, start, now, 0, 0, account.ID, 0, nil, nil, nil)
-			if err != nil {
-				return true, err
-			}
-			totals := geminiAggregateUsage(stats)
-
-			var used int64
-			if quota.SharedRPM > 0 {
-				used = totals.ProRequests + totals.FlashRequests
-			} else {
-				switch modelClass {
-				case geminiModelFlash:
-					used = totals.FlashRequests
-				default:
-					used = totals.ProRequests
-				}
-			}
-
-			if used >= limit {
-				resetAt := start.Add(time.Minute)
-				// Do not persist "rate limited" status from local precheck. See note above.
-				slog.Info("gemini_precheck_minute_quota_reached", "account_id", account.ID, "used", used, "limit", limit, "reset_at", resetAt)
-				return false, nil
-			}
-		}
-	}
-
-	return true, nil
-}
-
-// PreCheckUsageBatch performs quota precheck for multiple accounts in one request.
-// Returned map value=false means the account should be skipped.
-func (s *RateLimitService) PreCheckUsageBatch(ctx context.Context, accounts []*Account, requestedModel string) (map[int64]bool, error) {
-	result := make(map[int64]bool, len(accounts))
-	for _, account := range accounts {
-		if account == nil {
-			continue
-		}
-		result[account.ID] = true
-	}
-
-	if len(accounts) == 0 || requestedModel == "" {
-		return result, nil
-	}
-	if s.usageRepo == nil || s.geminiQuotaService == nil {
-		return result, nil
-	}
-
-	modelClass := geminiModelClassFromName(requestedModel)
-	now := time.Now()
-	dailyStart := geminiDailyWindowStart(now)
-	minuteStart := now.Truncate(time.Minute)
-
-	type quotaAccount struct {
-		account *Account
-		quota   GeminiQuota
-	}
-	quotaAccounts := make([]quotaAccount, 0, len(accounts))
-	for _, account := range accounts {
-		if account == nil || account.Platform != PlatformGemini {
-			continue
-		}
-		quota, ok := s.geminiQuotaService.QuotaForAccount(ctx, account)
-		if !ok {
-			continue
-		}
-		quotaAccounts = append(quotaAccounts, quotaAccount{
-			account: account,
-			quota:   quota,
-		})
-	}
-	if len(quotaAccounts) == 0 {
-		return result, nil
-	}
-
-	// 1) Daily precheck (cached + batch DB fallback)
-	dailyTotalsByID := make(map[int64]GeminiUsageTotals, len(quotaAccounts))
-	dailyMissIDs := make([]int64, 0, len(quotaAccounts))
-	for _, item := range quotaAccounts {
-		limit := geminiDailyLimit(item.quota, modelClass)
-		if limit <= 0 {
-			continue
-		}
-		accountID := item.account.ID
-		if totals, ok := s.getGeminiUsageTotals(accountID, dailyStart, now); ok {
-			dailyTotalsByID[accountID] = totals
-			continue
-		}
-		dailyMissIDs = append(dailyMissIDs, accountID)
-	}
-	if len(dailyMissIDs) > 0 {
-		totalsBatch, err := s.getGeminiUsageTotalsBatch(ctx, dailyMissIDs, dailyStart, now)
-		if err != nil {
-			return result, err
-		}
-		for _, accountID := range dailyMissIDs {
-			totals := totalsBatch[accountID]
-			dailyTotalsByID[accountID] = totals
-			s.setGeminiUsageTotals(accountID, dailyStart, now, totals)
-		}
-	}
-	for _, item := range quotaAccounts {
-		limit := geminiDailyLimit(item.quota, modelClass)
-		if limit <= 0 {
-			continue
-		}
-		accountID := item.account.ID
-		used := geminiUsedRequests(item.quota, modelClass, dailyTotalsByID[accountID], true)
-		if used >= limit {
-			resetAt := geminiDailyResetTime(now)
-			slog.Info("gemini_precheck_daily_quota_reached_batch", "account_id", accountID, "used", used, "limit", limit, "reset_at", resetAt)
-			result[accountID] = false
-		}
-	}
-
-	// 2) Minute precheck (batch DB)
-	minuteIDs := make([]int64, 0, len(quotaAccounts))
-	for _, item := range quotaAccounts {
-		accountID := item.account.ID
-		if !result[accountID] {
-			continue
-		}
-		if geminiMinuteLimit(item.quota, modelClass) <= 0 {
-			continue
-		}
-		minuteIDs = append(minuteIDs, accountID)
-	}
-	if len(minuteIDs) == 0 {
-		return result, nil
-	}
-
-	minuteTotalsByID, err := s.getGeminiUsageTotalsBatch(ctx, minuteIDs, minuteStart, now)
-	if err != nil {
-		return result, err
-	}
-	for _, item := range quotaAccounts {
-		accountID := item.account.ID
-		if !result[accountID] {
-			continue
-		}
-
-		limit := geminiMinuteLimit(item.quota, modelClass)
-		if limit <= 0 {
-			continue
-		}
-
-		used := geminiUsedRequests(item.quota, modelClass, minuteTotalsByID[accountID], false)
-		if used >= limit {
-			resetAt := minuteStart.Add(time.Minute)
-			slog.Info("gemini_precheck_minute_quota_reached_batch", "account_id", accountID, "used", used, "limit", limit, "reset_at", resetAt)
-			result[accountID] = false
-		}
-	}
-
-	return result, nil
-}
-
-func (s *RateLimitService) getGeminiUsageTotalsBatch(ctx context.Context, accountIDs []int64, start, end time.Time) (map[int64]GeminiUsageTotals, error) {
-	result := make(map[int64]GeminiUsageTotals, len(accountIDs))
-	if len(accountIDs) == 0 {
-		return result, nil
-	}
-
-	ids := make([]int64, 0, len(accountIDs))
-	seen := make(map[int64]struct{}, len(accountIDs))
-	for _, accountID := range accountIDs {
-		if accountID <= 0 {
-			continue
-		}
-		if _, ok := seen[accountID]; ok {
-			continue
-		}
-		seen[accountID] = struct{}{}
-		ids = append(ids, accountID)
-	}
-	if len(ids) == 0 {
-		return result, nil
-	}
-
-	if batchReader, ok := s.usageRepo.(geminiUsageTotalsBatchProvider); ok {
-		stats, err := batchReader.GetGeminiUsageTotalsBatch(ctx, ids, start, end)
-		if err != nil {
-			return nil, err
-		}
-		for _, accountID := range ids {
-			result[accountID] = stats[accountID]
-		}
-		return result, nil
-	}
-
-	for _, accountID := range ids {
-		stats, err := s.usageRepo.GetModelStatsWithFilters(ctx, start, end, 0, 0, accountID, 0, nil, nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		result[accountID] = geminiAggregateUsage(stats)
-	}
-	return result, nil
-}
-
-func geminiDailyLimit(quota GeminiQuota, modelClass geminiModelClass) int64 {
-	if quota.SharedRPD > 0 {
-		return quota.SharedRPD
-	}
-	switch modelClass {
-	case geminiModelFlash:
-		return quota.FlashRPD
-	default:
-		return quota.ProRPD
-	}
-}
-
-func geminiMinuteLimit(quota GeminiQuota, modelClass geminiModelClass) int64 {
-	if quota.SharedRPM > 0 {
-		return quota.SharedRPM
-	}
-	switch modelClass {
-	case geminiModelFlash:
-		return quota.FlashRPM
-	default:
-		return quota.ProRPM
-	}
-}
-
-func geminiUsedRequests(quota GeminiQuota, modelClass geminiModelClass, totals GeminiUsageTotals, daily bool) int64 {
-	if daily {
-		if quota.SharedRPD > 0 {
-			return totals.ProRequests + totals.FlashRequests
-		}
-	} else {
-		if quota.SharedRPM > 0 {
-			return totals.ProRequests + totals.FlashRequests
-		}
-	}
-	switch modelClass {
-	case geminiModelFlash:
-		return totals.FlashRequests
-	default:
-		return totals.ProRequests
-	}
-}
-
-func (s *RateLimitService) getGeminiUsageTotals(accountID int64, windowStart, now time.Time) (GeminiUsageTotals, bool) {
-	s.usageCacheMu.RLock()
-	defer s.usageCacheMu.RUnlock()
-
-	if s.usageCache == nil {
-		return GeminiUsageTotals{}, false
-	}
-
-	entry, ok := s.usageCache[accountID]
-	if !ok || entry == nil {
-		return GeminiUsageTotals{}, false
-	}
-	if !entry.windowStart.Equal(windowStart) {
-		return GeminiUsageTotals{}, false
-	}
-	if now.Sub(entry.cachedAt) >= geminiPrecheckCacheTTL {
-		return GeminiUsageTotals{}, false
-	}
-	return entry.totals, true
-}
-
-func (s *RateLimitService) setGeminiUsageTotals(accountID int64, windowStart, now time.Time, totals GeminiUsageTotals) {
-	s.usageCacheMu.Lock()
-	defer s.usageCacheMu.Unlock()
-	if s.usageCache == nil {
-		s.usageCache = make(map[int64]*geminiUsageCacheEntry)
-	}
-	s.usageCache[accountID] = &geminiUsageCacheEntry{
-		windowStart: windowStart,
-		cachedAt:    now,
-		totals:      totals,
-	}
-}
-
-// GeminiCooldown returns the fallback cooldown duration for Gemini 429s based on tier.
-func (s *RateLimitService) GeminiCooldown(ctx context.Context, account *Account) time.Duration {
-	if account == nil {
-		return 5 * time.Minute
-	}
-	if s.geminiQuotaService == nil {
-		return 5 * time.Minute
-	}
-	return s.geminiQuotaService.CooldownForAccount(ctx, account)
-}
 
 // handleAuthError 处理认证类错误(401/403)，停止账号调度
 func (s *RateLimitService) handleAuthError(ctx context.Context, account *Account, errorMsg string) {
@@ -667,20 +251,7 @@ func (s *RateLimitService) handleCustomErrorCode(ctx context.Context, account *A
 // handle429 处理429限流错误
 // 解析响应头获取重置时间，标记账号为限流状态
 func (s *RateLimitService) handle429(ctx context.Context, account *Account, headers http.Header, responseBody []byte) {
-	// 1. OpenAI 平台：优先尝试解析 x-codex-* 响应头（用于 rate_limit_exceeded）
-	if account.Platform == PlatformOpenAI {
-		s.persistOpenAICodexSnapshot(ctx, account, headers)
-		if resetAt := s.calculateOpenAI429ResetTime(headers); resetAt != nil {
-			if err := s.accountRepo.SetRateLimited(ctx, account.ID, *resetAt); err != nil {
-				slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
-				return
-			}
-			slog.Info("openai_account_rate_limited", "account_id", account.ID, "reset_at", *resetAt)
-			return
-		}
-	}
-
-	// 2. Anthropic 平台：尝试解析 per-window 头（5h / 7d），选择实际触发的窗口
+	// 1. 尝试解析 Anthropic per-window 头（5h / 7d），选择实际触发的窗口
 	if result := calculateAnthropic429ResetTime(headers); result != nil {
 		if err := s.accountRepo.SetRateLimited(ctx, account.ID, result.resetAt); err != nil {
 			slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
@@ -701,52 +272,16 @@ func (s *RateLimitService) handle429(ctx context.Context, account *Account, head
 		return
 	}
 
-	// 3. 尝试从响应头解析重置时间（Anthropic 聚合头，向后兼容）
+	// 2. 尝试从响应头解析重置时间（Anthropic 聚合头，向后兼容）
 	resetTimestamp := headers.Get("anthropic-ratelimit-unified-reset")
 
-	// 4. 如果响应头没有，尝试从响应体解析（OpenAI usage_limit_reached, Gemini）
+	// 没有限流重置时间的 429 可能是非真实限流（如 Extra usage required），
+	// 不标记账号限流状态，直接透传错误给客户端
 	if resetTimestamp == "" {
-		switch account.Platform {
-		case PlatformOpenAI:
-			// 尝试解析 OpenAI 的 usage_limit_reached 错误
-			if resetAt := parseOpenAIRateLimitResetTime(responseBody); resetAt != nil {
-				resetTime := time.Unix(*resetAt, 0)
-				if err := s.accountRepo.SetRateLimited(ctx, account.ID, resetTime); err != nil {
-					slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
-					return
-				}
-				slog.Info("account_rate_limited", "account_id", account.ID, "platform", account.Platform, "reset_at", resetTime, "reset_in", time.Until(resetTime).Truncate(time.Second))
-				return
-			}
-		case PlatformGemini:
-			// 尝试解析 Gemini 格式（用于其他平台）
-			if resetAt := ParseGeminiRateLimitResetTime(responseBody); resetAt != nil {
-				resetTime := time.Unix(*resetAt, 0)
-				if err := s.accountRepo.SetRateLimited(ctx, account.ID, resetTime); err != nil {
-					slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
-					return
-				}
-				slog.Info("account_rate_limited", "account_id", account.ID, "platform", account.Platform, "reset_at", resetTime, "reset_in", time.Until(resetTime).Truncate(time.Second))
-				return
-			}
-		}
-
-		// Anthropic 平台：没有限流重置时间的 429 可能是非真实限流（如 Extra usage required），
-		// 不标记账号限流状态，直接透传错误给客户端
-		if account.Platform == PlatformAnthropic {
-			slog.Warn("rate_limit_429_no_reset_time_skipped",
-				"account_id", account.ID,
-				"platform", account.Platform,
-				"reason", "no rate limit reset time in headers, likely not a real rate limit")
-			return
-		}
-
-		// 其他平台：没有重置时间，使用默认5分钟
-		resetAt := time.Now().Add(5 * time.Minute)
-		slog.Warn("rate_limit_no_reset_time", "account_id", account.ID, "platform", account.Platform, "using_default", "5m")
-		if err := s.accountRepo.SetRateLimited(ctx, account.ID, resetAt); err != nil {
-			slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
-		}
+		slog.Warn("rate_limit_429_no_reset_time_skipped",
+			"account_id", account.ID,
+			"platform", account.Platform,
+			"reason", "no rate limit reset time in headers, likely not a real rate limit")
 		return
 	}
 
@@ -777,54 +312,6 @@ func (s *RateLimitService) handle429(ctx context.Context, account *Account, head
 	}
 
 	slog.Info("account_rate_limited", "account_id", account.ID, "reset_at", resetAt)
-}
-
-// calculateOpenAI429ResetTime 从 OpenAI 429 响应头计算正确的重置时间
-// 返回 nil 表示无法从响应头中确定重置时间
-func (s *RateLimitService) calculateOpenAI429ResetTime(headers http.Header) *time.Time {
-	snapshot := ParseCodexRateLimitHeaders(headers)
-	if snapshot == nil {
-		return nil
-	}
-
-	normalized := snapshot.Normalize()
-	if normalized == nil {
-		return nil
-	}
-
-	now := time.Now()
-
-	// 判断哪个限制被触发（used_percent >= 100）
-	is7dExhausted := normalized.Used7dPercent != nil && *normalized.Used7dPercent >= 100
-	is5hExhausted := normalized.Used5hPercent != nil && *normalized.Used5hPercent >= 100
-
-	// 优先使用被触发限制的重置时间
-	if is7dExhausted && normalized.Reset7dSeconds != nil {
-		resetAt := now.Add(time.Duration(*normalized.Reset7dSeconds) * time.Second)
-		slog.Info("openai_429_7d_limit_exhausted", "reset_after_seconds", *normalized.Reset7dSeconds, "reset_at", resetAt)
-		return &resetAt
-	}
-	if is5hExhausted && normalized.Reset5hSeconds != nil {
-		resetAt := now.Add(time.Duration(*normalized.Reset5hSeconds) * time.Second)
-		slog.Info("openai_429_5h_limit_exhausted", "reset_after_seconds", *normalized.Reset5hSeconds, "reset_at", resetAt)
-		return &resetAt
-	}
-
-	// 都未达到100%但收到429，使用较长的重置时间
-	var maxResetSecs int
-	if normalized.Reset7dSeconds != nil && *normalized.Reset7dSeconds > maxResetSecs {
-		maxResetSecs = *normalized.Reset7dSeconds
-	}
-	if normalized.Reset5hSeconds != nil && *normalized.Reset5hSeconds > maxResetSecs {
-		maxResetSecs = *normalized.Reset5hSeconds
-	}
-	if maxResetSecs > 0 {
-		resetAt := now.Add(time.Duration(maxResetSecs) * time.Second)
-		slog.Info("openai_429_using_max_reset", "max_reset_seconds", maxResetSecs, "reset_at", resetAt)
-		return &resetAt
-	}
-
-	return nil
 }
 
 // anthropic429Result holds the parsed Anthropic 429 rate-limit information.
@@ -931,77 +418,6 @@ func pickSooner(a, b *time.Time) *time.Time {
 	default:
 		return b
 	}
-}
-
-func (s *RateLimitService) persistOpenAICodexSnapshot(ctx context.Context, account *Account, headers http.Header) {
-	if s == nil || s.accountRepo == nil || account == nil || headers == nil {
-		return
-	}
-	snapshot := ParseCodexRateLimitHeaders(headers)
-	if snapshot == nil {
-		return
-	}
-	updates := buildCodexUsageExtraUpdates(snapshot, time.Now())
-	if len(updates) == 0 {
-		return
-	}
-	if err := s.accountRepo.UpdateExtra(ctx, account.ID, updates); err != nil {
-		slog.Warn("openai_codex_snapshot_persist_failed", "account_id", account.ID, "error", err)
-	}
-}
-
-// parseOpenAIRateLimitResetTime 解析 OpenAI 格式的 429 响应，返回重置时间的 Unix 时间戳
-// OpenAI 的 usage_limit_reached 错误格式：
-//
-//	{
-//	  "error": {
-//	    "message": "The usage limit has been reached",
-//	    "type": "usage_limit_reached",
-//	    "resets_at": 1769404154,
-//	    "resets_in_seconds": 133107
-//	  }
-//	}
-func parseOpenAIRateLimitResetTime(body []byte) *int64 {
-	var parsed map[string]any
-	if err := json.Unmarshal(body, &parsed); err != nil {
-		return nil
-	}
-
-	errObj, ok := parsed["error"].(map[string]any)
-	if !ok {
-		return nil
-	}
-
-	// 检查是否为 usage_limit_reached 或 rate_limit_exceeded 类型
-	errType, _ := errObj["type"].(string)
-	if errType != "usage_limit_reached" && errType != "rate_limit_exceeded" {
-		return nil
-	}
-
-	// 优先使用 resets_at（Unix 时间戳）
-	if resetsAt, ok := errObj["resets_at"].(float64); ok {
-		ts := int64(resetsAt)
-		return &ts
-	}
-	if resetsAt, ok := errObj["resets_at"].(string); ok {
-		if ts, err := strconv.ParseInt(resetsAt, 10, 64); err == nil {
-			return &ts
-		}
-	}
-
-	// 如果没有 resets_at，尝试使用 resets_in_seconds
-	if resetsInSeconds, ok := errObj["resets_in_seconds"].(float64); ok {
-		ts := time.Now().Unix() + int64(resetsInSeconds)
-		return &ts
-	}
-	if resetsInSeconds, ok := errObj["resets_in_seconds"].(string); ok {
-		if sec, err := strconv.ParseInt(resetsInSeconds, 10, 64); err == nil {
-			ts := time.Now().Unix() + sec
-			return &ts
-		}
-	}
-
-	return nil
 }
 
 // handle529 处理529过载错误

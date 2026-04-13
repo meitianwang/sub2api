@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 	"time"
 )
@@ -33,34 +32,6 @@ func NewOpenAIOAuthService() *OpenAIOAuthService                { return &OpenAI
 func NewGeminiOAuthService() *GeminiOAuthService                { return &GeminiOAuthService{} }
 func NewOAuthRefreshAPI() *OAuthRefreshAPI                      { return nil }
 func NewGeminiMessagesCompatService() *GeminiMessagesCompatService { return &GeminiMessagesCompatService{} }
-
-// --- Codex/OpenAI stubs ---
-
-func syncOpenAICodexRateLimitFromExtra(_ context.Context, _ AccountRepository, _ *Account, _ time.Time) {}
-func buildCodexUsageExtraUpdates(_ ...interface{}) map[string]interface{}                                { return nil }
-
-// CodexRateLimitSnapshot stub
-type CodexRateLimitSnapshot struct{}
-
-func (s *CodexRateLimitSnapshot) Normalize() *CodexRateLimitNormalized { return nil }
-
-type CodexRateLimitNormalized struct {
-	Used5hPercent  *float64
-	Used7dPercent  *float64
-	Reset5hSeconds *int
-	Reset7dSeconds *int
-}
-
-func ParseCodexRateLimitHeaders(_ http.Header) *CodexRateLimitSnapshot {
-	return nil
-}
-
-func codexRateLimitResetAtFromSnapshot(_ *CodexRateLimitSnapshot, _ ...interface{}) *time.Time {
-	return nil
-}
-
-const chatgptCodexURL = "https://chatgpt.com"
-const codexCLIUserAgent = "codex-cli"
 
 func isImageGenerationModel(_ string) bool { return false }
 
@@ -322,11 +293,7 @@ func SetOpenAIClientTransport(_ ...interface{}) {}
 
 const OpenAIClientTransportHTTP = "http"
 
-func ParseGeminiRateLimitResetTime(_ []byte) *int64 { return nil }
-
 var errRefreshSkipped = fmt.Errorf("refresh skipped")
-
-func GeminiTokenCacheKey(_ *Account) string       { return "" }
 
 func NewTokenRefreshService(_ ...interface{}) *TokenRefreshService { return &TokenRefreshService{} }
 
