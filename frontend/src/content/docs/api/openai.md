@@ -12,7 +12,7 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `model` | string | 是 | 模型名称，例如 `gpt-4o`、`claude-sonnet-4-20250514` |
+| `model` | string | 是 | 模型名称，例如 `gpt-5.4`、`claude-sonnet-4-6` |
 | `messages` | array | 是 | 消息数组，包含 `role` 和 `content` 字段 |
 | `stream` | boolean | 否 | 是否启用流式输出，默认 `false` |
 | `temperature` | number | 否 | 采样温度，范围 0-2 |
@@ -25,7 +25,7 @@ curl -X POST {{BASE_URL}}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-xxxx" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.4",
     "messages": [
       {"role": "system", "content": "你是一个有用的助手。"},
       {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -41,7 +41,7 @@ curl -X POST {{BASE_URL}}/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-xxxx" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.4",
     "messages": [
       {"role": "user", "content": "写一首关于春天的诗"}
     ],
@@ -61,7 +61,7 @@ client = OpenAI(
 
 # 非流式调用
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.4",
     messages=[
         {"role": "system", "content": "你是一个有用的助手。"},
         {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -71,7 +71,7 @@ print(response.choices[0].message.content)
 
 # 流式调用
 stream = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.4",
     messages=[
         {"role": "user", "content": "写一首关于春天的诗"}
     ],
@@ -94,7 +94,7 @@ const client = new OpenAI({
 
 // 非流式调用
 const response = await client.chat.completions.create({
-  model: "gpt-4o",
+  model: "gpt-5.4",
   messages: [
     { role: "system", content: "你是一个有用的助手。" },
     { role: "user", content: "你好，请介绍一下自己。" },
@@ -104,7 +104,7 @@ console.log(response.choices[0].message.content);
 
 // 流式调用
 const stream = await client.chat.completions.create({
-  model: "gpt-4o",
+  model: "gpt-5.4",
   messages: [
     { role: "user", content: "写一首关于春天的诗" },
   ],
@@ -128,7 +128,7 @@ curl -X POST {{BASE_URL}}/v1/responses \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-xxxx" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.4",
     "input": "用简单的语言解释什么是量子计算。"
   }'
 ```
@@ -171,12 +171,12 @@ curl {{BASE_URL}}/v1/models \
   "object": "list",
   "data": [
     {
-      "id": "gpt-4o",
+      "id": "gpt-5.4",
       "object": "model",
       "owned_by": "openai"
     },
     {
-      "id": "claude-sonnet-4-20250514",
+      "id": "claude-sonnet-4-6",
       "object": "model",
       "owned_by": "anthropic"
     }

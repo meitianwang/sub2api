@@ -19,7 +19,7 @@
 | API Key | `sk-xxxx`（替换为你的实际 Key） |
 | Model ID | 分组内可用的模型名称 |
 
-常用 Model ID 示例：`claude-sonnet-4-6`、`gemini-3-pro-preview`、`gpt-4o`
+常用 Model ID 示例：`claude-sonnet-4-6`、`gemini-3-pro-preview`、`gpt-5.4`
 
 ## Cline 配置步骤
 

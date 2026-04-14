@@ -143,7 +143,7 @@ curl -X POST {{BASE_URL}}/v1beta/models/gemini-2.5-pro:generateContent \
 
 ## 注意事项
 
-- API Key 必须属于 Gemini 类型的分组，否则请求会被拒绝
+- API Key 所属分组需包含 Gemini 系列模型，否则请求可能被拒绝
 - 流式请求需要添加 `?alt=sse` 查询参数以启用 SSE 格式
 - 使用 `key` 查询参数认证时，仅限 `/v1beta` 路径下的端点有效
 - Gemini CLI 的配置方式请参考 CLI 配置教程中的 Gemini CLI 章节

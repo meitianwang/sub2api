@@ -10,7 +10,7 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `model` | string | 是 | 模型名称，例如 `claude-sonnet-4-20250514` |
+| `model` | string | 是 | 模型名称，例如 `claude-sonnet-4-6` |
 | `messages` | array | 是 | 消息数组，包含 `role` 和 `content` 字段 |
 | `max_tokens` | integer | 是 | 最大生成 token 数 |
 | `stream` | boolean | 否 | 是否启用流式输出，默认 `false` |
@@ -33,7 +33,7 @@ curl -X POST {{BASE_URL}}/v1/messages \
   -H "Authorization: Bearer sk-xxxx" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
     "max_tokens": 1024,
     "messages": [
       {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -49,7 +49,7 @@ curl -X POST {{BASE_URL}}/v1/messages \
   -H "Authorization: Bearer sk-xxxx" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
     "max_tokens": 1024,
     "stream": true,
     "messages": [
@@ -72,7 +72,7 @@ client = Anthropic(
 
 # 非流式调用
 response = client.messages.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-4-6",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -82,7 +82,7 @@ print(response.content[0].text)
 
 # 流式调用
 with client.messages.stream(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-4-6",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "写一首关于春天的诗"}
@@ -108,14 +108,14 @@ curl -X POST {{BASE_URL}}/v1/messages/count_tokens \
   -H "Authorization: Bearer sk-xxxx" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6",
     "messages": [
       {"role": "user", "content": "你好，这段文字有多少 token？"}
     ]
   }'
 ```
 
-> 此端点仅在 API Key 所属分组的平台类型为 Anthropic 时可用。OpenAI 类型的分组调用此端点会返回 404。
+> 此端点需要分组中包含 Claude 系列模型。如果分组不包含 Claude 模型，调用此端点可能会返回错误。
 
 ## 认证方式
 

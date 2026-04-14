@@ -29,7 +29,7 @@ Cursor 原生支持 OpenAI 兼容 API，只需在设置中填写 Base URL 和 AP
 Cursor 通过 OpenAI 兼容格式（`/v1/chat/completions`）调用模型，因此支持以下模型：
 
 - **Claude 系列**：如 `claude-sonnet-4-6`、`claude-opus-4-6` 等
-- **GPT 系列**：如 `gpt-4o`、`gpt-5.4` 等
+- **GPT 系列**：如 `gpt-5.4`、`gpt-5.3-codex` 等
 - **Gemini 系列**：如 `gemini-2.5-pro`、`gemini-3-pro-preview` 等
 
 只要你的分组中包含对应模型，且该分组支持 `chat/completions` 格式，即可在 Cursor 中使用。

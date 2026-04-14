@@ -73,7 +73,7 @@ curl {{BASE_URL}}/v1/models \
 | 分组 A | 0.5x | claude-sonnet-4-6, claude-opus-4-6 |
 | 分组 B | 0.1x | claude-sonnet-4-6, gpt-5.4 |
 
-以 claude-sonnet-4-20250514 为例，假设官方价格为输入 ¥3.00/百万 Token、输出 ¥15.00/百万 Token：
+以 claude-sonnet-4-6 为例，假设官方价格为输入 ¥3.00/百万 Token、输出 ¥15.00/百万 Token：
 
 - 在分组 A（倍率 0.5x）中的实际价格：
   - 输入：¥3.00 x 0.5 = ¥1.50/百万 Token
