@@ -1,24 +1,15 @@
 <template>
   <aside
     class="sidebar"
-    :class="[
-      sidebarCollapsed ? 'w-[72px]' : 'w-64',
-      { '-translate-x-full lg:translate-x-0': !mobileOpen }
-    ]"
+    :class="{ '-translate-x-full lg:translate-x-0': !mobileOpen }"
   >
     <!-- Logo/Brand -->
-    <router-link to="/home" class="sidebar-header no-underline" :title="sidebarCollapsed ? t('nav.home') : undefined">
+    <router-link to="/home" class="sidebar-header no-underline" :title="t('nav.home')">
       <!-- Custom Logo or Default Logo -->
-      <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-glow">
+      <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-glow">
         <img v-if="settingsLoaded" :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
       </div>
-      <transition name="fade">
-        <div v-if="!sidebarCollapsed" class="flex flex-col">
-          <span class="text-lg font-bold text-gray-900 dark:text-white">
-            {{ siteName }}
-          </span>
-        </div>
-      </transition>
+      <span class="sidebar-brand-name">{{ siteName }}</span>
     </router-link>
 
     <!-- Navigation -->
@@ -33,7 +24,7 @@
             :to="item.path"
             class="sidebar-link mb-1"
             :class="{ 'sidebar-link-active': isActive(item.path) }"
-            :title="sidebarCollapsed ? item.label : undefined"
+            :title="item.label"
             :id="
               item.path === '/admin/accounts'
                 ? 'sidebar-channel-manage'
@@ -47,18 +38,13 @@
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
             <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            <transition name="fade">
-              <span v-if="!sidebarCollapsed">{{ item.label }}</span>
-            </transition>
+            <span class="sidebar-link-label">{{ item.label }}</span>
           </router-link>
         </div>
 
         <!-- Personal Section for Admin (hidden in simple mode) -->
         <div v-if="!authStore.isSimpleMode" class="sidebar-section">
-          <div v-if="!sidebarCollapsed" class="sidebar-section-title">
-            {{ t('nav.myAccount') }}
-          </div>
-          <div v-else class="mx-3 my-3 h-px bg-gray-200 dark:bg-dark-700"></div>
+          <div class="sidebar-section-title">{{ t('nav.myAccount') }}</div>
 
           <router-link
             v-for="item in personalNavItems"
@@ -66,15 +52,13 @@
             :to="item.path"
             class="sidebar-link mb-1"
             :class="{ 'sidebar-link-active': isActive(item.path) }"
-            :title="sidebarCollapsed ? item.label : undefined"
+            :title="item.label"
             :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
             @click="handleMenuItemClick(item.path)"
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
             <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            <transition name="fade">
-              <span v-if="!sidebarCollapsed">{{ item.label }}</span>
-            </transition>
+            <span class="sidebar-link-label">{{ item.label }}</span>
           </router-link>
         </div>
       </template>
@@ -88,48 +72,39 @@
             :to="item.path"
             class="sidebar-link mb-1"
             :class="{ 'sidebar-link-active': isActive(item.path) }"
-            :title="sidebarCollapsed ? item.label : undefined"
+            :title="item.label"
             :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
             @click="handleMenuItemClick(item.path)"
           >
             <span v-if="item.iconSvg" class="h-5 w-5 flex-shrink-0 sidebar-svg-icon" v-html="sanitizeSvg(item.iconSvg)"></span>
             <component v-else :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            <transition name="fade">
-              <span v-if="!sidebarCollapsed">{{ item.label }}</span>
-            </transition>
+            <span class="sidebar-link-label">{{ item.label }}</span>
           </router-link>
         </div>
       </template>
     </nav>
 
     <!-- Bottom Section -->
-    <div class="mt-auto border-t border-gray-100 p-3 dark:border-dark-800">
+    <div class="sidebar-bottom">
       <!-- Theme Toggle -->
       <button
         @click="toggleTheme"
-        class="sidebar-link mb-2 w-full"
-        :title="sidebarCollapsed ? (isDark ? t('nav.lightMode') : t('nav.darkMode')) : undefined"
+        class="sidebar-link mb-1 w-full"
+        :title="isDark ? t('nav.lightMode') : t('nav.darkMode')"
       >
         <SunIcon v-if="isDark" class="h-5 w-5 flex-shrink-0 text-amber-500" />
         <MoonIcon v-else class="h-5 w-5 flex-shrink-0" />
-        <transition name="fade">
-          <span v-if="!sidebarCollapsed">{{
-            isDark ? t('nav.lightMode') : t('nav.darkMode')
-          }}</span>
-        </transition>
+        <span class="sidebar-link-label">{{ isDark ? t('nav.lightMode') : t('nav.darkMode') }}</span>
       </button>
 
-      <!-- Collapse Button -->
+      <!-- Collapse Button (mobile only — hidden on desktop via sidebar-collapse-btn) -->
       <button
         @click="toggleSidebar"
-        class="sidebar-link w-full"
-        :title="sidebarCollapsed ? t('nav.expand') : t('nav.collapse')"
+        class="sidebar-link sidebar-collapse-btn w-full"
+        :title="t('nav.collapse')"
       >
-        <ChevronDoubleLeftIcon v-if="!sidebarCollapsed" class="h-5 w-5 flex-shrink-0" />
-        <ChevronDoubleRightIcon v-else class="h-5 w-5 flex-shrink-0" />
-        <transition name="fade">
-          <span v-if="!sidebarCollapsed">{{ t('nav.collapse') }}</span>
-        </transition>
+        <ChevronDoubleLeftIcon class="h-5 w-5 flex-shrink-0" />
+        <span class="sidebar-link-label">{{ t('nav.collapse') }}</span>
       </button>
     </div>
   </aside>
@@ -167,7 +142,6 @@ const authStore = useAuthStore()
 const onboardingStore = useOnboardingStore()
 const adminSettingsStore = useAdminSettingsStore()
 
-const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const mobileOpen = computed(() => appStore.mobileOpen)
 const isAdmin = computed(() => authStore.isAdmin)
 const isDark = ref(document.documentElement.classList.contains('dark'))
@@ -448,20 +422,6 @@ const ChevronDoubleLeftIcon = {
     )
 }
 
-const ChevronDoubleRightIcon = {
-  render: () =>
-    h(
-      'svg',
-      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
-      [
-        h('path', {
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
-          d: 'm5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5'
-        })
-      ]
-    )
-}
 
 // User navigation items (for regular users)
 const userNavItems = computed((): NavItem[] => {

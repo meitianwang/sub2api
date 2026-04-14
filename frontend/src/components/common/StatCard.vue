@@ -1,23 +1,25 @@
 <template>
   <div class="stat-card">
-    <div :class="['stat-icon', iconClass]">
-      <component v-if="icon" :is="icon" class="h-6 w-6" aria-hidden="true" />
-    </div>
-    <div class="min-w-0 flex-1">
-      <p class="stat-label truncate">{{ title }}</p>
-      <div class="mt-1 flex items-baseline gap-2">
-        <p class="stat-value" :title="String(formattedValue)">{{ formattedValue }}</p>
-        <span v-if="change !== undefined" :class="['stat-trend', trendClass]">
-          <Icon
-            v-if="changeType !== 'neutral'"
-            name="arrowUp"
-            size="xs"
-            :class="changeType === 'down' && 'rotate-180'"
-          />
-          {{ formattedChange }}
-        </span>
+    <!-- Top row: label + icon -->
+    <div class="flex items-start justify-between gap-2">
+      <p class="stat-label">{{ title }}</p>
+      <div v-if="icon" :class="['stat-icon flex-shrink-0', iconClass]">
+        <component :is="icon" class="h-4 w-4" aria-hidden="true" />
       </div>
     </div>
+    <!-- Value -->
+    <p class="stat-value" :title="String(formattedValue)">{{ formattedValue }}</p>
+    <!-- Trend -->
+    <span v-if="change !== undefined" :class="['stat-trend', trendClass]">
+      <Icon
+        v-if="changeType !== 'neutral'"
+        name="arrowUp"
+        size="xs"
+        :class="changeType === 'down' && 'rotate-180'"
+      />
+      {{ formattedChange }}
+    </span>
+    <span v-else class="stat-trend opacity-0">—</span>
   </div>
 </template>
 

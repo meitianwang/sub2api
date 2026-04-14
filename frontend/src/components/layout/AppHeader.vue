@@ -1,6 +1,6 @@
 <template>
-  <header class="glass sticky top-0 z-30 border-b border-accent-200/80 dark:border-dark-800">
-    <div class="flex h-13 items-center justify-between px-4 md:px-6" style="height: 52px;">
+  <header class="app-header">
+    <div class="app-header-inner">
       <!-- Left: Mobile Menu Toggle + Page Title -->
       <div class="flex items-center gap-4">
         <button

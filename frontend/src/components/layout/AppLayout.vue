@@ -7,10 +7,7 @@
     <AppSidebar />
 
     <!-- Main Content Area -->
-    <div
-      class="relative min-h-screen transition-all duration-300"
-      :class="[sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64']"
-    >
+    <div class="relative min-h-screen lg:ml-14">
       <!-- Header -->
       <AppHeader />
 
@@ -25,16 +22,13 @@
 <script setup lang="ts">
 import '@/styles/onboarding.css'
 import { computed, onMounted } from 'vue'
-import { useAppStore } from '@/stores'
 import { useAuthStore } from '@/stores/auth'
 import { useOnboardingTour } from '@/composables/useOnboardingTour'
 import { useOnboardingStore } from '@/stores/onboarding'
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
 
-const appStore = useAppStore()
 const authStore = useAuthStore()
-const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const { replayTour } = useOnboardingTour({

@@ -15,7 +15,7 @@
   body {
     @apply bg-accent-50 text-accent-900 dark:bg-dark-950 dark:text-accent-100;
     @apply min-h-screen;
-    background-color: #f7f7f9;
+    background-color: #f4f4f5;
   }
 
   .dark body {
@@ -59,14 +59,11 @@
     background: rgba(139, 92, 246, 0.15);
   }
 
-  /* 选中文本样式 */
   ::selection {
     @apply bg-primary-500/20 text-primary-900 dark:text-primary-100;
   }
 
-  /*
-   * 表格滚动容器
-   */
+  /* 表格滚动容器 */
   .table-wrapper {
     scrollbar-width: auto;
     scrollbar-color: rgba(139, 92, 246, 0.25) transparent;
@@ -88,7 +85,10 @@
 }
 
 @layer components {
-  /* ============ 按钮样式 ============ */
+
+  /* ============================================================
+     按钮
+     ============================================================ */
   .btn {
     @apply inline-flex items-center justify-center gap-2;
     @apply rounded-md px-4 py-2 text-sm font-medium tracking-wide;
@@ -99,9 +99,8 @@
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white;
+    @apply bg-primary-600 text-white shadow-sm;
     @apply hover:bg-primary-700;
-    @apply shadow-sm;
     background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   }
   .btn-primary:hover {
@@ -123,40 +122,28 @@
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white;
+    @apply bg-red-600 text-white shadow-sm;
     @apply hover:bg-red-700;
-    @apply shadow-sm;
   }
 
   .btn-success {
-    @apply bg-emerald-600 text-white;
+    @apply bg-emerald-600 text-white shadow-sm;
     @apply hover:bg-emerald-700;
-    @apply shadow-sm;
   }
 
   .btn-warning {
-    @apply bg-amber-500 text-white;
+    @apply bg-amber-500 text-white shadow-sm;
     @apply hover:bg-amber-600;
-    @apply shadow-sm;
   }
 
-  .btn-sm {
-    @apply rounded px-3 py-1.5 text-xs tracking-normal;
-  }
+  .btn-sm  { @apply rounded px-3 py-1.5 text-xs tracking-normal; }
+  .btn-md  { @apply rounded-md px-4 py-2 text-sm; }
+  .btn-lg  { @apply rounded-md px-6 py-2.5 text-base; }
+  .btn-icon { @apply rounded-md p-2; }
 
-  .btn-md {
-    @apply rounded-md px-4 py-2 text-sm;
-  }
-
-  .btn-lg {
-    @apply rounded-md px-6 py-2.5 text-base;
-  }
-
-  .btn-icon {
-    @apply rounded-md p-2;
-  }
-
-  /* ============ 输入框样式 ============ */
+  /* ============================================================
+     输入框
+     ============================================================ */
   .input {
     @apply w-full rounded-md px-3 py-2 text-sm;
     @apply bg-white dark:bg-dark-800;
@@ -168,36 +155,23 @@
     @apply disabled:cursor-not-allowed disabled:bg-accent-50 dark:disabled:bg-dark-900 disabled:opacity-60;
   }
 
-  .input-error {
-    @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
-  }
+  .input-error      { @apply border-red-500 focus:border-red-500 focus:ring-red-500/20; }
+  .input-label      { @apply mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-accent-400 dark:text-accent-500; }
+  .input-hint       { @apply mt-1 text-xs text-accent-400 dark:text-dark-400; }
+  .input-error-text { @apply mt-1 text-xs text-red-500; }
 
-  .input-label {
-    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-accent-500 dark:text-accent-400;
-  }
-
-  .input-hint {
-    @apply mt-1 text-xs text-accent-400 dark:text-dark-400;
-  }
-
-  .input-error-text {
-    @apply mt-1 text-xs text-red-500;
-  }
-
-  /* Hide number input spinner buttons */
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+  input[type='number'] { -moz-appearance: textfield; }
 
-  input[type='number'] {
-    -moz-appearance: textfield;
-  }
-
-  /* ============ 玻璃效果（简化版）============ */
+  /* ============================================================
+     카드 (Card)
+     ============================================================ */
   .glass {
-    @apply bg-white/90 backdrop-blur-md dark:bg-dark-900/90;
+    @apply bg-white/95 backdrop-blur-sm dark:bg-dark-900/95;
   }
 
   .glass-card {
@@ -207,7 +181,6 @@
     @apply transition-all duration-200;
   }
 
-  /* ============ 卡片样式 ============ */
   .card {
     @apply bg-white dark:bg-dark-800;
     @apply rounded-lg;
@@ -227,131 +200,125 @@
 
   .card-header {
     @apply border-b border-accent-100 dark:border-dark-700;
-    @apply px-6 py-4;
+    @apply px-5 py-3.5;
+    @apply flex items-center justify-between;
   }
 
-  .card-body {
-    @apply p-6;
-  }
+  .card-body   { @apply p-5; }
 
   .card-footer {
     @apply border-t border-accent-100 dark:border-dark-700;
-    @apply px-6 py-4;
+    @apply px-5 py-3;
+    @apply bg-accent-50/60 dark:bg-dark-900/40;
   }
 
-  /* ============ 统计卡片 ============ */
+  /* ============================================================
+     Stat Cards — 数字优先纵向布局
+     ============================================================ */
   .stat-card {
     @apply card p-5;
-    @apply flex items-start gap-4;
+    @apply flex flex-col justify-between gap-3;
+    min-height: 120px;
+  }
+
+  /* 顶部行：标签 + 图标 */
+  .stat-card-top {
+    @apply flex items-start justify-between;
   }
 
   .stat-icon {
-    @apply h-10 w-10 rounded-lg;
+    @apply h-8 w-8 rounded-md;
     @apply flex items-center justify-center;
-    @apply text-lg flex-shrink-0;
+    @apply text-sm flex-shrink-0;
   }
 
-  .stat-icon-primary {
-    @apply bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400;
-  }
-
-  .stat-icon-success {
-    @apply bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400;
-  }
-
-  .stat-icon-warning {
-    @apply bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400;
-  }
-
-  .stat-icon-danger {
-    @apply bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400;
-  }
-
-  .stat-value {
-    @apply text-2xl font-bold text-accent-900 dark:text-white truncate;
-    font-variant-numeric: tabular-nums;
-  }
+  .stat-icon-primary { @apply bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400; }
+  .stat-icon-success { @apply bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400; }
+  .stat-icon-warning { @apply bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400; }
+  .stat-icon-danger  { @apply bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400; }
 
   .stat-label {
-    @apply text-xs font-medium uppercase tracking-wider text-accent-400 dark:text-dark-400;
+    @apply text-[10px] font-bold uppercase tracking-widest;
+    @apply text-accent-400 dark:text-dark-500;
+  }
+
+  /* 大数字 */
+  .stat-value {
+    @apply text-3xl font-bold text-accent-900 dark:text-white;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
 
   .stat-trend {
-    @apply mt-1 flex items-center gap-1 text-xs font-medium;
+    @apply flex items-center gap-1 text-xs font-semibold;
   }
+  .stat-trend-up   { @apply text-emerald-600 dark:text-emerald-400; }
+  .stat-trend-down { @apply text-red-500 dark:text-red-400; }
 
-  .stat-trend-up {
-    @apply text-emerald-600 dark:text-emerald-400;
-  }
-
-  .stat-trend-down {
-    @apply text-red-500 dark:text-red-400;
-  }
-
-  /* ============ 表格样式 ============ */
+  /* ============================================================
+     表格 — 更紧凑，条纹行
+     ============================================================ */
   .table-container {
     @apply overflow-x-auto rounded-lg border border-accent-200 dark:border-dark-700;
   }
 
-  .table {
-    @apply w-full text-sm;
-  }
+  .table { @apply w-full text-sm; }
 
   .table th {
-    @apply px-4 py-2.5 text-left;
-    @apply text-xs font-semibold uppercase tracking-wider;
-    @apply text-accent-400 dark:text-dark-400;
+    @apply px-4 py-2 text-left;
+    @apply text-[10px] font-bold uppercase tracking-widest;
+    @apply text-accent-400 dark:text-dark-500;
     @apply bg-accent-50 dark:bg-dark-900;
     @apply border-b border-accent-200 dark:border-dark-700;
+    white-space: nowrap;
   }
 
   .table td {
-    @apply px-4 py-3;
-    @apply text-accent-700 dark:text-accent-300;
+    @apply px-4 py-2.5;
+    @apply text-sm text-accent-700 dark:text-accent-300;
     @apply border-b border-accent-100 dark:border-dark-800;
   }
 
-  .table tr:last-child td {
-    @apply border-b-0;
+  .table tr:last-child td { @apply border-b-0; }
+
+  /* 奇偶条纹 */
+  .table tbody tr:nth-child(even) {
+    @apply bg-accent-50/50 dark:bg-dark-900/30;
   }
 
   .table tbody tr {
     @apply transition-colors duration-100;
-    @apply hover:bg-accent-50/60 dark:hover:bg-dark-800/60;
+  }
+  .table tbody tr:hover {
+    @apply bg-primary-50/60 dark:bg-primary-900/10;
   }
 
-  /* ============ 徽章样式 ============ */
+  /* 数字列等宽字体 */
+  .table td.numeric {
+    font-variant-numeric: tabular-nums;
+    @apply font-mono text-xs;
+  }
+
+  /* ============================================================
+     徽章
+     ============================================================ */
   .badge {
     @apply inline-flex items-center gap-1;
-    @apply rounded px-2 py-0.5 text-xs font-medium;
-    letter-spacing: 0.01em;
+    @apply rounded px-2 py-0.5 text-[11px] font-semibold;
+    letter-spacing: 0.02em;
   }
 
-  .badge-primary {
-    @apply bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400;
-  }
+  .badge-primary { @apply bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400; }
+  .badge-success { @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400; }
+  .badge-warning { @apply bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400; }
+  .badge-danger  { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400; }
+  .badge-gray    { @apply bg-accent-100 text-accent-600 dark:bg-dark-700 dark:text-dark-300; }
+  .badge-purple  { @apply bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-400; }
 
-  .badge-success {
-    @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400;
-  }
-
-  .badge-warning {
-    @apply bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400;
-  }
-
-  .badge-danger {
-    @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400;
-  }
-
-  .badge-gray {
-    @apply bg-accent-100 text-accent-600 dark:bg-dark-700 dark:text-dark-300;
-  }
-
-  .badge-purple {
-    @apply bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-400;
-  }
-
-  /* ============ 下拉菜单 ============ */
+  /* ============================================================
+     下拉菜单
+     ============================================================ */
   .dropdown {
     @apply absolute z-50;
     @apply bg-white dark:bg-dark-800;
@@ -370,7 +337,9 @@
     @apply flex items-center gap-2.5;
   }
 
-  /* ============ 模态框 ============ */
+  /* ============================================================
+     模态框
+     ============================================================ */
   .modal-overlay {
     @apply fixed inset-0 z-50;
     @apply bg-black/40 backdrop-blur-sm dark:bg-black/60;
@@ -387,84 +356,49 @@
   }
 
   .modal-header {
-    @apply border-b border-accent-100 px-4 py-3.5 dark:border-dark-700;
-    @apply sm:px-6 sm:py-4;
-    @apply flex items-center justify-between;
-    @apply flex-shrink-0;
+    @apply border-b border-accent-100 px-5 py-3.5 dark:border-dark-700;
+    @apply flex items-center justify-between flex-shrink-0;
   }
 
-  .modal-title {
-    @apply text-base font-semibold text-accent-900 dark:text-white;
-  }
+  .modal-title { @apply text-sm font-semibold text-accent-900 dark:text-white; }
 
   .modal-body {
-    @apply px-4 py-3;
-    @apply sm:px-6 sm:py-4;
+    @apply px-5 py-4;
     @apply flex-1 overflow-y-auto;
   }
 
   .modal-footer {
-    @apply border-t border-accent-100 px-4 py-3 dark:border-dark-700;
-    @apply sm:px-6 sm:py-4;
+    @apply border-t border-accent-100 px-5 py-3 dark:border-dark-700;
     @apply bg-accent-50/60 dark:bg-dark-900/40;
-    @apply flex items-center justify-end gap-2;
-    @apply flex-shrink-0;
+    @apply flex items-center justify-end gap-2 flex-shrink-0;
   }
 
-  /* 防止body滚动 */
-  body.modal-open {
-    overflow: hidden;
-  }
+  body.modal-open { overflow: hidden; }
 
-  .modal-enter-active {
-    transition: opacity 200ms ease-out;
-  }
-
-  .modal-leave-active {
-    transition: opacity 150ms ease-in;
-  }
-
+  .modal-enter-active  { transition: opacity 200ms ease-out; }
+  .modal-leave-active  { transition: opacity 150ms ease-in; }
   .modal-enter-from,
-  .modal-leave-to {
-    opacity: 0;
-  }
+  .modal-leave-to      { opacity: 0; }
 
-  .modal-enter-active .modal-content {
-    transition: transform 200ms ease-out, opacity 200ms ease-out;
-  }
-
-  .modal-leave-active .modal-content {
-    transition: transform 150ms ease-in, opacity 150ms ease-in;
-  }
-
+  .modal-enter-active .modal-content { transition: transform 200ms ease-out, opacity 200ms ease-out; }
+  .modal-leave-active .modal-content { transition: transform 150ms ease-in, opacity 150ms ease-in; }
   .modal-enter-from .modal-content,
-  .modal-leave-to .modal-content {
-    transform: scale(0.97) translateY(8px);
-    opacity: 0;
-  }
-
+  .modal-leave-to .modal-content     { transform: scale(0.97) translateY(8px); opacity: 0; }
   .modal-enter-to .modal-content,
-  .modal-leave-from .modal-content {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
+  .modal-leave-from .modal-content   { transform: scale(1) translateY(0); opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
-    .modal-enter-active,
-    .modal-leave-active,
-    .modal-enter-active .modal-content,
-    .modal-leave-active .modal-content {
+    .modal-enter-active, .modal-leave-active,
+    .modal-enter-active .modal-content, .modal-leave-active .modal-content {
       transition-duration: 1ms;
       transition-delay: 0ms;
     }
-
-    .modal-enter-from .modal-content,
-    .modal-leave-to .modal-content {
-      transform: none;
-    }
+    .modal-enter-from .modal-content, .modal-leave-to .modal-content { transform: none; }
   }
 
-  /* ============ Dialog ============ */
+  /* ============================================================
+     Dialog
+     ============================================================ */
   .dialog-overlay {
     @apply fixed inset-0 z-50;
     @apply bg-black/40 dark:bg-black/60;
@@ -472,29 +406,28 @@
   }
 
   .dialog-container {
-    @apply flex w-full flex-col;
-    @apply max-h-[90vh];
+    @apply flex w-full flex-col max-h-[90vh];
     @apply rounded-xl bg-white dark:bg-dark-800;
     @apply border border-accent-200 dark:border-dark-700;
     @apply shadow-float;
   }
 
   .dialog-header {
-    @apply border-b border-accent-100 px-6 py-4 dark:border-dark-700;
+    @apply border-b border-accent-100 px-5 py-3.5 dark:border-dark-700;
     @apply flex items-center justify-between;
   }
 
-  .dialog-body {
-    @apply overflow-y-auto px-6 py-4;
-  }
+  .dialog-body   { @apply overflow-y-auto px-5 py-4; }
 
   .dialog-footer {
-    @apply border-t border-accent-100 px-6 py-4 dark:border-dark-700;
+    @apply border-t border-accent-100 px-5 py-3 dark:border-dark-700;
     @apply bg-accent-50/60 dark:bg-dark-900/40;
     @apply flex items-center justify-end gap-2;
   }
 
-  /* ============ Toast 通知 ============ */
+  /* ============================================================
+     Toast
+     ============================================================ */
   .toast {
     @apply fixed right-4 top-4 z-[100];
     @apply min-w-[320px] max-w-md;
@@ -506,126 +439,209 @@
     @apply animate-slide-in-right;
   }
 
-  .toast-success {
-    @apply border-l-emerald-500;
-  }
+  .toast-success { @apply border-l-emerald-500; }
+  .toast-error   { @apply border-l-red-500; }
+  .toast-warning { @apply border-l-amber-500; }
+  .toast-info    { @apply border-l-primary-500; }
 
-  .toast-error {
-    @apply border-l-red-500;
-  }
-
-  .toast-warning {
-    @apply border-l-amber-500;
-  }
-
-  .toast-info {
-    @apply border-l-primary-500;
-  }
-
-  /* ============ 侧边栏 ============ */
+  /* ============================================================
+     侧边栏 — 图标 Rail（桌面常驻 56px，移动端全宽）
+     ============================================================ */
   .sidebar {
     @apply fixed inset-y-0 left-0 z-40;
-    @apply w-64 bg-white dark:bg-dark-900;
-    @apply border-r border-accent-200 dark:border-dark-800;
+    /* 移动端：全宽侧边栏 */
+    @apply w-60 bg-white dark:bg-dark-900;
+    @apply border-r border-accent-100 dark:border-dark-800;
     @apply flex flex-col;
     @apply transition-transform duration-300;
   }
 
+  /* 桌面端：永远 56px Icon Rail */
+  @media (min-width: 1024px) {
+    .sidebar {
+      width: 56px;
+    }
+  }
+
   .sidebar-header {
-    @apply h-14 px-4;
     @apply flex items-center gap-3;
+    @apply h-14 px-4;
     @apply border-b border-accent-100 dark:border-dark-800;
+    @apply flex-shrink-0;
+  }
+
+  /* 桌面端 header 居中显示 logo */
+  @media (min-width: 1024px) {
+    .sidebar-header {
+      @apply justify-center px-0;
+    }
+  }
+
+  .sidebar-brand-name {
+    @apply text-sm font-bold text-accent-800 dark:text-accent-100;
+    @apply truncate;
+  }
+
+  /* 桌面端隐藏文字 */
+  @media (min-width: 1024px) {
+    .sidebar-brand-name        { display: none; }
+    .sidebar-section-title     { display: none; }
+    .sidebar-link-label        { display: none; }
+    .sidebar-collapse-btn      { display: none; }
   }
 
   .sidebar-nav {
-    @apply flex-1 overflow-y-auto px-2 py-3;
+    @apply flex-1 overflow-y-auto py-3;
+    @apply scrollbar-hide;
   }
 
-  .sidebar-link {
-    @apply flex items-center gap-3 rounded-md px-3 py-2;
-    @apply text-sm font-medium;
-    @apply text-accent-500 dark:text-dark-400;
-    @apply transition-all duration-150;
-    @apply hover:bg-accent-50 dark:hover:bg-dark-800;
-    @apply hover:text-accent-900 dark:hover:text-accent-100;
-    @apply relative;
+  /* 移动端：带 padding */
+  .sidebar-nav { padding-left: 0.5rem; padding-right: 0.5rem; }
+
+  /* 桌面端：nav 居中 */
+  @media (min-width: 1024px) {
+    .sidebar-nav {
+      @apply flex flex-col items-center;
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 
-  .sidebar-link-active {
-    @apply bg-primary-50 dark:bg-primary-900/15;
-    @apply text-primary-700 dark:text-primary-400;
-    @apply hover:bg-primary-50 dark:hover:bg-primary-900/15;
-    @apply hover:text-primary-700 dark:hover:text-primary-400;
-  }
-
-  .sidebar-link-active::before {
-    content: '';
-    @apply absolute left-0 inset-y-1 w-0.5 rounded-full bg-primary-600 dark:bg-primary-500;
-  }
-
-  .sidebar-section {
-    @apply mb-4;
-  }
+  .sidebar-section { @apply mb-1 w-full; }
 
   .sidebar-section-title {
-    @apply mb-1 px-3 py-1;
-    @apply text-[10px] font-bold uppercase tracking-widest;
-    @apply text-accent-300 dark:text-dark-500;
-  }
-
-  /* SVG icon in sidebar */
-  .sidebar-svg-icon svg {
-    @apply h-5 w-5;
-  }
-
-  /* ============ 页面头部 ============ */
-  .page-header {
-    @apply mb-6;
-  }
-
-  .page-title {
-    @apply text-xl font-semibold text-accent-900 dark:text-white;
-  }
-
-  .page-description {
-    @apply mt-0.5 text-sm text-accent-400 dark:text-dark-400;
-  }
-
-  /* ============ 空状态 ============ */
-  .empty-state {
-    @apply flex flex-col items-center justify-center px-4 py-16;
-    @apply text-center;
-  }
-
-  .empty-state-icon {
-    @apply mb-4 h-12 w-12;
+    @apply px-3 py-1;
+    @apply text-[9px] font-black uppercase tracking-[0.12em];
     @apply text-accent-300 dark:text-dark-600;
   }
 
-  .empty-state-title {
-    @apply mb-1 text-sm font-semibold text-accent-700 dark:text-accent-300;
+  /* 桌面端区块分隔改为细线 */
+  .sidebar-section + .sidebar-section::before {
+    display: none;
   }
 
-  .empty-state-description {
-    @apply max-w-sm text-sm text-accent-400 dark:text-dark-400;
+  @media (min-width: 1024px) {
+    .sidebar-section {
+      @apply w-full flex flex-col items-center;
+      margin-bottom: 0;
+    }
+    .sidebar-section + .sidebar-section {
+      margin-top: 0.25rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid;
+      @apply border-accent-100 dark:border-dark-800;
+    }
   }
 
-  /* ============ 加载状态 ============ */
-  .spinner {
+  .sidebar-link {
+    @apply flex items-center gap-3 w-full;
+    @apply rounded-md px-3 py-2;
+    @apply text-sm font-medium;
+    @apply text-accent-500 dark:text-dark-400;
+    @apply transition-all duration-150;
+    @apply hover:bg-accent-100 dark:hover:bg-dark-800;
+    @apply hover:text-accent-800 dark:hover:text-accent-100;
+    @apply relative cursor-pointer;
+  }
+
+  /* 桌面端：icon 居中，正方形按钮 */
+  @media (min-width: 1024px) {
+    .sidebar-link {
+      @apply justify-center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      padding: 0;
+      margin: 2px auto;
+    }
+  }
+
+  .sidebar-link-active {
+    @apply bg-primary-600 text-white;
+    @apply hover:bg-primary-700 hover:text-white;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  }
+
+  @media (min-width: 1024px) {
+    .sidebar-link-active {
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+    }
+  }
+
+  .sidebar-svg-icon svg { @apply h-5 w-5; }
+
+  /* 侧边栏底部 */
+  .sidebar-bottom {
+    @apply flex-shrink-0;
+    @apply border-t border-accent-100 dark:border-dark-800;
+    @apply py-2;
+  }
+
+  @media (min-width: 1024px) {
+    .sidebar-bottom {
+      @apply flex flex-col items-center;
+      padding: 0.5rem 0;
+    }
+  }
+
+  /* ============================================================
+     Header — 工具栏风格
+     ============================================================ */
+  .app-header {
+    @apply sticky top-0 z-30;
+    @apply bg-white/95 backdrop-blur-sm dark:bg-dark-900/95;
+    @apply border-b border-accent-200 dark:border-dark-800;
+    height: 48px;
+  }
+
+  .app-header-inner {
+    @apply flex items-center justify-between h-full;
+    @apply px-4 md:px-6;
+  }
+
+  /* ============================================================
+     页面头部 (Page Header)
+     ============================================================ */
+  .page-header { @apply mb-6; }
+
+  .page-title {
+    @apply text-xl font-bold text-accent-900 dark:text-white;
+    letter-spacing: -0.02em;
+  }
+
+  .page-description {
+    @apply mt-0.5 text-xs text-accent-400 dark:text-dark-500;
+  }
+
+  /* ============================================================
+     空状态
+     ============================================================ */
+  .empty-state {
+    @apply flex flex-col items-center justify-center px-4 py-16 text-center;
+  }
+
+  .empty-state-icon        { @apply mb-4 h-10 w-10 text-accent-300 dark:text-dark-600; }
+  .empty-state-title       { @apply mb-1 text-sm font-semibold text-accent-700 dark:text-accent-300; }
+  .empty-state-description { @apply max-w-sm text-xs text-accent-400 dark:text-dark-400; }
+
+  /* ============================================================
+     加载
+     ============================================================ */
+  .spinner  {
     @apply h-4 w-4 rounded-full border-2 border-current border-t-transparent;
     @apply animate-spin;
   }
 
-  .skeleton {
-    @apply animate-pulse rounded bg-accent-100 dark:bg-dark-700;
-  }
+  .skeleton { @apply animate-pulse rounded bg-accent-100 dark:bg-dark-700; }
 
-  /* ============ 分隔线 ============ */
-  .divider {
-    @apply my-4 h-px bg-accent-100 dark:bg-dark-700;
-  }
+  /* ============================================================
+     分隔线
+     ============================================================ */
+  .divider { @apply my-4 h-px bg-accent-100 dark:bg-dark-700; }
 
-  /* ============ 标签页 ============ */
+  /* ============================================================
+     Tabs
+     ============================================================ */
   .tabs {
     @apply flex gap-0.5 p-1;
     @apply rounded-lg bg-accent-100 dark:bg-dark-800;
@@ -645,27 +661,28 @@
     @apply shadow-card;
   }
 
-  /* ============ 进度条 ============ */
+  /* ============================================================
+     进度条
+     ============================================================ */
   .progress {
-    @apply h-1.5 overflow-hidden rounded-full bg-accent-100 dark:bg-dark-700;
+    @apply h-1 overflow-hidden rounded-full bg-accent-100 dark:bg-dark-700;
   }
 
   .progress-bar {
-    @apply h-full;
-    @apply transition-all duration-500;
+    @apply h-full transition-all duration-500;
     background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%);
   }
 
-  /* ============ 开关 ============ */
+  /* ============================================================
+     开关
+     ============================================================ */
   .switch {
     @apply relative h-5 w-9 cursor-pointer rounded-full;
     @apply bg-accent-200 dark:bg-dark-600;
     @apply transition-colors duration-200;
   }
 
-  .switch-active {
-    @apply bg-primary-600;
-  }
+  .switch-active { @apply bg-primary-600; }
 
   .switch-thumb {
     @apply absolute left-0.5 top-0.5 h-4 w-4 rounded-full;
@@ -673,11 +690,11 @@
     @apply transition-transform duration-200;
   }
 
-  .switch-active .switch-thumb {
-    @apply translate-x-4;
-  }
+  .switch-active .switch-thumb { @apply translate-x-4; }
 
-  /* ============ 代码块 ============ */
+  /* ============================================================
+     Code
+     ============================================================ */
   .code {
     @apply font-mono text-xs;
     @apply bg-accent-100 dark:bg-dark-700;
@@ -692,55 +709,29 @@
     @apply border border-dark-800;
   }
 
-  /* ============ Tour Description ============ */
+  /* ============================================================
+     Tour
+     ============================================================ */
   .tour-step-description {
     @apply space-y-3 text-sm leading-relaxed text-accent-700 dark:text-accent-200;
   }
+  .tour-step-description ul { @apply list-disc pl-5; }
+  .tour-step-description ol { @apply list-decimal pl-5; }
+  .tour-step-description li + li { @apply mt-1; }
 
-  .tour-step-description ul {
-    @apply list-disc pl-5;
-  }
+  .tour-info-box    { @apply rounded border-l-4 border-blue-500 bg-blue-50 px-3 py-2 text-xs text-blue-900 dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-200; }
+  .tour-success-box { @apply rounded border-l-4 border-emerald-500 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-400 dark:bg-emerald-950/30 dark:text-emerald-200; }
+  .tour-warning-box { @apply rounded border-l-4 border-amber-500 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-400 dark:bg-amber-950/30 dark:text-amber-200; }
+  .tour-error-box   { @apply rounded border-l-4 border-red-500 bg-red-50 px-3 py-2 text-xs text-red-900 dark:border-red-400 dark:bg-red-950/30 dark:text-red-200; }
 
-  .tour-step-description ol {
-    @apply list-decimal pl-5;
-  }
-
-  .tour-step-description li + li {
-    @apply mt-1;
-  }
-
-  .tour-info-box {
-    @apply rounded border-l-4 border-blue-500 bg-blue-50 px-3 py-2 text-xs text-blue-900;
-    @apply dark:border-blue-400 dark:bg-blue-950/30 dark:text-blue-200;
-  }
-
-  .tour-success-box {
-    @apply rounded border-l-4 border-emerald-500 bg-emerald-50 px-3 py-2 text-xs text-emerald-900;
-    @apply dark:border-emerald-400 dark:bg-emerald-950/30 dark:text-emerald-200;
-  }
-
-  .tour-warning-box {
-    @apply rounded border-l-4 border-amber-500 bg-amber-50 px-3 py-2 text-xs text-amber-900;
-    @apply dark:border-amber-400 dark:bg-amber-950/30 dark:text-amber-200;
-  }
-
-  .tour-error-box {
-    @apply rounded border-l-4 border-red-500 bg-red-50 px-3 py-2 text-xs text-red-900;
-    @apply dark:border-red-400 dark:bg-red-950/30 dark:text-red-200;
-  }
-
-  /* ============ 表格页面布局优化 ============ */
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  .table-wrapper thead.sticky {
-    box-shadow: 0 1px 0 0 rgb(0 0 0 / 0.08);
-  }
+  /* ============================================================
+     表格容器
+     ============================================================ */
+  .table-wrapper { overflow-x: auto; }
+  .table-wrapper thead.sticky { box-shadow: 0 1px 0 0 rgb(0 0 0 / 0.08); }
 }
 
 @layer utilities {
-  /* 文字渐变 */
   .text-gradient {
     background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
     -webkit-background-clip: text;
@@ -748,26 +739,16 @@
     background-clip: text;
   }
 
-  /* 实线背景（替换玻璃效果）*/
   .glass {
     @apply bg-white/95 backdrop-blur-sm dark:bg-dark-900/95;
   }
 
-  /* 隐藏滚动条 */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-  /* 安全区域 */
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
