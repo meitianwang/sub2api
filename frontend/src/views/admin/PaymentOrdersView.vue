@@ -8,7 +8,7 @@
             <input
               v-model="filters.user_id"
               type="text"
-              :placeholder="t('admin.payment.userIdSearch', 'User ID')"
+              :placeholder="t('admin.payment.userIdSearch')"
               class="input"
               @input="debouncedLoad"
             />
@@ -53,7 +53,7 @@
               @click="loadOrders"
               :disabled="loading"
               class="btn btn-secondary"
-              :title="t('common.refresh', '刷新')"
+              :title="t('common.refresh')"
             >
               <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
             </button>
@@ -108,11 +108,11 @@
           </template>
 
           <template #cell-actions="{ row }">
-            <div class="flex items-center gap-1">
+            <div class="flex items-center space-x-2">
               <button
                 @click="openDetail(row.id)"
                 class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-600 dark:hover:text-gray-300"
-                :title="t('common.details', '详情')"
+                :title="t('common.details')"
               >
                 <Icon name="eye" size="sm" />
               </button>
@@ -120,7 +120,7 @@
                 v-if="row.status === 'pending'"
                 @click="handleCancel(row.id)"
                 class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                :title="t('common.cancel', '取消')"
+                :title="t('common.cancel')"
               >
                 <Icon name="x" size="sm" />
               </button>
@@ -128,7 +128,7 @@
                 v-if="row.status === 'failed'"
                 @click="handleRetry(row.id)"
                 class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-                :title="t('admin.payment.retry', '重试')"
+                :title="t('admin.payment.retry')"
               >
                 <Icon name="refresh" size="sm" />
               </button>
@@ -136,7 +136,7 @@
                 v-if="row.status === 'completed' || row.status === 'paid'"
                 @click="openRefundDialog(row)"
                 class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400"
-                :title="t('admin.payment.refund', '退款')"
+                :title="t('admin.payment.refund')"
               >
                 <Icon name="arrowLeft" size="sm" />
               </button>
@@ -160,7 +160,7 @@
     <!-- Order Detail Dialog -->
     <BaseDialog
       :show="showDetailDialog"
-      :title="t('admin.payment.orderDetail', '订单详情 / Order Detail')"
+      :title="t('admin.payment.orderDetail')"
       width="wide"
       @close="showDetailDialog = false"
     >
@@ -175,67 +175,67 @@
             <p class="font-mono font-medium text-gray-900 dark:text-white">#{{ orderDetail.order.id }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.user', '用户') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.user') }}</span>
             <p class="text-gray-900 dark:text-white">{{ orderDetail.order.user_email || orderDetail.order.user_id }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.amount', '金额') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.amount') }}</span>
             <p class="font-medium text-gray-900 dark:text-white">{{ orderDetail.order.amount }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.payAmount', '实付') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.payAmount') }}</span>
             <p class="text-gray-900 dark:text-white">{{ orderDetail.order.pay_amount || '-' }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.status', '状态') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.status') }}</span>
             <p><span :class="['badge', orderStatusClass(orderDetail.order.status)]">{{ orderStatusLabel(orderDetail.order.status) }}</span></p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.paymentType', '支付方式') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.paymentType') }}</span>
             <p class="text-gray-900 dark:text-white">{{ paymentTypeLabel(orderDetail.order.payment_type) }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.orderType', '类型') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.orderType') }}</span>
             <p class="text-gray-900 dark:text-white">{{ orderDetail.order.order_type === 'balance' ? '余额' : '订阅' }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.rechargeCode', '充值码') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.rechargeCode') }}</span>
             <p class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ orderDetail.order.recharge_code || '-' }}</p>
           </div>
           <div v-if="orderDetail.order.payment_trade_no">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.tradeNo', '交易号') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.tradeNo') }}</span>
             <p class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ orderDetail.order.payment_trade_no }}</p>
           </div>
           <div v-if="orderDetail.order.fee_rate">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.feeRate', '费率') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.feeRate') }}</span>
             <p class="text-gray-900 dark:text-white">{{ (Number(orderDetail.order.fee_rate) * 100).toFixed(1) }}%</p>
           </div>
           <div v-if="orderDetail.order.refund_amount">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.refundAmount', '退款金额') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.refundAmount') }}</span>
             <p class="text-red-600 dark:text-red-400">{{ orderDetail.order.refund_amount }}</p>
           </div>
           <div v-if="orderDetail.order.refund_reason">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.refundReason', '退款原因') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.refundReason') }}</span>
             <p class="text-gray-700 dark:text-gray-300">{{ orderDetail.order.refund_reason }}</p>
           </div>
           <div v-if="orderDetail.order.failed_reason">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.failedReason', '失败原因') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.failedReason') }}</span>
             <p class="text-red-600 dark:text-red-400">{{ orderDetail.order.failed_reason }}</p>
           </div>
           <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.createdAt', '创建时间') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.createdAt') }}</span>
             <p class="text-gray-900 dark:text-white">{{ formatDateTime(orderDetail.order.created_at) }}</p>
           </div>
           <div v-if="orderDetail.order.paid_at">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.paidAt', '支付时间') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.paidAt') }}</span>
             <p class="text-gray-900 dark:text-white">{{ formatDateTime(orderDetail.order.paid_at) }}</p>
           </div>
           <div v-if="orderDetail.order.completed_at">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.completedAt', '完成时间') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.completedAt') }}</span>
             <p class="text-gray-900 dark:text-white">{{ formatDateTime(orderDetail.order.completed_at) }}</p>
           </div>
           <div v-if="orderDetail.order.src_host">
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.srcHost', '来源') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.srcHost') }}</span>
             <p class="text-gray-700 dark:text-gray-300">{{ orderDetail.order.src_host }}</p>
           </div>
         </div>
@@ -243,7 +243,7 @@
         <!-- Audit Logs -->
         <div v-if="orderDetail.audit_logs.length > 0">
           <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-            {{ t('admin.payment.auditLogs', '审计日志 / Audit Logs') }}
+            {{ t('admin.payment.auditLogs') }}
           </h4>
           <div class="space-y-2">
             <div
@@ -267,7 +267,7 @@
       <template #footer>
         <div class="flex justify-end">
           <button type="button" @click="showDetailDialog = false" class="btn btn-secondary">
-            {{ t('common.close', '关闭') }}
+            {{ t('common.close') }}
           </button>
         </div>
       </template>
@@ -276,17 +276,17 @@
     <!-- Refund Dialog -->
     <BaseDialog
       :show="showRefundDialog"
-      :title="t('admin.payment.processRefund', '处理退款 / Process Refund')"
+      :title="t('admin.payment.processRefund')"
       width="normal"
       @close="showRefundDialog = false"
     >
       <form id="admin-refund-form" @submit.prevent="handleRefund" class="space-y-4">
         <div>
-          <label class="input-label">{{ t('admin.payment.orderId', '订单 ID') }}</label>
+          <label class="input-label">{{ t('admin.payment.orderId') }}</label>
           <input :value="refundingOrder?.id" disabled class="input bg-gray-50 dark:bg-dark-800" />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.refundAmount', '退款金额 / Refund Amount') }}</label>
+          <label class="input-label">{{ t('admin.payment.refundAmount') }}</label>
           <input
             v-model.number="refundForm.amount"
             type="number"
@@ -298,22 +298,22 @@
           />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.refundReason', '退款原因 / Reason') }}</label>
+          <label class="input-label">{{ t('admin.payment.refundReason') }}</label>
           <textarea
             v-model="refundForm.reason"
             rows="3"
             class="input"
-            :placeholder="t('admin.payment.refundReasonPlaceholder', '请说明退款原因')"
+            :placeholder="t('admin.payment.refundReasonPlaceholder')"
           ></textarea>
         </div>
       </form>
       <template #footer>
         <div class="flex justify-end gap-3">
           <button type="button" @click="showRefundDialog = false" class="btn btn-secondary">
-            {{ t('common.cancel', '取消') }}
+            {{ t('common.cancel') }}
           </button>
           <button type="submit" form="admin-refund-form" :disabled="processingRefund" class="btn btn-danger">
-            {{ processingRefund ? t('common.loading', '处理中...') : t('admin.payment.confirmRefund', '确认退款') }}
+            {{ processingRefund ? t('common.loading') : t('admin.payment.confirmRefund') }}
           </button>
         </div>
       </template>
@@ -322,10 +322,10 @@
     <!-- Cancel Confirm -->
     <ConfirmDialog
       :show="showCancelConfirm"
-      :title="t('admin.payment.cancelOrder', '取消订单 / Cancel Order')"
-      :message="t('admin.payment.cancelConfirm', '确定要取消此订单吗？')"
-      :confirm-text="t('common.confirm', '确定')"
-      :cancel-text="t('common.cancel', '取消')"
+      :title="t('admin.payment.cancelOrder')"
+      :message="t('admin.payment.cancelConfirm')"
+      :confirm-text="t('common.confirm')"
+      :cancel-text="t('common.cancel')"
       danger
       @confirm="confirmCancel"
       @cancel="showCancelConfirm = false"
@@ -394,7 +394,7 @@ let abortController: AbortController | null = null
 // ==================== Options ====================
 
 const statusOptions = computed(() => [
-  { value: '', label: t('admin.payment.allStatus', '全部状态 / All Status') },
+  { value: '', label: t('admin.payment.allStatus') },
   { value: 'pending', label: '待支付 / Pending' },
   { value: 'paid', label: '已支付 / Paid' },
   { value: 'recharging', label: '充值中 / Recharging' },
@@ -410,7 +410,7 @@ const statusOptions = computed(() => [
 ])
 
 const paymentTypeOptions = computed(() => [
-  { value: '', label: t('admin.payment.allPaymentTypes', '全部方式 / All Types') },
+  { value: '', label: t('admin.payment.allPaymentTypes') },
   { value: 'alipay', label: '支付宝 / Alipay' },
   { value: 'wxpay', label: '微信 / WeChat' },
   { value: 'stripe', label: 'Stripe' },
@@ -418,21 +418,21 @@ const paymentTypeOptions = computed(() => [
 ])
 
 const orderTypeOptions = computed(() => [
-  { value: '', label: t('admin.payment.allOrderTypes', '全部类型 / All') },
+  { value: '', label: t('admin.payment.allOrderTypes') },
   { value: 'balance', label: '余额 / Balance' },
   { value: 'subscription', label: '订阅 / Subscription' }
 ])
 
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
-  { key: 'user_email', label: t('admin.payment.user', '用户') },
-  { key: 'amount', label: t('admin.payment.amount', '金额'), sortable: true },
-  { key: 'pay_amount', label: t('admin.payment.payAmount', '实付') },
-  { key: 'status', label: t('admin.payment.status', '状态'), sortable: true },
-  { key: 'payment_type', label: t('admin.payment.paymentType', '方式') },
-  { key: 'order_type', label: t('admin.payment.orderType', '类型') },
-  { key: 'created_at', label: t('admin.payment.createdAt', '创建时间'), sortable: true },
-  { key: 'actions', label: t('common.actions', '操作') }
+  { key: 'user_email', label: t('admin.payment.user') },
+  { key: 'amount', label: t('admin.payment.amount'), sortable: true },
+  { key: 'pay_amount', label: t('admin.payment.payAmount') },
+  { key: 'status', label: t('admin.payment.status'), sortable: true },
+  { key: 'payment_type', label: t('admin.payment.paymentType') },
+  { key: 'order_type', label: t('admin.payment.orderType') },
+  { key: 'created_at', label: t('admin.payment.createdAt'), sortable: true },
+  { key: 'actions', label: t('common.actions') }
 ])
 
 // ==================== Helpers ====================
@@ -515,7 +515,7 @@ async function loadOrders() {
     pagination.total = response.total
   } catch (error: any) {
     if (currentController.signal.aborted || error?.name === 'AbortError') return
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadFailed', '加载订单失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadFailed'))
     console.error('Failed to load orders:', error)
   } finally {
     if (abortController === currentController && !currentController.signal.aborted) {
@@ -548,7 +548,7 @@ async function openDetail(orderId: number) {
     const data = await paymentAdminAPI.getOrderDetail(orderId)
     orderDetail.value = data
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadDetailFailed', '加载详情失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadDetailFailed'))
   } finally {
     detailLoading.value = false
   }
@@ -564,12 +564,12 @@ async function confirmCancel() {
   if (!cancellingOrderId.value) return
   try {
     await paymentAdminAPI.cancelOrder(cancellingOrderId.value)
-    appStore.showSuccess(t('admin.payment.orderCancelled', '订单已取消'))
+    appStore.showSuccess(t('admin.payment.orderCancelled'))
     showCancelConfirm.value = false
     cancellingOrderId.value = null
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.cancelFailed', '取消失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.cancelFailed'))
   }
 }
 
@@ -577,10 +577,10 @@ async function confirmCancel() {
 async function handleRetry(orderId: number) {
   try {
     await paymentAdminAPI.retryRecharge(orderId)
-    appStore.showSuccess(t('admin.payment.retrySuccess', '重试已发起'))
+    appStore.showSuccess(t('admin.payment.retrySuccess'))
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.retryFailed', '重试失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.retryFailed'))
   }
 }
 
@@ -597,12 +597,12 @@ async function handleRefund() {
   processingRefund.value = true
   try {
     await paymentAdminAPI.processRefund(refundingOrder.value.id, refundForm.amount, refundForm.reason)
-    appStore.showSuccess(t('admin.payment.refundSuccess', '退款已处理'))
+    appStore.showSuccess(t('admin.payment.refundSuccess'))
     showRefundDialog.value = false
     refundingOrder.value = null
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.refundFailed', '退款失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.refundFailed'))
   } finally {
     processingRefund.value = false
   }

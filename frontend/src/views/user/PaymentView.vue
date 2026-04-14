@@ -1,22 +1,38 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
+    <div class="mx-auto max-w-2xl space-y-6">
       <!-- Loading -->
       <div v-if="configLoading" class="flex items-center justify-center py-12">
         <LoadingSpinner />
       </div>
 
       <template v-else>
+        <!-- Current Balance Card -->
+        <div class="card overflow-hidden">
+          <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center">
+            <div
+              class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm"
+            >
+              <Icon name="creditCard" size="xl" class="text-white" />
+            </div>
+            <p class="text-sm font-medium text-primary-100">{{ t('redeem.currentBalance') }}</p>
+            <p class="mt-2 text-4xl font-bold text-white">
+              ¥{{ user?.balance?.toFixed(2) || '0.00' }}
+            </p>
+          </div>
+        </div>
+
         <!-- Recharge Form -->
-        <div class="card p-6">
+        <div class="card">
+          <div class="p-6">
           <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            {{ t('user.payment.recharge', '充值 / Recharge') }}
+            {{ t('user.payment.recharge') }}
           </h2>
 
           <form @submit.prevent="handleCreateOrder" class="space-y-5">
             <!-- Order Type -->
             <div>
-              <label class="input-label">{{ t('user.payment.orderType', '订单类型 / Order Type') }}</label>
+              <label class="input-label">{{ t('user.payment.orderType') }}</label>
               <div class="mt-1 flex gap-4">
                 <label class="flex cursor-pointer items-center gap-2">
                   <input
@@ -26,7 +42,7 @@
                     class="text-primary-600 focus:ring-primary-500"
                   />
                   <span class="text-sm text-gray-700 dark:text-gray-300">
-                    {{ t('user.payment.balance', '余额充值 / Balance') }}
+                    {{ t('user.payment.balance') }}
                   </span>
                 </label>
                 <label v-if="plans.length > 0" class="flex cursor-pointer items-center gap-2">
@@ -37,7 +53,7 @@
                     class="text-primary-600 focus:ring-primary-500"
                   />
                   <span class="text-sm text-gray-700 dark:text-gray-300">
-                    {{ t('user.payment.subscription', '订阅 / Subscription') }}
+                    {{ t('user.payment.subscription') }}
                   </span>
                 </label>
               </div>
@@ -45,7 +61,7 @@
 
             <!-- Subscription Plan Selector (only when order_type === subscription) -->
             <div v-if="orderForm.order_type === 'subscription' && plans.length > 0">
-              <label class="input-label">{{ t('user.payment.selectPlan', '选择套餐 / Select Plan') }}</label>
+              <label class="input-label">{{ t('user.payment.selectPlan') }}</label>
               <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div
                   v-for="plan in plans"
@@ -87,7 +103,7 @@
 
             <!-- Amount -->
             <div v-if="orderForm.order_type === 'balance'">
-              <label class="input-label">{{ t('user.payment.amount', '金额 / Amount') }}</label>
+              <label class="input-label">{{ t('user.payment.amount') }}</label>
               <input
                 v-model.number="orderForm.amount"
                 type="number"
@@ -98,15 +114,15 @@
                 class="input"
                 :placeholder="`${config?.min_recharge_amount || 1} - ${config?.max_recharge_amount || 10000}`"
               />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {{ t('user.payment.amountRange', '范围 / Range') }}:
+              <p class="input-hint">
+                {{ t('user.payment.amountRange') }}:
                 {{ config?.min_recharge_amount || 1 }} - {{ config?.max_recharge_amount || 10000 }}
               </p>
             </div>
 
             <!-- Payment Type -->
             <div>
-              <label class="input-label">{{ t('user.payment.paymentType', '支付方式 / Payment Method') }}</label>
+              <label class="input-label">{{ t('user.payment.paymentType') }}</label>
               <div class="mt-2 space-y-2">
                 <label
                   v-for="method in availableMethods"
@@ -133,10 +149,10 @@
                   </div>
                   <div class="text-right text-xs text-gray-500 dark:text-gray-400">
                     <span v-if="Number(method.fee_rate) > 0">
-                      {{ t('user.payment.fee', '手续费 / Fee') }}: {{ (Number(method.fee_rate) * 100).toFixed(1) }}%
+                      {{ t('user.payment.fee') }}: {{ (Number(method.fee_rate) * 100).toFixed(1) }}%
                     </span>
                     <span v-else class="text-green-500">
-                      {{ t('user.payment.noFee', '免手续费 / No fee') }}
+                      {{ t('user.payment.noFee') }}
                     </span>
                   </div>
                 </label>
@@ -148,16 +164,18 @@
               :disabled="creating || !canCreateOrder"
               class="btn btn-primary w-full"
             >
-              {{ creating ? t('common.loading', '处理中...') : t('user.payment.createOrder', '创建订单 / Create Order') }}
+              {{ creating ? t('common.loading') : t('user.payment.createOrder') }}
             </button>
           </form>
+          </div>
         </div>
 
         <!-- Active Order -->
-        <div v-if="activeOrder" class="card p-6">
+        <div v-if="activeOrder" class="card">
+          <div class="p-6">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('user.payment.activeOrder', '当前订单 / Active Order') }}
+              {{ t('user.payment.activeOrder') }}
             </h2>
             <span :class="['badge', orderStatusClass(activeOrder.order.status)]">
               {{ orderStatusLabel(activeOrder.order.status) }}
@@ -166,23 +184,23 @@
 
           <div class="space-y-3">
             <div class="flex justify-between text-sm">
-              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.orderId', '订单号 / Order ID') }}</span>
+              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.orderId') }}</span>
               <span class="font-mono text-gray-900 dark:text-white">#{{ activeOrder.order.id }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.amount', '金额 / Amount') }}</span>
+              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.amount') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ activeOrder.order.amount }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.payAmount', '实付 / Pay Amount') }}</span>
+              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.payAmount') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ activeOrder.order.pay_amount }}</span>
             </div>
             <div v-if="Number(activeOrder.order.fee_rate) > 0" class="flex justify-between text-sm">
-              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.feeRate', '费率 / Fee Rate') }}</span>
+              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.feeRate') }}</span>
               <span class="text-gray-700 dark:text-gray-300">{{ (Number(activeOrder.order.fee_rate) * 100).toFixed(1) }}%</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.expiresAt', '过期时间 / Expires') }}</span>
+              <span class="text-gray-500 dark:text-gray-400">{{ t('user.payment.expiresAt') }}</span>
               <span class="text-gray-700 dark:text-gray-300">{{ formatDateTime(activeOrder.order.expires_at) }}</span>
             </div>
 
@@ -194,7 +212,7 @@
                 rel="noopener noreferrer"
                 class="btn btn-primary w-full"
               >
-                {{ t('user.payment.goToPay', '前往支付 / Go to Pay') }}
+                {{ t('user.payment.goToPay') }}
                 <Icon name="externalLink" size="sm" class="ml-2" />
               </a>
             </div>
@@ -202,7 +220,7 @@
             <!-- QR Code -->
             <div v-if="activeOrder.qr_code" class="mt-4 flex flex-col items-center">
               <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                {{ t('user.payment.scanQr', '扫码支付 / Scan to Pay') }}
+                {{ t('user.payment.scanQr') }}
               </p>
               <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-dark-600">
                 <img
@@ -219,8 +237,9 @@
 
             <!-- Polling indicator -->
             <p v-if="polling" class="mt-3 text-center text-xs text-gray-400 dark:text-dark-400">
-              {{ t('user.payment.polling', '正在检查支付状态... / Checking payment status...') }}
+              {{ t('user.payment.polling') }}
             </p>
+          </div>
           </div>
         </div>
 
@@ -229,12 +248,12 @@
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
             <div class="flex items-center justify-between">
               <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                {{ t('user.payment.orderHistory', '订单记录 / Order History') }}
+                {{ t('user.payment.orderHistory') }}
               </h2>
               <button
                 @click="loadOrders"
                 :disabled="ordersLoading"
-                class="btn btn-secondary btn-sm"
+                class="btn btn-secondary"
               >
                 <Icon name="refresh" size="sm" :class="ordersLoading ? 'animate-spin' : ''" />
               </button>
@@ -260,7 +279,7 @@
 
             <template #cell-order_type="{ value }">
               <span class="text-sm text-gray-700 dark:text-gray-300">
-                {{ value === 'balance' ? t('user.payment.balance', '余额') : t('user.payment.subscription', '订阅') }}
+                {{ value === 'balance' ? t('user.payment.balance') : t('user.payment.subscription') }}
               </span>
             </template>
 
@@ -269,20 +288,20 @@
             </template>
 
             <template #cell-actions="{ row }">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center space-x-2">
                 <button
                   v-if="row.status === 'pending'"
                   @click="handleCancelOrder(row.id)"
-                  class="btn btn-danger btn-sm text-xs"
+                  class="btn btn-danger text-xs"
                 >
-                  {{ t('common.cancel', '取消') }}
+                  {{ t('common.cancel') }}
                 </button>
                 <button
                   v-if="row.status === 'completed'"
                   @click="openRefundDialog(row)"
-                  class="btn btn-secondary btn-sm text-xs"
+                  class="btn btn-secondary text-xs"
                 >
-                  {{ t('user.payment.refund', '退款') }}
+                  {{ t('user.payment.refund') }}
                 </button>
               </div>
             </template>
@@ -304,13 +323,13 @@
       <!-- Refund Dialog -->
       <BaseDialog
         :show="showRefundDialog"
-        :title="t('user.payment.requestRefund', '申请退款 / Request Refund')"
+        :title="t('user.payment.requestRefund')"
         width="normal"
         @close="showRefundDialog = false"
       >
         <form id="refund-form" @submit.prevent="handleRequestRefund" class="space-y-4">
           <div>
-            <label class="input-label">{{ t('user.payment.refundAmount', '退款金额 / Refund Amount') }}</label>
+            <label class="input-label">{{ t('user.payment.refundAmount') }}</label>
             <input
               v-model.number="refundForm.amount"
               type="number"
@@ -322,22 +341,22 @@
             />
           </div>
           <div>
-            <label class="input-label">{{ t('user.payment.refundReason', '退款原因 / Reason') }}</label>
+            <label class="input-label">{{ t('user.payment.refundReason') }}</label>
             <textarea
               v-model="refundForm.reason"
               rows="3"
               class="input"
-              :placeholder="t('user.payment.refundReasonPlaceholder', '请说明退款原因 / Please describe the reason')"
+              :placeholder="t('user.payment.refundReasonPlaceholder')"
             ></textarea>
           </div>
         </form>
         <template #footer>
           <div class="flex justify-end gap-3">
             <button type="button" @click="showRefundDialog = false" class="btn btn-secondary">
-              {{ t('common.cancel', '取消') }}
+              {{ t('common.cancel') }}
             </button>
             <button type="submit" form="refund-form" :disabled="refunding" class="btn btn-primary">
-              {{ refunding ? t('common.loading', '处理中...') : t('common.submit', '提交') }}
+              {{ refunding ? t('common.loading') : t('common.submit') }}
             </button>
           </div>
         </template>
@@ -346,10 +365,10 @@
       <!-- Cancel Confirm -->
       <ConfirmDialog
         :show="showCancelConfirm"
-        :title="t('user.payment.cancelOrder', '取消订单 / Cancel Order')"
-        :message="t('user.payment.cancelConfirm', '确定要取消此订单吗？/ Are you sure you want to cancel this order?')"
-        :confirm-text="t('common.confirm', '确定')"
-        :cancel-text="t('common.cancel', '取消')"
+        :title="t('user.payment.cancelOrder')"
+        :message="t('user.payment.cancelConfirm')"
+        :confirm-text="t('common.confirm')"
+        :cancel-text="t('common.cancel')"
         danger
         @confirm="confirmCancelOrder"
         @cancel="showCancelConfirm = false"
@@ -361,6 +380,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { paymentAPI } from '@/api/payment'
@@ -376,7 +396,10 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
 const appStore = useAppStore()
+
+const user = computed(() => authStore.user)
 
 // ==================== State ====================
 
@@ -456,12 +479,12 @@ const canCreateOrder = computed(() => {
 
 const orderColumns = computed<Column[]>(() => [
   { key: 'id', label: 'ID' },
-  { key: 'amount', label: t('user.payment.amount', '金额') },
-  { key: 'status', label: t('user.payment.status', '状态') },
-  { key: 'payment_type', label: t('user.payment.paymentType', '支付方式') },
-  { key: 'order_type', label: t('user.payment.orderType', '类型') },
-  { key: 'created_at', label: t('user.payment.createdAt', '创建时间'), sortable: true },
-  { key: 'actions', label: t('common.actions', '操作') }
+  { key: 'amount', label: t('user.payment.amount') },
+  { key: 'status', label: t('user.payment.status') },
+  { key: 'payment_type', label: t('user.payment.paymentType') },
+  { key: 'order_type', label: t('user.payment.orderType') },
+  { key: 'created_at', label: t('user.payment.createdAt'), sortable: true },
+  { key: 'actions', label: t('common.actions') }
 ])
 
 // ==================== Helpers ====================
@@ -544,7 +567,7 @@ async function loadConfig() {
       orderForm.payment_type = firstAvailable.payment_type
     }
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('user.payment.loadFailed', '加载配置失败'))
+    appStore.showError(error.response?.data?.detail || t('user.payment.loadFailed'))
     console.error('Failed to load payment config:', error)
   } finally {
     configLoading.value = false
@@ -558,7 +581,7 @@ async function loadOrders() {
     orders.value = response.items
     orderPagination.total = response.total
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('user.payment.loadOrdersFailed', '加载订单失败'))
+    appStore.showError(error.response?.data?.detail || t('user.payment.loadOrdersFailed'))
     console.error('Failed to load orders:', error)
   } finally {
     ordersLoading.value = false
@@ -580,11 +603,11 @@ async function handleCreateOrder() {
     }
     const result = await paymentAPI.createOrder(payload)
     activeOrder.value = result
-    appStore.showSuccess(t('user.payment.orderCreated', '订单已创建'))
+    appStore.showSuccess(t('user.payment.orderCreated'))
     startPolling(result.order.id)
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('user.payment.createFailed', '创建订单失败'))
+    appStore.showError(error.response?.data?.detail || t('user.payment.createFailed'))
     console.error('Failed to create order:', error)
   } finally {
     creating.value = false
@@ -600,7 +623,7 @@ function startPolling(orderId: number) {
       if (order.status === 'completed' || order.status === 'paid') {
         stopPolling()
         activeOrder.value = null
-        appStore.showSuccess(t('user.payment.paymentSuccess', '支付成功'))
+        appStore.showSuccess(t('user.payment.paymentSuccess'))
         loadOrders()
       } else if (
         order.status === 'expired' ||
@@ -635,7 +658,7 @@ async function confirmCancelOrder() {
   if (!cancellingOrderId.value) return
   try {
     await paymentAPI.cancelOrder(cancellingOrderId.value)
-    appStore.showSuccess(t('user.payment.orderCancelled', '订单已取消'))
+    appStore.showSuccess(t('user.payment.orderCancelled'))
     showCancelConfirm.value = false
     cancellingOrderId.value = null
     if (activeOrder.value?.order.id === cancellingOrderId.value) {
@@ -644,7 +667,7 @@ async function confirmCancelOrder() {
     }
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('user.payment.cancelFailed', '取消失败'))
+    appStore.showError(error.response?.data?.detail || t('user.payment.cancelFailed'))
   }
 }
 
@@ -661,12 +684,12 @@ async function handleRequestRefund() {
   refunding.value = true
   try {
     await paymentAPI.requestRefund(refundingOrder.value.id, refundForm.amount, refundForm.reason)
-    appStore.showSuccess(t('user.payment.refundRequested', '退款申请已提交'))
+    appStore.showSuccess(t('user.payment.refundRequested'))
     showRefundDialog.value = false
     refundingOrder.value = null
     loadOrders()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('user.payment.refundFailed', '退款申请失败'))
+    appStore.showError(error.response?.data?.detail || t('user.payment.refundFailed'))
   } finally {
     refunding.value = false
   }

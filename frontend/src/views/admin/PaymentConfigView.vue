@@ -27,41 +27,41 @@
         <template v-else-if="dashboard">
           <!-- Stats Cards -->
           <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div class="card p-4">
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.todayAmount', '今日金额') }}</p>
+            <div class="card"><div class="p-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.todayAmount') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.today_amount }}</p>
-            </div>
-            <div class="card p-4">
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.todayOrders', '今日订单') }}</p>
+            </div></div>
+            <div class="card"><div class="p-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.todayOrders') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.today_order_count }}</p>
-            </div>
-            <div class="card p-4">
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.totalAmount', '总金额') }}</p>
+            </div></div>
+            <div class="card"><div class="p-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.totalAmount') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.total_amount }}</p>
-            </div>
-            <div class="card p-4">
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.totalOrders', '总订单') }}</p>
+            </div></div>
+            <div class="card"><div class="p-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.payment.totalOrders') }}</p>
               <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.total_order_count }}</p>
-            </div>
+            </div></div>
           </div>
 
           <!-- Daily Chart -->
-          <div class="card mt-6 p-6">
-            <h3 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.dailyTrend', '每日趋势 / Daily Trend') }}
+          <div class="card mt-6"><div class="p-6">
+            <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.dailyTrend') }}
             </h3>
             <div v-if="dashboard.daily_series.length > 0" class="overflow-x-auto">
               <canvas ref="chartCanvas" height="250"></canvas>
             </div>
             <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.payment.noData', '暂无数据') }}
+              {{ t('admin.payment.noData') }}
             </p>
-          </div>
+          </div></div>
 
           <!-- Payment Methods -->
-          <div v-if="dashboard.payment_methods.length > 0" class="card mt-6 p-6">
-            <h3 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.paymentMethods', '支付方式统计') }}
+          <div v-if="dashboard.payment_methods.length > 0" class="card mt-6"><div class="p-6">
+            <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.paymentMethods') }}
             </h3>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div
@@ -71,24 +71,24 @@
               >
                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ paymentTypeLabel(method.type) }}</p>
                 <p class="mt-1 text-lg font-bold text-gray-900 dark:text-white">{{ method.amount }}</p>
-                <p class="text-xs text-gray-400">{{ method.count }} {{ t('admin.payment.orders', '笔') }}</p>
+                <p class="text-xs text-gray-400">{{ method.count }} {{ t('admin.payment.orders') }}</p>
               </div>
             </div>
-          </div>
+          </div></div>
         </template>
       </div>
 
       <!-- Tab: Settings -->
       <div v-show="activeTab === 'settings'">
-        <div class="card p-6">
+        <div class="card"><div class="p-6">
           <div class="mb-6 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.configSettings', '支付配置 / Payment Settings') }}
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.configSettings') }}
             </h3>
             <button
               @click="loadConfig"
               :disabled="configLoading"
-              class="btn btn-secondary btn-sm"
+              class="btn btn-secondary"
             >
               <Icon name="refresh" size="sm" :class="configLoading ? 'animate-spin' : ''" />
             </button>
@@ -110,27 +110,27 @@
             </div>
             <div class="flex justify-end pt-2">
               <button type="submit" :disabled="savingConfig" class="btn btn-primary">
-                {{ savingConfig ? t('common.saving', '保存中...') : t('common.save', '保存') }}
+                {{ savingConfig ? t('common.saving') : t('common.save') }}
               </button>
             </div>
           </form>
-        </div>
+        </div></div>
       </div>
 
       <!-- Tab: Provider Instances -->
       <div v-show="activeTab === 'providers'">
         <div class="card">
           <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.providerInstances', '支付渠道实例 / Provider Instances') }}
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.providerInstances') }}
             </h3>
             <div class="flex gap-2">
-              <button @click="loadProviderInstances" :disabled="providersLoading" class="btn btn-secondary btn-sm">
+              <button @click="loadProviderInstances" :disabled="providersLoading" class="btn btn-secondary">
                 <Icon name="refresh" size="sm" :class="providersLoading ? 'animate-spin' : ''" />
               </button>
-              <button @click="openProviderDialog()" class="btn btn-primary btn-sm">
+              <button @click="openProviderDialog()" class="btn btn-primary">
                 <Icon name="plus" size="sm" class="mr-1" />
-                {{ t('common.create', '创建') }}
+                {{ t('common.create') }}
               </button>
             </div>
           </div>
@@ -146,18 +146,18 @@
 
             <template #cell-enabled="{ value }">
               <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
-                {{ value ? t('common.enabled', '启用') : t('common.disabled', '禁用') }}
+                {{ value ? t('common.enabled') : t('common.disabled') }}
               </span>
             </template>
 
             <template #cell-refund_enabled="{ value }">
               <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
-                {{ value ? t('common.yes', '是') : t('common.no', '否') }}
+                {{ value ? t('common.yes') : t('common.no') }}
               </span>
             </template>
 
             <template #cell-actions="{ row }">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center space-x-2">
                 <button
                   @click="openProviderDialog(row)"
                   class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-600 dark:hover:text-gray-300"
@@ -180,16 +180,16 @@
       <div v-show="activeTab === 'channels'">
         <div class="card">
           <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.channels', '支付渠道 / Channels') }}
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.channels') }}
             </h3>
             <div class="flex gap-2">
-              <button @click="loadChannels" :disabled="channelsLoading" class="btn btn-secondary btn-sm">
+              <button @click="loadChannels" :disabled="channelsLoading" class="btn btn-secondary">
                 <Icon name="refresh" size="sm" :class="channelsLoading ? 'animate-spin' : ''" />
               </button>
-              <button @click="openChannelDialog()" class="btn btn-primary btn-sm">
+              <button @click="openChannelDialog()" class="btn btn-primary">
                 <Icon name="plus" size="sm" class="mr-1" />
-                {{ t('common.create', '创建') }}
+                {{ t('common.create') }}
               </button>
             </div>
           </div>
@@ -205,12 +205,12 @@
 
             <template #cell-enabled="{ value }">
               <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
-                {{ value ? t('common.enabled', '启用') : t('common.disabled', '禁用') }}
+                {{ value ? t('common.enabled') : t('common.disabled') }}
               </span>
             </template>
 
             <template #cell-actions="{ row }">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center space-x-2">
                 <button
                   @click="openChannelDialog(row)"
                   class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-600 dark:hover:text-gray-300"
@@ -233,16 +233,16 @@
       <div v-show="activeTab === 'plans'">
         <div class="card">
           <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.subscriptionPlans', '订阅套餐 / Subscription Plans') }}
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.payment.subscriptionPlans') }}
             </h3>
             <div class="flex gap-2">
-              <button @click="loadPlans" :disabled="plansLoading" class="btn btn-secondary btn-sm">
+              <button @click="loadPlans" :disabled="plansLoading" class="btn btn-secondary">
                 <Icon name="refresh" size="sm" :class="plansLoading ? 'animate-spin' : ''" />
               </button>
-              <button @click="openPlanDialog()" class="btn btn-primary btn-sm">
+              <button @click="openPlanDialog()" class="btn btn-primary">
                 <Icon name="plus" size="sm" class="mr-1" />
-                {{ t('common.create', '创建') }}
+                {{ t('common.create') }}
               </button>
             </div>
           </div>
@@ -272,12 +272,12 @@
 
             <template #cell-for_sale="{ value }">
               <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
-                {{ value ? t('common.yes', '是') : t('common.no', '否') }}
+                {{ value ? t('common.yes') : t('common.no') }}
               </span>
             </template>
 
             <template #cell-actions="{ row }">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center space-x-2">
                 <button
                   @click="openPlanDialog(row)"
                   class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-600 dark:hover:text-gray-300"
@@ -300,14 +300,14 @@
     <!-- Provider Instance Dialog -->
     <BaseDialog
       :show="showProviderDialog"
-      :title="editingProvider ? t('admin.payment.editProvider', '编辑实例') : t('admin.payment.createProvider', '创建实例')"
+      :title="editingProvider ? t('admin.payment.editProvider') : t('admin.payment.createProvider')"
       width="wide"
       @close="showProviderDialog = false"
     >
       <form id="provider-form" @submit.prevent="saveProvider" class="space-y-4">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label class="input-label">{{ t('admin.payment.providerKey', '提供商 / Provider') }}</label>
+            <label class="input-label">{{ t('admin.payment.providerKey') }}</label>
             <Select
               v-model="providerForm.provider_key"
               :options="providerKeyOptions"
@@ -315,11 +315,11 @@
             />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.name', '名称 / Name') }}</label>
+            <label class="input-label">{{ t('admin.payment.name') }}</label>
             <input v-model="providerForm.name" type="text" required class="input" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.supportedTypes', '支持类型 / Supported Types') }}</label>
+            <label class="input-label">{{ t('admin.payment.supportedTypes') }}</label>
             <input
               v-model="providerForm.supported_types"
               type="text"
@@ -328,24 +328,24 @@
             />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.sortOrder', '排序 / Sort Order') }}</label>
+            <label class="input-label">{{ t('admin.payment.sortOrder') }}</label>
             <input v-model.number="providerForm.sort_order" type="number" class="input" />
           </div>
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <Toggle v-model="providerForm.enabled" />
-              {{ t('common.enabled', '启用') }}
+              {{ t('common.enabled') }}
             </label>
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <Toggle v-model="providerForm.refund_enabled" />
-              {{ t('admin.payment.refundEnabled', '允许退款') }}
+              {{ t('admin.payment.refundEnabled') }}
             </label>
           </div>
         </div>
 
         <!-- Config Fields -->
         <div>
-          <label class="input-label">{{ t('admin.payment.configFields', '配置字段 / Config') }}</label>
+          <label class="input-label">{{ t('admin.payment.configFields') }}</label>
           <div class="space-y-2">
             <div
               v-for="(_value, key) in providerForm.config"
@@ -382,7 +382,7 @@
               <button
                 type="button"
                 @click="addConfigField"
-                class="btn btn-secondary btn-sm"
+                class="btn btn-secondary"
               >
                 <Icon name="plus" size="sm" />
               </button>
@@ -393,8 +393,8 @@
         <!-- Limits JSON -->
         <div>
           <label class="input-label">
-            {{ t('admin.payment.limits', '限额 / Limits') }}
-            <span class="ml-1 text-xs font-normal text-gray-400">(JSON, {{ t('common.optional', '可选') }})</span>
+            {{ t('admin.payment.limits') }}
+            <span class="ml-1 text-xs font-normal text-gray-400">(JSON, {{ t('common.optional') }})</span>
           </label>
           <textarea
             v-model="providerForm.limits"
@@ -407,10 +407,10 @@
       <template #footer>
         <div class="flex justify-end gap-3">
           <button type="button" @click="showProviderDialog = false" class="btn btn-secondary">
-            {{ t('common.cancel', '取消') }}
+            {{ t('common.cancel') }}
           </button>
           <button type="submit" form="provider-form" :disabled="savingProvider" class="btn btn-primary">
-            {{ savingProvider ? t('common.saving', '保存中...') : t('common.save', '保存') }}
+            {{ savingProvider ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </template>
@@ -419,59 +419,59 @@
     <!-- Channel Dialog -->
     <BaseDialog
       :show="showChannelDialog"
-      :title="editingChannel ? t('admin.payment.editChannel', '编辑渠道') : t('admin.payment.createChannel', '创建渠道')"
+      :title="editingChannel ? t('admin.payment.editChannel') : t('admin.payment.createChannel')"
       width="normal"
       @close="showChannelDialog = false"
     >
       <form id="channel-form" @submit.prevent="saveChannel" class="space-y-4">
         <div>
-          <label class="input-label">{{ t('admin.payment.name', '名称 / Name') }}</label>
+          <label class="input-label">{{ t('admin.payment.name') }}</label>
           <input v-model="channelForm.name" type="text" required class="input" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.groupId', '分组 ID / Group ID') }}</label>
+            <label class="input-label">{{ t('admin.payment.groupId') }}</label>
             <input v-model.number="channelForm.group_id" type="number" class="input" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.platform', '平台 / Platform') }}</label>
+            <label class="input-label">{{ t('admin.payment.platform') }}</label>
             <input v-model="channelForm.platform" type="text" required class="input" placeholder="web / mobile" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.rateMultiplier', '倍率 / Rate Multiplier') }}</label>
+            <label class="input-label">{{ t('admin.payment.rateMultiplier') }}</label>
             <input v-model="channelForm.rate_multiplier" type="text" class="input" placeholder="1.0" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.sortOrder', '排序 / Sort Order') }}</label>
+            <label class="input-label">{{ t('admin.payment.sortOrder') }}</label>
             <input v-model.number="channelForm.sort_order" type="number" class="input" />
           </div>
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.description', '描述 / Description') }}</label>
+          <label class="input-label">{{ t('admin.payment.description') }}</label>
           <textarea v-model="channelForm.description" rows="2" class="input"></textarea>
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.models', '模型 / Models') }}</label>
+          <label class="input-label">{{ t('admin.payment.models') }}</label>
           <input v-model="channelForm.models" type="text" class="input" placeholder="gpt-4,claude-3" />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.features', '特性 / Features') }}</label>
+          <label class="input-label">{{ t('admin.payment.features') }}</label>
           <input v-model="channelForm.features" type="text" class="input" placeholder="unlimited,priority" />
         </div>
         <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <Toggle v-model="channelForm.enabled" />
-          {{ t('common.enabled', '启用') }}
+          {{ t('common.enabled') }}
         </label>
       </form>
       <template #footer>
         <div class="flex justify-end gap-3">
           <button type="button" @click="showChannelDialog = false" class="btn btn-secondary">
-            {{ t('common.cancel', '取消') }}
+            {{ t('common.cancel') }}
           </button>
           <button type="submit" form="channel-form" :disabled="savingChannel" class="btn btn-primary">
-            {{ savingChannel ? t('common.saving', '保存中...') : t('common.save', '保存') }}
+            {{ savingChannel ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </template>
@@ -480,71 +480,71 @@
     <!-- Plan Dialog -->
     <BaseDialog
       :show="showPlanDialog"
-      :title="editingPlan ? t('admin.payment.editPlan', '编辑套餐') : t('admin.payment.createPlan', '创建套餐')"
+      :title="editingPlan ? t('admin.payment.editPlan') : t('admin.payment.createPlan')"
       width="normal"
       @close="showPlanDialog = false"
     >
       <form id="plan-form" @submit.prevent="savePlan" class="space-y-4">
         <div>
-          <label class="input-label">{{ t('admin.payment.name', '名称 / Name') }}</label>
+          <label class="input-label">{{ t('admin.payment.name') }}</label>
           <input v-model="planForm.name" type="text" required class="input" />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.description', '描述 / Description') }}</label>
+          <label class="input-label">{{ t('admin.payment.description') }}</label>
           <textarea v-model="planForm.description" rows="2" class="input"></textarea>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.groupId', '分组 ID / Group ID') }}</label>
+            <label class="input-label">{{ t('admin.payment.groupId') }}</label>
             <input v-model.number="planForm.group_id" type="number" class="input" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.price', '价格 / Price') }}</label>
+            <label class="input-label">{{ t('admin.payment.price') }}</label>
             <input v-model="planForm.price" type="text" required class="input" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.originalPrice', '原价 / Original Price') }}</label>
+            <label class="input-label">{{ t('admin.payment.originalPrice') }}</label>
             <input v-model="planForm.original_price" type="text" class="input" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.productName', '产品名 / Product Name') }}</label>
+            <label class="input-label">{{ t('admin.payment.productName') }}</label>
             <input v-model="planForm.product_name" type="text" class="input" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.validityDays', '有效期 / Validity') }}</label>
+            <label class="input-label">{{ t('admin.payment.validityDays') }}</label>
             <input v-model.number="planForm.validity_days" type="number" min="1" required class="input" />
           </div>
           <div>
-            <label class="input-label">{{ t('admin.payment.validityUnit', '单位 / Unit') }}</label>
+            <label class="input-label">{{ t('admin.payment.validityUnit') }}</label>
             <Select v-model="planForm.validity_unit" :options="validityUnitOptions" />
           </div>
         </div>
         <div>
-          <label class="input-label">{{ t('admin.payment.features', '特性 / Features') }}</label>
+          <label class="input-label">{{ t('admin.payment.features') }}</label>
           <textarea v-model="planForm.features" rows="2" class="input" placeholder="Feature 1, Feature 2"></textarea>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">{{ t('admin.payment.sortOrder', '排序 / Sort Order') }}</label>
+            <label class="input-label">{{ t('admin.payment.sortOrder') }}</label>
             <input v-model.number="planForm.sort_order" type="number" class="input" />
           </div>
           <label class="flex items-center gap-2 self-end text-sm text-gray-700 dark:text-gray-300">
             <Toggle v-model="planForm.for_sale" />
-            {{ t('admin.payment.forSale', '上架销售') }}
+            {{ t('admin.payment.forSale') }}
           </label>
         </div>
       </form>
       <template #footer>
         <div class="flex justify-end gap-3">
           <button type="button" @click="showPlanDialog = false" class="btn btn-secondary">
-            {{ t('common.cancel', '取消') }}
+            {{ t('common.cancel') }}
           </button>
           <button type="submit" form="plan-form" :disabled="savingPlan" class="btn btn-primary">
-            {{ savingPlan ? t('common.saving', '保存中...') : t('common.save', '保存') }}
+            {{ savingPlan ? t('common.saving') : t('common.save') }}
           </button>
         </div>
       </template>
@@ -553,10 +553,10 @@
     <!-- Delete Confirm -->
     <ConfirmDialog
       :show="showDeleteConfirm"
-      :title="t('common.delete', '删除')"
+      :title="t('common.delete')"
       :message="deleteConfirmMessage"
-      :confirm-text="t('common.delete', '删除')"
-      :cancel-text="t('common.cancel', '取消')"
+      :confirm-text="t('common.delete')"
+      :cancel-text="t('common.cancel')"
       danger
       @confirm="confirmDelete"
       @cancel="showDeleteConfirm = false"
@@ -587,11 +587,11 @@ type TabKey = 'dashboard' | 'settings' | 'providers' | 'channels' | 'plans'
 const activeTab = ref<TabKey>('dashboard')
 
 const tabs = [
-  { key: 'dashboard' as TabKey, label: t('admin.payment.dashboard', '数据概览 / Dashboard') },
-  { key: 'settings' as TabKey, label: t('admin.payment.settings', '基础配置 / Settings') },
-  { key: 'providers' as TabKey, label: t('admin.payment.providers', '支付实例 / Providers') },
-  { key: 'channels' as TabKey, label: t('admin.payment.channelsTab', '渠道 / Channels') },
-  { key: 'plans' as TabKey, label: t('admin.payment.plansTab', '套餐 / Plans') }
+  { key: 'dashboard' as TabKey, label: t('admin.payment.dashboard') },
+  { key: 'settings' as TabKey, label: t('admin.payment.settings') },
+  { key: 'providers' as TabKey, label: t('admin.payment.providers') },
+  { key: 'channels' as TabKey, label: t('admin.payment.channelsTab') },
+  { key: 'plans' as TabKey, label: t('admin.payment.plansTab') }
 ]
 
 // ==================== Dashboard ====================
@@ -608,7 +608,7 @@ async function loadDashboard() {
     await nextTick()
     renderChart()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadDashboardFailed', '加载仪表盘失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadDashboardFailed'))
   } finally {
     dashboardLoading.value = false
   }
@@ -634,14 +634,14 @@ async function renderChart() {
         labels: series.map(d => d.date),
         datasets: [
           {
-            label: t('admin.payment.amount', '金额'),
+            label: t('admin.payment.amount'),
             data: series.map(d => Number(d.amount)),
             backgroundColor: isDark ? 'rgba(139,92,246,0.6)' : 'rgba(139,92,246,0.7)',
             borderRadius: 4,
             yAxisID: 'y'
           },
           {
-            label: t('admin.payment.orderCount', '订单数'),
+            label: t('admin.payment.orderCount'),
             data: series.map(d => d.count),
             type: 'line' as const,
             borderColor: isDark ? '#60a5fa' : '#3b82f6',
@@ -662,13 +662,13 @@ async function renderChart() {
             position: 'left',
             ticks: { color: textColor },
             grid: { color: gridColor },
-            title: { display: true, text: t('admin.payment.amount', '金额'), color: textColor }
+            title: { display: true, text: t('admin.payment.amount'), color: textColor }
           },
           y1: {
             position: 'right',
             ticks: { color: textColor },
             grid: { drawOnChartArea: false },
-            title: { display: true, text: t('admin.payment.orderCount', '订单数'), color: textColor }
+            title: { display: true, text: t('admin.payment.orderCount'), color: textColor }
           }
         },
         plugins: {
@@ -698,7 +698,7 @@ async function loadConfig() {
       Object.assign(configSettings, configs)
     }
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadConfigFailed', '加载配置失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadConfigFailed'))
   } finally {
     configLoading.value = false
   }
@@ -708,9 +708,9 @@ async function saveConfig() {
   savingConfig.value = true
   try {
     await paymentAdminAPI.updateConfig(configSettings)
-    appStore.showSuccess(t('admin.payment.configSaved', '配置已保存'))
+    appStore.showSuccess(t('admin.payment.configSaved'))
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.saveConfigFailed', '保存配置失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.saveConfigFailed'))
   } finally {
     savingConfig.value = false
   }
@@ -752,12 +752,12 @@ const providerKeyOptions = [
 
 const providerColumns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: t('admin.payment.name', '名称') },
-  { key: 'provider_key', label: t('admin.payment.providerKey', '提供商') },
-  { key: 'supported_types', label: t('admin.payment.supportedTypes', '类型') },
-  { key: 'enabled', label: t('common.enabled', '启用') },
-  { key: 'refund_enabled', label: t('admin.payment.refundEnabled', '退款') },
-  { key: 'actions', label: t('common.actions', '操作') }
+  { key: 'name', label: t('admin.payment.name') },
+  { key: 'provider_key', label: t('admin.payment.providerKey') },
+  { key: 'supported_types', label: t('admin.payment.supportedTypes') },
+  { key: 'enabled', label: t('common.enabled') },
+  { key: 'refund_enabled', label: t('admin.payment.refundEnabled') },
+  { key: 'actions', label: t('common.actions') }
 ])
 
 function providerBadgeClass(key: string): string {
@@ -775,7 +775,7 @@ async function loadProviderInstances() {
   try {
     providerInstances.value = await paymentAdminAPI.listProviderInstances()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadProvidersFailed', '加载失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadProvidersFailed'))
   } finally {
     providersLoading.value = false
   }
@@ -843,11 +843,11 @@ async function saveProvider() {
     } else {
       await paymentAdminAPI.createProviderInstance(payload)
     }
-    appStore.showSuccess(t('admin.payment.providerSaved', '已保存'))
+    appStore.showSuccess(t('admin.payment.providerSaved'))
     showProviderDialog.value = false
     loadProviderInstances()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.saveProviderFailed', '保存失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.saveProviderFailed'))
   } finally {
     savingProvider.value = false
   }
@@ -875,12 +875,12 @@ const channelForm = reactive({
 
 const channelColumns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: t('admin.payment.name', '名称') },
-  { key: 'group_id', label: t('admin.payment.groupId', '分组') },
-  { key: 'platform', label: t('admin.payment.platform', '平台') },
-  { key: 'rate_multiplier', label: t('admin.payment.rateMultiplier', '倍率') },
-  { key: 'enabled', label: t('common.enabled', '启用') },
-  { key: 'actions', label: t('common.actions', '操作') }
+  { key: 'name', label: t('admin.payment.name') },
+  { key: 'group_id', label: t('admin.payment.groupId') },
+  { key: 'platform', label: t('admin.payment.platform') },
+  { key: 'rate_multiplier', label: t('admin.payment.rateMultiplier') },
+  { key: 'enabled', label: t('common.enabled') },
+  { key: 'actions', label: t('common.actions') }
 ])
 
 async function loadChannels() {
@@ -888,7 +888,7 @@ async function loadChannels() {
   try {
     channels.value = await paymentAdminAPI.listChannels()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadChannelsFailed', '加载失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadChannelsFailed'))
   } finally {
     channelsLoading.value = false
   }
@@ -941,11 +941,11 @@ async function saveChannel() {
     } else {
       await paymentAdminAPI.createChannel(payload)
     }
-    appStore.showSuccess(t('admin.payment.channelSaved', '已保存'))
+    appStore.showSuccess(t('admin.payment.channelSaved'))
     showChannelDialog.value = false
     loadChannels()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.saveChannelFailed', '保存失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.saveChannelFailed'))
   } finally {
     savingChannel.value = false
   }
@@ -981,13 +981,13 @@ const validityUnitOptions = [
 
 const planColumns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: t('admin.payment.name', '名称') },
-  { key: 'group_id', label: t('admin.payment.groupId', '分组') },
-  { key: 'price', label: t('admin.payment.price', '价格'), sortable: true },
-  { key: 'validity', label: t('admin.payment.validity', '有效期') },
-  { key: 'for_sale', label: t('admin.payment.forSale', '上架'), sortable: true },
-  { key: 'sort_order', label: t('admin.payment.sortOrder', '排序'), sortable: true },
-  { key: 'actions', label: t('common.actions', '操作') }
+  { key: 'name', label: t('admin.payment.name') },
+  { key: 'group_id', label: t('admin.payment.groupId') },
+  { key: 'price', label: t('admin.payment.price'), sortable: true },
+  { key: 'validity', label: t('admin.payment.validity') },
+  { key: 'for_sale', label: t('admin.payment.forSale'), sortable: true },
+  { key: 'sort_order', label: t('admin.payment.sortOrder'), sortable: true },
+  { key: 'actions', label: t('common.actions') }
 ])
 
 function validityUnitLabel(unit: string): string {
@@ -1000,7 +1000,7 @@ async function loadPlans() {
   try {
     plansList.value = await paymentAdminAPI.listPlans()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadPlansFailed', '加载失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.loadPlansFailed'))
   } finally {
     plansLoading.value = false
   }
@@ -1059,11 +1059,11 @@ async function savePlan() {
     } else {
       await paymentAdminAPI.createPlan(payload)
     }
-    appStore.showSuccess(t('admin.payment.planSaved', '已保存'))
+    appStore.showSuccess(t('admin.payment.planSaved'))
     showPlanDialog.value = false
     loadPlans()
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.savePlanFailed', '保存失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.savePlanFailed'))
   } finally {
     savingPlan.value = false
   }
@@ -1077,8 +1077,7 @@ let deleteAction: (() => Promise<void>) | null = null
 
 function handleDeleteProvider(instance: ProviderInstance) {
   deleteConfirmMessage.value = t(
-    'admin.payment.deleteProviderConfirm',
-    `确定要删除支付实例 "${instance.name}" 吗？/ Delete provider "${instance.name}"?`
+    'admin.payment.deleteProviderConfirm'
   )
   deleteAction = async () => {
     await paymentAdminAPI.deleteProviderInstance(instance.id)
@@ -1089,8 +1088,7 @@ function handleDeleteProvider(instance: ProviderInstance) {
 
 function handleDeleteChannel(channel: PaymentChannel) {
   deleteConfirmMessage.value = t(
-    'admin.payment.deleteChannelConfirm',
-    `确定要删除渠道 "${channel.name}" 吗？/ Delete channel "${channel.name}"?`
+    'admin.payment.deleteChannelConfirm'
   )
   deleteAction = async () => {
     await paymentAdminAPI.deleteChannel(channel.id)
@@ -1101,8 +1099,7 @@ function handleDeleteChannel(channel: PaymentChannel) {
 
 function handleDeletePlan(plan: SubscriptionPlan) {
   deleteConfirmMessage.value = t(
-    'admin.payment.deletePlanConfirm',
-    `确定要删除套餐 "${plan.name}" 吗？/ Delete plan "${plan.name}"?`
+    'admin.payment.deletePlanConfirm'
   )
   deleteAction = async () => {
     await paymentAdminAPI.deletePlan(plan.id)
@@ -1115,9 +1112,9 @@ async function confirmDelete() {
   if (!deleteAction) return
   try {
     await deleteAction()
-    appStore.showSuccess(t('admin.payment.deleted', '已删除'))
+    appStore.showSuccess(t('admin.payment.deleted'))
   } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.deleteFailed', '删除失败'))
+    appStore.showError(error.response?.data?.detail || t('admin.payment.deleteFailed'))
   } finally {
     showDeleteConfirm.value = false
     deleteAction = null
