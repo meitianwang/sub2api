@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -34,24 +33,6 @@ type apiKeyCache struct {
 
 func NewAPIKeyCache(rdb *redis.Client) service.APIKeyCache {
 	return &apiKeyCache{rdb: rdb}
-}
-
-func (c *apiKeyCache) GetCreateAttemptCount(ctx context.Context, userID int64) (int, error) {
-	key := apiKeyRateLimitKey(userID)
-	count, err := c.rdb.Get(ctx, key).Int()
-	if errors.Is(err, redis.Nil) {
-		return 0, nil
-	}
-	return count, err
-}
-
-func (c *apiKeyCache) IncrementCreateAttemptCount(ctx context.Context, userID int64) error {
-	key := apiKeyRateLimitKey(userID)
-	pipe := c.rdb.Pipeline()
-	pipe.Incr(ctx, key)
-	pipe.Expire(ctx, key, apiKeyRateLimitDuration)
-	_, err := pipe.Exec(ctx)
-	return err
 }
 
 func (c *apiKeyCache) DeleteCreateAttemptCount(ctx context.Context, userID int64) error {

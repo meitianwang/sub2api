@@ -23,9 +23,6 @@ var (
 	ErrAPIKeyNotFound     = infraerrors.NotFound("API_KEY_NOT_FOUND", "api key not found")
 	ErrGroupNotAllowed    = infraerrors.Forbidden("GROUP_NOT_ALLOWED", "user is not allowed to bind this group")
 	ErrAPIKeyExists       = infraerrors.Conflict("API_KEY_EXISTS", "api key already exists")
-	ErrAPIKeyTooShort     = infraerrors.BadRequest("API_KEY_TOO_SHORT", "api key must be at least 16 characters")
-	ErrAPIKeyInvalidChars = infraerrors.BadRequest("API_KEY_INVALID_CHARS", "api key can only contain letters, numbers, underscores, and hyphens")
-	ErrAPIKeyRateLimited  = infraerrors.TooManyRequests("API_KEY_RATE_LIMITED", "too many failed attempts, please try again later")
 	ErrInvalidIPPattern   = infraerrors.BadRequest("INVALID_IP_PATTERN", "invalid IP or CIDR pattern")
 	// ErrAPIKeyExpired        = infraerrors.Forbidden("API_KEY_EXPIRED", "api key has expired")
 	ErrAPIKeyExpired = infraerrors.Forbidden("API_KEY_EXPIRED", "api key 已过期")
@@ -39,7 +36,6 @@ var (
 )
 
 const (
-	apiKeyMaxErrorsPerHour = 20
 	apiKeyLastUsedMinTouch = 30 * time.Second
 	// DB 写失败后的短退避，避免请求路径持续同步重试造成写风暴与高延迟。
 	apiKeyLastUsedFailBackoff = 5 * time.Second
@@ -59,7 +55,6 @@ type APIKeyRepository interface {
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams, filters APIKeyListFilters) ([]APIKey, *pagination.PaginationResult, error)
 	VerifyOwnership(ctx context.Context, userID int64, apiKeyIDs []int64) ([]int64, error)
 	CountByUserID(ctx context.Context, userID int64) (int64, error)
-	ExistsByKey(ctx context.Context, key string) (bool, error)
 	ListByGroupID(ctx context.Context, groupID int64, params pagination.PaginationParams) ([]APIKey, *pagination.PaginationResult, error)
 	SearchAPIKeys(ctx context.Context, userID int64, keyword string, limit int) ([]APIKey, error)
 	ClearGroupIDByGroupID(ctx context.Context, groupID int64) (int64, error)
@@ -124,8 +119,6 @@ type APIKeyQuotaUsageState struct {
 
 // APIKeyCache defines cache operations for API key service
 type APIKeyCache interface {
-	GetCreateAttemptCount(ctx context.Context, userID int64) (int, error)
-	IncrementCreateAttemptCount(ctx context.Context, userID int64) error
 	DeleteCreateAttemptCount(ctx context.Context, userID int64) error
 
 	IncrementDailyUsage(ctx context.Context, apiKey string) error
@@ -151,7 +144,6 @@ type APIKeyAuthCacheInvalidator interface {
 type CreateAPIKeyRequest struct {
 	Name        string   `json:"name"`
 	GroupID     *int64   `json:"group_id"`
-	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
 
@@ -260,55 +252,6 @@ func (s *APIKeyService) GenerateKey() (string, error) {
 	return key, nil
 }
 
-// ValidateCustomKey 验证自定义API Key格式
-func (s *APIKeyService) ValidateCustomKey(key string) error {
-	// 检查长度
-	if len(key) < 16 {
-		return ErrAPIKeyTooShort
-	}
-
-	// 检查字符：只允许字母、数字、下划线、连字符
-	for _, c := range key {
-		if (c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			(c >= '0' && c <= '9') ||
-			c == '_' || c == '-' {
-			continue
-		}
-		return ErrAPIKeyInvalidChars
-	}
-
-	return nil
-}
-
-// checkAPIKeyRateLimit 检查用户创建自定义Key的错误次数是否超限
-func (s *APIKeyService) checkAPIKeyRateLimit(ctx context.Context, userID int64) error {
-	if s.cache == nil {
-		return nil
-	}
-
-	count, err := s.cache.GetCreateAttemptCount(ctx, userID)
-	if err != nil {
-		// Redis 出错时不阻止用户操作
-		return nil
-	}
-
-	if count >= apiKeyMaxErrorsPerHour {
-		return ErrAPIKeyRateLimited
-	}
-
-	return nil
-}
-
-// incrementAPIKeyErrorCount 增加用户创建自定义Key的错误计数
-func (s *APIKeyService) incrementAPIKeyErrorCount(ctx context.Context, userID int64) {
-	if s.cache == nil {
-		return
-	}
-
-	_ = s.cache.IncrementCreateAttemptCount(ctx, userID)
-}
-
 // canUserBindGroup 检查用户是否可以绑定指定分组
 // 对于订阅类型分组：检查用户是否有有效订阅
 // 对于标准类型分组：使用原有的 AllowedGroups 和 IsExclusive 逻辑
@@ -357,39 +300,10 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 		}
 	}
 
-	var key string
-
-	// 判断是否使用自定义Key
-	if req.CustomKey != nil && *req.CustomKey != "" {
-		// 检查限流（仅对自定义key进行限流）
-		if err := s.checkAPIKeyRateLimit(ctx, userID); err != nil {
-			return nil, err
-		}
-
-		// 验证自定义Key格式
-		if err := s.ValidateCustomKey(*req.CustomKey); err != nil {
-			return nil, err
-		}
-
-		// 检查Key是否已存在
-		exists, err := s.apiKeyRepo.ExistsByKey(ctx, *req.CustomKey)
-		if err != nil {
-			return nil, fmt.Errorf("check key exists: %w", err)
-		}
-		if exists {
-			// Key已存在，增加错误计数
-			s.incrementAPIKeyErrorCount(ctx, userID)
-			return nil, ErrAPIKeyExists
-		}
-
-		key = *req.CustomKey
-	} else {
-		// 生成随机API Key
-		var err error
-		key, err = s.GenerateKey()
-		if err != nil {
-			return nil, fmt.Errorf("generate key: %w", err)
-		}
+	// 生成随机API Key
+	key, err := s.GenerateKey()
+	if err != nil {
+		return nil, fmt.Errorf("generate key: %w", err)
 	}
 
 	// 创建API Key记录
