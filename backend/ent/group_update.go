@@ -15,8 +15,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentchannel"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
@@ -713,6 +715,36 @@ func (_u *GroupUpdate) AddAllowedUsers(v ...*User) *GroupUpdate {
 	return _u.AddAllowedUserIDs(ids...)
 }
 
+// AddPaymentChannelIDs adds the "payment_channels" edge to the PaymentChannel entity by IDs.
+func (_u *GroupUpdate) AddPaymentChannelIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddPaymentChannelIDs(ids...)
+	return _u
+}
+
+// AddPaymentChannels adds the "payment_channels" edges to the PaymentChannel entity.
+func (_u *GroupUpdate) AddPaymentChannels(v ...*PaymentChannel) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentChannelIDs(ids...)
+}
+
+// AddSubscriptionPlanIDs adds the "subscription_plans" edge to the SubscriptionPlan entity by IDs.
+func (_u *GroupUpdate) AddSubscriptionPlanIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddSubscriptionPlanIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionPlans adds the "subscription_plans" edges to the SubscriptionPlan entity.
+func (_u *GroupUpdate) AddSubscriptionPlans(v ...*SubscriptionPlan) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionPlanIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdate) Mutation() *GroupMutation {
 	return _u.mutation
@@ -842,6 +874,48 @@ func (_u *GroupUpdate) RemoveAllowedUsers(v ...*User) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAllowedUserIDs(ids...)
+}
+
+// ClearPaymentChannels clears all "payment_channels" edges to the PaymentChannel entity.
+func (_u *GroupUpdate) ClearPaymentChannels() *GroupUpdate {
+	_u.mutation.ClearPaymentChannels()
+	return _u
+}
+
+// RemovePaymentChannelIDs removes the "payment_channels" edge to PaymentChannel entities by IDs.
+func (_u *GroupUpdate) RemovePaymentChannelIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemovePaymentChannelIDs(ids...)
+	return _u
+}
+
+// RemovePaymentChannels removes "payment_channels" edges to PaymentChannel entities.
+func (_u *GroupUpdate) RemovePaymentChannels(v ...*PaymentChannel) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentChannelIDs(ids...)
+}
+
+// ClearSubscriptionPlans clears all "subscription_plans" edges to the SubscriptionPlan entity.
+func (_u *GroupUpdate) ClearSubscriptionPlans() *GroupUpdate {
+	_u.mutation.ClearSubscriptionPlans()
+	return _u
+}
+
+// RemoveSubscriptionPlanIDs removes the "subscription_plans" edge to SubscriptionPlan entities by IDs.
+func (_u *GroupUpdate) RemoveSubscriptionPlanIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveSubscriptionPlanIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionPlans removes "subscription_plans" edges to SubscriptionPlan entities.
+func (_u *GroupUpdate) RemoveSubscriptionPlans(v ...*SubscriptionPlan) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionPlanIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1398,6 +1472,96 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PaymentChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentChannelsIDs(); len(nodes) > 0 && !_u.mutation.PaymentChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionPlansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionPlansIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionPlansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionPlansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -2098,6 +2262,36 @@ func (_u *GroupUpdateOne) AddAllowedUsers(v ...*User) *GroupUpdateOne {
 	return _u.AddAllowedUserIDs(ids...)
 }
 
+// AddPaymentChannelIDs adds the "payment_channels" edge to the PaymentChannel entity by IDs.
+func (_u *GroupUpdateOne) AddPaymentChannelIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddPaymentChannelIDs(ids...)
+	return _u
+}
+
+// AddPaymentChannels adds the "payment_channels" edges to the PaymentChannel entity.
+func (_u *GroupUpdateOne) AddPaymentChannels(v ...*PaymentChannel) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentChannelIDs(ids...)
+}
+
+// AddSubscriptionPlanIDs adds the "subscription_plans" edge to the SubscriptionPlan entity by IDs.
+func (_u *GroupUpdateOne) AddSubscriptionPlanIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddSubscriptionPlanIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionPlans adds the "subscription_plans" edges to the SubscriptionPlan entity.
+func (_u *GroupUpdateOne) AddSubscriptionPlans(v ...*SubscriptionPlan) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionPlanIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_u *GroupUpdateOne) Mutation() *GroupMutation {
 	return _u.mutation
@@ -2227,6 +2421,48 @@ func (_u *GroupUpdateOne) RemoveAllowedUsers(v ...*User) *GroupUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAllowedUserIDs(ids...)
+}
+
+// ClearPaymentChannels clears all "payment_channels" edges to the PaymentChannel entity.
+func (_u *GroupUpdateOne) ClearPaymentChannels() *GroupUpdateOne {
+	_u.mutation.ClearPaymentChannels()
+	return _u
+}
+
+// RemovePaymentChannelIDs removes the "payment_channels" edge to PaymentChannel entities by IDs.
+func (_u *GroupUpdateOne) RemovePaymentChannelIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemovePaymentChannelIDs(ids...)
+	return _u
+}
+
+// RemovePaymentChannels removes "payment_channels" edges to PaymentChannel entities.
+func (_u *GroupUpdateOne) RemovePaymentChannels(v ...*PaymentChannel) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentChannelIDs(ids...)
+}
+
+// ClearSubscriptionPlans clears all "subscription_plans" edges to the SubscriptionPlan entity.
+func (_u *GroupUpdateOne) ClearSubscriptionPlans() *GroupUpdateOne {
+	_u.mutation.ClearSubscriptionPlans()
+	return _u
+}
+
+// RemoveSubscriptionPlanIDs removes the "subscription_plans" edge to SubscriptionPlan entities by IDs.
+func (_u *GroupUpdateOne) RemoveSubscriptionPlanIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveSubscriptionPlanIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionPlans removes "subscription_plans" edges to SubscriptionPlan entities.
+func (_u *GroupUpdateOne) RemoveSubscriptionPlans(v ...*SubscriptionPlan) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionPlanIDs(ids...)
 }
 
 // Where appends a list predicates to the GroupUpdate builder.
@@ -2813,6 +3049,96 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PaymentChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentChannelsIDs(); len(nodes) > 0 && !_u.mutation.PaymentChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionPlansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionPlansIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionPlansCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionPlansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Group{config: _u.config}

@@ -107,6 +107,7 @@ func registerRoutes(
 	v1 := r.Group("/api/v1")
 
 	// 注册各模块路由
+	routes.RegisterPaymentWebhookRoutes(v1, h) // 支付回调（无需认证，必须在认证路由之前）
 	routes.RegisterAuthRoutes(v1, h, jwtAuth, redisClient, settingService)
 	routes.RegisterUserRoutes(v1, h, jwtAuth, settingService)
 	routes.RegisterAdminRoutes(v1, h, adminAuth)

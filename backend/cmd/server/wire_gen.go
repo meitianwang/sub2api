@@ -10,8 +10,10 @@ import (
 	"context"
 	"github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"github.com/Wei-Shaw/sub2api/internal/handler"
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
+	"github.com/Wei-Shaw/sub2api/internal/payment"
 	"github.com/Wei-Shaw/sub2api/internal/repository"
 	"github.com/Wei-Shaw/sub2api/internal/server"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
@@ -104,8 +106,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	privacyClientFactory := providePrivacyClientFactory()
 	adminService := service.NewAdminService(userRepository, groupRepository, accountRepository, proxyRepository, apiKeyRepository, redeemCodeRepository, billingCacheService, proxyExitInfoProber, proxyLatencyCache, apiKeyAuthCacheInvalidator, client, settingService, subscriptionService, userSubscriptionRepository, privacyClientFactory)
 	adminUserHandler := admin.NewUserHandler(adminService)
-	sessionLimitCache := repository.ProvideSessionLimitCache(redisClient, configConfig)
-	rpmCache := repository.NewRPMCache(redisClient)
 	groupHandler := admin.NewGroupHandler(adminService, dashboardService)
 	oAuthService := service.NewOAuthService()
 	openAIOAuthService := service.NewOpenAIOAuthService()
@@ -127,6 +127,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	geminiTokenProvider := service.ProvideGeminiTokenProvider(accountRepository, geminiTokenCache, geminiOAuthService, oAuthRefreshAPI)
 	accountTestService := service.NewAccountTestService(accountRepository, geminiTokenProvider, httpUpstream, configConfig, tlsFingerprintProfileService)
 	crsSyncService := service.NewCRSSyncService(accountRepository, proxyRepository, oAuthService, openAIOAuthService, geminiOAuthService, configConfig)
+	sessionLimitCache := repository.ProvideSessionLimitCache(redisClient, configConfig)
+	rpmCache := repository.NewRPMCache(redisClient)
 	accountHandler := admin.NewAccountHandler(adminService, oAuthService, openAIOAuthService, geminiOAuthService, rateLimitService, accountUsageService, accountTestService, crsSyncService, sessionLimitCache, rpmCache, compositeTokenCacheInvalidator)
 	adminAnnouncementHandler := admin.NewAnnouncementHandler(announcementService)
 	dataManagementService := service.NewDataManagementService()
@@ -184,16 +186,34 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	scheduledTestResultRepository := repository.NewScheduledTestResultRepository(db)
 	scheduledTestService := service.ProvideScheduledTestService(scheduledTestPlanRepository, scheduledTestResultRepository)
 	scheduledTestHandler := admin.NewScheduledTestHandler(scheduledTestService)
-	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, adminAnnouncementHandler, dataManagementHandler, backupHandler, oAuthHandler, proxyHandler, adminRedeemHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, errorPassthroughHandler, tlsFingerprintProfileHandler, adminAPIKeyHandler, scheduledTestHandler)
+	paymentOrderRepository := repository.NewPaymentOrderRepository(client, db)
+	paymentAuditLogRepository := repository.NewPaymentAuditLogRepository(client)
+	paymentProviderInstanceRepository := repository.NewPaymentProviderInstanceRepository(client)
+	subscriptionPlanRepository := repository.NewSubscriptionPlanRepository(client)
+	paymentConfigService := service.NewPaymentConfigService(settingService)
+	paymentProviderRegistry := providePaymentProviderRegistry()
+	paymentLoadBalancer := service.NewPaymentLoadBalancer(paymentProviderInstanceRepository, paymentOrderRepository, paymentConfigService, secretEncryptor)
+	paymentOrderService := service.NewPaymentOrderService(paymentOrderRepository, paymentAuditLogRepository, paymentProviderInstanceRepository, subscriptionPlanRepository, groupRepository, userRepository, userService, paymentConfigService, paymentProviderRegistry, paymentLoadBalancer, secretEncryptor, client, redeemService, subscriptionService)
+	paymentOrderHandler := admin.NewPaymentOrderHandler(paymentOrderService)
+	paymentRefundHandler := admin.NewPaymentRefundHandler(paymentOrderService)
+	paymentConfigHandler := admin.NewPaymentConfigHandler(paymentConfigService)
+	paymentProviderInstanceHandler := admin.NewPaymentProviderInstanceHandler(paymentProviderInstanceRepository, secretEncryptor, paymentOrderService)
+	paymentChannelRepository := repository.NewPaymentChannelRepository(client)
+	paymentChannelHandler := admin.NewPaymentChannelHandler(paymentChannelRepository)
+	paymentSubscriptionPlanHandler := admin.NewPaymentSubscriptionPlanHandler(subscriptionPlanRepository, paymentOrderService)
+	paymentDashboardHandler := admin.NewPaymentDashboardHandler(paymentOrderService)
+	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, adminAnnouncementHandler, dataManagementHandler, backupHandler, oAuthHandler, proxyHandler, adminRedeemHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, errorPassthroughHandler, tlsFingerprintProfileHandler, adminAPIKeyHandler, scheduledTestHandler, paymentOrderHandler, paymentRefundHandler, paymentConfigHandler, paymentProviderInstanceHandler, paymentChannelHandler, paymentSubscriptionPlanHandler, paymentDashboardHandler)
 	usageRecordWorkerPool := service.NewUsageRecordWorkerPool(configConfig)
 	userMsgQueueCache := repository.NewUserMsgQueueCache(redisClient)
 	userMessageQueueService := service.ProvideUserMessageQueueService(userMsgQueueCache, rpmCache, configConfig)
 	gatewayHandler := handler.NewGatewayHandler(gatewayService, userService, billingCacheService, usageService, apiKeyService, usageRecordWorkerPool, errorPassthroughService, userMessageQueueService, configConfig, settingService)
 	handlerSettingHandler := handler.ProvideSettingHandler(settingService, buildInfo, groupRepository)
 	totpHandler := handler.NewTotpHandler(totpService)
+	paymentHandler := handler.NewPaymentHandler(paymentOrderService, paymentConfigService, paymentLoadBalancer, paymentChannelRepository, subscriptionPlanRepository)
+	paymentWebhookHandler := handler.NewPaymentWebhookHandler(paymentOrderService)
 	idempotencyCoordinator := service.ProvideIdempotencyCoordinator(idempotencyRepository, configConfig)
 	idempotencyCleanupService := service.ProvideIdempotencyCleanupService(idempotencyRepository, configConfig)
-	handlers := handler.ProvideHandlers(authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, announcementHandler, adminHandlers, gatewayHandler, handlerSettingHandler, totpHandler, idempotencyCoordinator, idempotencyCleanupService)
+	handlers := handler.ProvideHandlers(authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, announcementHandler, adminHandlers, gatewayHandler, handlerSettingHandler, totpHandler, paymentHandler, paymentWebhookHandler, idempotencyCoordinator, idempotencyCleanupService)
 	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(authService, userService)
 	adminAuthMiddleware := middleware.NewAdminAuthMiddleware(authService, userService, settingService)
 	apiKeyAuthMiddleware := middleware.NewAPIKeyAuthMiddleware(apiKeyService, subscriptionService, configConfig)
@@ -207,8 +227,10 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	tokenRefreshService := service.ProvideTokenRefreshService()
 	accountExpiryService := service.ProvideAccountExpiryService(accountRepository)
 	subscriptionExpiryService := service.ProvideSubscriptionExpiryService(userSubscriptionRepository)
+	openAIGatewayService := service.NewOpenAIGatewayService()
 	scheduledTestRunnerService := service.ProvideScheduledTestRunnerService(scheduledTestPlanRepository, scheduledTestService, accountTestService, rateLimitService, configConfig)
-	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, opsSystemLogSink, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, idempotencyCleanupService, pricingService, emailQueueService, billingCacheService, usageRecordWorkerPool, subscriptionService, oAuthService, openAIOAuthService, geminiOAuthService, scheduledTestRunnerService, backupService)
+	paymentOrderExpiryService := service.ProvidePaymentOrderExpiryService(paymentOrderRepository, paymentAuditLogRepository, paymentProviderRegistry, paymentProviderInstanceRepository, secretEncryptor)
+	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, opsSystemLogSink, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, usageCleanupService, idempotencyCleanupService, pricingService, emailQueueService, billingCacheService, usageRecordWorkerPool, subscriptionService, oAuthService, openAIOAuthService, geminiOAuthService, openAIGatewayService, scheduledTestRunnerService, backupService, paymentOrderExpiryService)
 	application := &Application{
 		Server:  httpServer,
 		Cleanup: v,
@@ -225,6 +247,15 @@ type Application struct {
 
 func providePrivacyClientFactory() service.PrivacyClientFactory {
 	return repository.CreatePrivacyReqClient
+}
+
+func providePaymentProviderRegistry() *service.PaymentProviderRegistry {
+	r := service.NewPaymentProviderRegistry()
+	r.Register(domain.PaymentProviderEasyPay, payment.NewEasyPayProvider)
+	r.Register(domain.PaymentProviderAlipay, payment.NewAlipayProvider)
+	r.Register(domain.PaymentProviderWxpay, payment.NewWxPayProvider)
+	r.Register(domain.PaymentProviderStripe, payment.NewStripeProvider)
+	return r
 }
 
 func provideServiceBuildInfo(buildInfo handler.BuildInfo) service.BuildInfo {
@@ -257,8 +288,10 @@ func provideCleanup(
 	oauth *service.OAuthService,
 	openaiOAuth *service.OpenAIOAuthService,
 	geminiOAuth *service.GeminiOAuthService,
+	openAIGateway *service.OpenAIGatewayService,
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	backupSvc *service.BackupService,
+	paymentOrderExpiry *service.PaymentOrderExpiryService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -372,6 +405,12 @@ func provideCleanup(
 				geminiOAuth.Stop()
 				return nil
 			}},
+			{"OpenAIWSPool", func() error {
+				if openAIGateway != nil {
+					openAIGateway.CloseOpenAIWSPool()
+				}
+				return nil
+			}},
 			{"ScheduledTestRunnerService", func() error {
 				if scheduledTestRunner != nil {
 					scheduledTestRunner.Stop()
@@ -381,6 +420,12 @@ func provideCleanup(
 			{"BackupService", func() error {
 				if backupSvc != nil {
 					backupSvc.Stop()
+				}
+				return nil
+			}},
+			{"PaymentOrderExpiryService", func() error {
+				if paymentOrderExpiry != nil {
+					paymentOrderExpiry.Stop()
 				}
 				return nil
 			}},

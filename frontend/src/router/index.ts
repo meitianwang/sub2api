@@ -210,15 +210,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/purchase',
-    name: 'PurchaseSubscription',
-    component: () => import('@/views/user/PurchaseSubscriptionView.vue'),
+    path: '/payment',
+    name: 'Payment',
+    component: () => import('@/views/user/PaymentView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: false,
-      title: 'Purchase Subscription',
-      titleKey: 'purchase.title',
-      descriptionKey: 'purchase.description'
+      title: 'Payment',
+      titleKey: 'payment.title',
+      descriptionKey: 'payment.description'
     }
   },
   {
@@ -344,6 +344,30 @@ const routes: RouteRecordRaw[] = [
       title: 'Redeem Code Management',
       titleKey: 'admin.redeem.title',
       descriptionKey: 'admin.redeem.description'
+    }
+  },
+  {
+    path: '/admin/payment-orders',
+    name: 'AdminPaymentOrders',
+    component: () => import('@/views/admin/PaymentOrdersView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Payment Orders',
+      titleKey: 'admin.payment.ordersTitle',
+      descriptionKey: 'admin.payment.ordersDescription'
+    }
+  },
+  {
+    path: '/admin/payment-config',
+    name: 'AdminPaymentConfig',
+    component: () => import('@/views/admin/PaymentConfigView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Payment Configuration',
+      titleKey: 'admin.payment.configTitle',
+      descriptionKey: 'admin.payment.configDescription'
     }
   },
   {

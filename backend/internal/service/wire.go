@@ -324,6 +324,19 @@ func ProvideBackupService(
 	return svc
 }
 
+// ProvidePaymentOrderExpiryService creates and starts PaymentOrderExpiryService.
+func ProvidePaymentOrderExpiryService(
+	orderRepo PaymentOrderRepository,
+	auditLogRepo PaymentAuditLogRepository,
+	registry *PaymentProviderRegistry,
+	instanceRepo PaymentProviderInstanceRepository,
+	encryptor SecretEncryptor,
+) *PaymentOrderExpiryService {
+	svc := NewPaymentOrderExpiryService(orderRepo, auditLogRepo, registry, instanceRepo, encryptor, 30*time.Second)
+	svc.Start()
+	return svc
+}
+
 // ProvideSettingService wires SettingService with group reader for default subscription validation.
 func ProvideSettingService(settingRepo SettingRepository, groupRepo GroupRepository, cfg *config.Config) *SettingService {
 	svc := NewSettingService(settingRepo, cfg)
@@ -404,4 +417,10 @@ var ProviderSet = wire.NewSet(
 	ProvideIdempotencyCleanupService,
 	ProvideScheduledTestService,
 	ProvideScheduledTestRunnerService,
+
+	// Payment services
+	NewPaymentConfigService,
+	NewPaymentLoadBalancer,
+	NewPaymentOrderService,
+	ProvidePaymentOrderExpiryService,
 )

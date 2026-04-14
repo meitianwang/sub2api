@@ -105,8 +105,6 @@ const (
 	SettingKeyDocURL                      = "doc_url"                       // 文档链接
 	SettingKeyHomeContent                 = "home_content"                  // 首页内容（支持 Markdown/HTML，或 URL 作为 iframe src）
 	SettingKeyHideCcsImportButton         = "hide_ccs_import_button"        // 是否隐藏 API Keys 页面的导入 CCS 按钮
-	SettingKeyPurchaseSubscriptionEnabled = "purchase_subscription_enabled" // 是否展示"购买订阅"页面入口
-	SettingKeyPurchaseSubscriptionURL     = "purchase_subscription_url"     // "购买订阅"页面 URL（作为 iframe src）
 	SettingKeyCustomMenuItems             = "custom_menu_items"             // 自定义菜单项（JSON 数组）
 	SettingKeyCustomEndpoints             = "custom_endpoints"              // 自定义端点列表（JSON 数组）
 
@@ -204,6 +202,27 @@ const (
 	SettingKeyEnableFingerprintUnification = "enable_fingerprint_unification"
 	// SettingKeyEnableMetadataPassthrough 是否透传客户端原始 metadata.user_id（默认 false）
 	SettingKeyEnableMetadataPassthrough = "enable_metadata_passthrough"
+
+	// 支付系统设置
+	SettingKeyPayOrderTimeoutMinutes    = "pay_order_timeout_minutes"
+	SettingKeyPayMinRechargeAmount      = "pay_min_recharge_amount"
+	SettingKeyPayMaxRechargeAmount      = "pay_max_recharge_amount"
+	SettingKeyPayMaxDailyRechargeAmount = "pay_max_daily_recharge_amount"
+	SettingKeyPayProductName            = "pay_product_name"
+	SettingKeyPayProviders              = "pay_providers"
+	SettingKeyPayHelpImageURL           = "pay_help_image_url"
+	SettingKeyPayHelpText               = "pay_help_text"
+	SettingKeyPayMaxDailyAmountAlipay   = "pay_max_daily_amount_alipay"
+	SettingKeyPayMaxDailyAmountWxpay    = "pay_max_daily_amount_wxpay"
+	SettingKeyPayMaxDailyAmountStripe   = "pay_max_daily_amount_stripe"
+	SettingKeyPayGracePeriodMinutes     = "pay_grace_period_minutes"
+
+	// Cancel rate limiting settings
+	SettingKeyPayCancelRateLimitEnabled    = "pay_cancel_rate_limit_enabled"
+	SettingKeyPayCancelRateLimitWindow     = "pay_cancel_rate_limit_window"
+	SettingKeyPayCancelRateLimitUnit       = "pay_cancel_rate_limit_unit"
+	SettingKeyPayCancelRateLimitMax        = "pay_cancel_rate_limit_max"
+	SettingKeyPayCancelRateLimitWindowMode = "pay_cancel_rate_limit_window_mode"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

@@ -89,5 +89,8 @@ func RegisterUserRoutes(
 			subscriptions.GET("/progress", h.Subscription.GetProgress)
 			subscriptions.GET("/summary", h.Subscription.GetSummary)
 		}
+
+		// 支付
+		registerPaymentUserRoutes(authenticated, h)
 	}
 }

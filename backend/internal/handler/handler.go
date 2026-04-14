@@ -27,21 +27,30 @@ type AdminHandlers struct {
 	TLSFingerprintProfile *admin.TLSFingerprintProfileHandler
 	APIKey                *admin.AdminAPIKeyHandler
 	ScheduledTest         *admin.ScheduledTestHandler
+	PaymentOrder          *admin.PaymentOrderHandler
+	PaymentRefund         *admin.PaymentRefundHandler
+	PaymentConfig         *admin.PaymentConfigHandler
+	PaymentProviderInstance *admin.PaymentProviderInstanceHandler
+	PaymentChannel        *admin.PaymentChannelHandler
+	PaymentSubscriptionPlan *admin.PaymentSubscriptionPlanHandler
+	PaymentDashboard      *admin.PaymentDashboardHandler
 }
 
 // Handlers contains all HTTP handlers
 type Handlers struct {
-	Auth          *AuthHandler
-	User          *UserHandler
-	APIKey        *APIKeyHandler
-	Usage         *UsageHandler
-	Redeem        *RedeemHandler
-	Subscription  *SubscriptionHandler
-	Announcement  *AnnouncementHandler
-	Admin         *AdminHandlers
-	Gateway       *GatewayHandler
-	Setting       *SettingHandler
-	Totp          *TotpHandler
+	Auth            *AuthHandler
+	User            *UserHandler
+	APIKey          *APIKeyHandler
+	Usage           *UsageHandler
+	Redeem          *RedeemHandler
+	Subscription    *SubscriptionHandler
+	Announcement    *AnnouncementHandler
+	Admin           *AdminHandlers
+	Gateway         *GatewayHandler
+	Setting         *SettingHandler
+	Totp            *TotpHandler
+	Payment         *PaymentHandler
+	PaymentWebhook  *PaymentWebhookHandler
 }
 
 // BuildInfo contains build-time information

@@ -14,7 +14,9 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentchannel"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
@@ -506,6 +508,36 @@ func (_c *GroupCreate) AddAllowedUsers(v ...*User) *GroupCreate {
 	return _c.AddAllowedUserIDs(ids...)
 }
 
+// AddPaymentChannelIDs adds the "payment_channels" edge to the PaymentChannel entity by IDs.
+func (_c *GroupCreate) AddPaymentChannelIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddPaymentChannelIDs(ids...)
+	return _c
+}
+
+// AddPaymentChannels adds the "payment_channels" edges to the PaymentChannel entity.
+func (_c *GroupCreate) AddPaymentChannels(v ...*PaymentChannel) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPaymentChannelIDs(ids...)
+}
+
+// AddSubscriptionPlanIDs adds the "subscription_plans" edge to the SubscriptionPlan entity by IDs.
+func (_c *GroupCreate) AddSubscriptionPlanIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddSubscriptionPlanIDs(ids...)
+	return _c
+}
+
+// AddSubscriptionPlans adds the "subscription_plans" edges to the SubscriptionPlan entity.
+func (_c *GroupCreate) AddSubscriptionPlans(v ...*SubscriptionPlan) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSubscriptionPlanIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (_c *GroupCreate) Mutation() *GroupMutation {
 	return _c.mutation
@@ -912,6 +944,38 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PaymentChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.PaymentChannelsTable,
+			Columns: []string{group.PaymentChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentchannel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SubscriptionPlansIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionPlansTable,
+			Columns: []string{group.SubscriptionPlansColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

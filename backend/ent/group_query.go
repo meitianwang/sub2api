@@ -17,8 +17,10 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/paymentchannel"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userallowedgroup"
@@ -38,6 +40,8 @@ type GroupQuery struct {
 	withUsageLogs         *UsageLogQuery
 	withAccounts          *AccountQuery
 	withAllowedUsers      *UserQuery
+	withPaymentChannels   *PaymentChannelQuery
+	withSubscriptionPlans *SubscriptionPlanQuery
 	withAccountGroups     *AccountGroupQuery
 	withUserAllowedGroups *UserAllowedGroupQuery
 	modifiers             []func(*sql.Selector)
@@ -202,6 +206,50 @@ func (_q *GroupQuery) QueryAllowedUsers() *UserQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, group.AllowedUsersTable, group.AllowedUsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPaymentChannels chains the current query on the "payment_channels" edge.
+func (_q *GroupQuery) QueryPaymentChannels() *PaymentChannelQuery {
+	query := (&PaymentChannelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(paymentchannel.Table, paymentchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.PaymentChannelsTable, group.PaymentChannelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubscriptionPlans chains the current query on the "subscription_plans" edge.
+func (_q *GroupQuery) QuerySubscriptionPlans() *SubscriptionPlanQuery {
+	query := (&SubscriptionPlanClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(subscriptionplan.Table, subscriptionplan.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.SubscriptionPlansTable, group.SubscriptionPlansColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -451,6 +499,8 @@ func (_q *GroupQuery) Clone() *GroupQuery {
 		withUsageLogs:         _q.withUsageLogs.Clone(),
 		withAccounts:          _q.withAccounts.Clone(),
 		withAllowedUsers:      _q.withAllowedUsers.Clone(),
+		withPaymentChannels:   _q.withPaymentChannels.Clone(),
+		withSubscriptionPlans: _q.withSubscriptionPlans.Clone(),
 		withAccountGroups:     _q.withAccountGroups.Clone(),
 		withUserAllowedGroups: _q.withUserAllowedGroups.Clone(),
 		// clone intermediate query.
@@ -522,6 +572,28 @@ func (_q *GroupQuery) WithAllowedUsers(opts ...func(*UserQuery)) *GroupQuery {
 		opt(query)
 	}
 	_q.withAllowedUsers = query
+	return _q
+}
+
+// WithPaymentChannels tells the query-builder to eager-load the nodes that are connected to
+// the "payment_channels" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithPaymentChannels(opts ...func(*PaymentChannelQuery)) *GroupQuery {
+	query := (&PaymentChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPaymentChannels = query
+	return _q
+}
+
+// WithSubscriptionPlans tells the query-builder to eager-load the nodes that are connected to
+// the "subscription_plans" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithSubscriptionPlans(opts ...func(*SubscriptionPlanQuery)) *GroupQuery {
+	query := (&SubscriptionPlanClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withSubscriptionPlans = query
 	return _q
 }
 
@@ -625,13 +697,15 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [10]bool{
 			_q.withAPIKeys != nil,
 			_q.withRedeemCodes != nil,
 			_q.withSubscriptions != nil,
 			_q.withUsageLogs != nil,
 			_q.withAccounts != nil,
 			_q.withAllowedUsers != nil,
+			_q.withPaymentChannels != nil,
+			_q.withSubscriptionPlans != nil,
 			_q.withAccountGroups != nil,
 			_q.withUserAllowedGroups != nil,
 		}
@@ -696,6 +770,20 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := _q.loadAllowedUsers(ctx, query, nodes,
 			func(n *Group) { n.Edges.AllowedUsers = []*User{} },
 			func(n *Group, e *User) { n.Edges.AllowedUsers = append(n.Edges.AllowedUsers, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPaymentChannels; query != nil {
+		if err := _q.loadPaymentChannels(ctx, query, nodes,
+			func(n *Group) { n.Edges.PaymentChannels = []*PaymentChannel{} },
+			func(n *Group, e *PaymentChannel) { n.Edges.PaymentChannels = append(n.Edges.PaymentChannels, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withSubscriptionPlans; query != nil {
+		if err := _q.loadSubscriptionPlans(ctx, query, nodes,
+			func(n *Group) { n.Edges.SubscriptionPlans = []*SubscriptionPlan{} },
+			func(n *Group, e *SubscriptionPlan) { n.Edges.SubscriptionPlans = append(n.Edges.SubscriptionPlans, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -964,6 +1052,72 @@ func (_q *GroupQuery) loadAllowedUsers(ctx context.Context, query *UserQuery, no
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *GroupQuery) loadPaymentChannels(ctx context.Context, query *PaymentChannelQuery, nodes []*Group, init func(*Group), assign func(*Group, *PaymentChannel)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(paymentchannel.FieldGroupID)
+	}
+	query.Where(predicate.PaymentChannel(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.PaymentChannelsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *GroupQuery) loadSubscriptionPlans(ctx context.Context, query *SubscriptionPlanQuery, nodes []*Group, init func(*Group), assign func(*Group, *SubscriptionPlan)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(subscriptionplan.FieldGroupID)
+	}
+	query.Where(predicate.SubscriptionPlan(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.SubscriptionPlansColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

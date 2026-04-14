@@ -57,3 +57,42 @@ const (
 	SubscriptionStatusSuspended = "suspended"
 )
 
+// Payment order status constants
+const (
+	PaymentOrderStatusPending           = "pending"
+	PaymentOrderStatusPaid              = "paid"
+	PaymentOrderStatusRecharging        = "recharging"
+	PaymentOrderStatusCompleted         = "completed"
+	PaymentOrderStatusExpired           = "expired"
+	PaymentOrderStatusCancelled         = "cancelled"
+	PaymentOrderStatusFailed            = "failed"
+	PaymentOrderStatusRefundRequested   = "refund_requested"
+	PaymentOrderStatusRefunding         = "refunding"
+	PaymentOrderStatusPartiallyRefunded = "partially_refunded"
+	PaymentOrderStatusRefunded          = "refunded"
+	PaymentOrderStatusRefundFailed      = "refund_failed"
+)
+
+// Payment order type constants
+const (
+	PaymentOrderTypeBalance      = "balance"
+	PaymentOrderTypeSubscription = "subscription"
+)
+
+// Payment type constants
+const (
+	PaymentTypeAlipay       = "alipay"
+	PaymentTypeAlipayDirect = "alipay_direct"
+	PaymentTypeWxpay        = "wxpay"
+	PaymentTypeWxpayDirect  = "wxpay_direct"
+	PaymentTypeStripe       = "stripe"
+)
+
+// Payment provider key constants
+const (
+	PaymentProviderEasyPay = "easypay"
+	PaymentProviderAlipay  = "alipay"
+	PaymentProviderWxpay   = "wxpay"
+	PaymentProviderStripe  = "stripe"
+)
+

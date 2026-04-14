@@ -169,6 +169,8 @@ func (Group) Edges() []ent.Edge {
 			Through("user_allowed_groups", UserAllowedGroup.Type),
 		// 注意：fallback_group_id 直接作为字段使用，不定义 edge
 		// 这样允许多个分组指向同一个降级分组（M2O 关系）
+		edge.To("payment_channels", PaymentChannel.Type),
+		edge.To("subscription_plans", SubscriptionPlan.Type),
 	}
 }
 

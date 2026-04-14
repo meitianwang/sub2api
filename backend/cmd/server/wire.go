@@ -12,7 +12,9 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"github.com/Wei-Shaw/sub2api/internal/handler"
+	"github.com/Wei-Shaw/sub2api/internal/payment"
 	"github.com/Wei-Shaw/sub2api/internal/repository"
 	"github.com/Wei-Shaw/sub2api/internal/server"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
@@ -41,6 +43,9 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 		// Server layer ProviderSet
 		server.ProviderSet,
 
+		// Payment provider registry (here to avoid service→payment→service import cycle)
+		providePaymentProviderRegistry,
+
 		// Privacy client factory for OpenAI training opt-out
 		providePrivacyClientFactory,
 
@@ -58,6 +63,15 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 
 func providePrivacyClientFactory() service.PrivacyClientFactory {
 	return repository.CreatePrivacyReqClient
+}
+
+func providePaymentProviderRegistry() *service.PaymentProviderRegistry {
+	r := service.NewPaymentProviderRegistry()
+	r.Register(domain.PaymentProviderEasyPay, payment.NewEasyPayProvider)
+	r.Register(domain.PaymentProviderAlipay, payment.NewAlipayProvider)
+	r.Register(domain.PaymentProviderWxpay, payment.NewWxPayProvider)
+	r.Register(domain.PaymentProviderStripe, payment.NewStripeProvider)
+	return r
 }
 
 func provideServiceBuildInfo(buildInfo handler.BuildInfo) service.BuildInfo {
@@ -93,6 +107,7 @@ func provideCleanup(
 	openAIGateway *service.OpenAIGatewayService,
 	scheduledTestRunner *service.ScheduledTestRunnerService,
 	backupSvc *service.BackupService,
+	paymentOrderExpiry *service.PaymentOrderExpiryService,
 ) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -222,6 +237,12 @@ func provideCleanup(
 			{"BackupService", func() error {
 				if backupSvc != nil {
 					backupSvc.Stop()
+				}
+				return nil
+			}},
+			{"PaymentOrderExpiryService", func() error {
+				if paymentOrderExpiry != nil {
+					paymentOrderExpiry.Stop()
 				}
 				return nil
 			}},

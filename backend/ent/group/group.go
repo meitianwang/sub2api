@@ -87,6 +87,10 @@ const (
 	EdgeAccounts = "accounts"
 	// EdgeAllowedUsers holds the string denoting the allowed_users edge name in mutations.
 	EdgeAllowedUsers = "allowed_users"
+	// EdgePaymentChannels holds the string denoting the payment_channels edge name in mutations.
+	EdgePaymentChannels = "payment_channels"
+	// EdgeSubscriptionPlans holds the string denoting the subscription_plans edge name in mutations.
+	EdgeSubscriptionPlans = "subscription_plans"
 	// EdgeAccountGroups holds the string denoting the account_groups edge name in mutations.
 	EdgeAccountGroups = "account_groups"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
@@ -131,6 +135,20 @@ const (
 	// AllowedUsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	AllowedUsersInverseTable = "users"
+	// PaymentChannelsTable is the table that holds the payment_channels relation/edge.
+	PaymentChannelsTable = "payment_channels"
+	// PaymentChannelsInverseTable is the table name for the PaymentChannel entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentchannel" package.
+	PaymentChannelsInverseTable = "payment_channels"
+	// PaymentChannelsColumn is the table column denoting the payment_channels relation/edge.
+	PaymentChannelsColumn = "group_id"
+	// SubscriptionPlansTable is the table that holds the subscription_plans relation/edge.
+	SubscriptionPlansTable = "subscription_plans"
+	// SubscriptionPlansInverseTable is the table name for the SubscriptionPlan entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptionplan" package.
+	SubscriptionPlansInverseTable = "subscription_plans"
+	// SubscriptionPlansColumn is the table column denoting the subscription_plans relation/edge.
+	SubscriptionPlansColumn = "group_id"
 	// AccountGroupsTable is the table that holds the account_groups relation/edge.
 	AccountGroupsTable = "account_groups"
 	// AccountGroupsInverseTable is the table name for the AccountGroup entity.
@@ -472,6 +490,34 @@ func ByAllowedUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByPaymentChannelsCount orders the results by payment_channels count.
+func ByPaymentChannelsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPaymentChannelsStep(), opts...)
+	}
+}
+
+// ByPaymentChannels orders the results by payment_channels terms.
+func ByPaymentChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentChannelsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// BySubscriptionPlansCount orders the results by subscription_plans count.
+func BySubscriptionPlansCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSubscriptionPlansStep(), opts...)
+	}
+}
+
+// BySubscriptionPlans orders the results by subscription_plans terms.
+func BySubscriptionPlans(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionPlansStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAccountGroupsCount orders the results by account_groups count.
 func ByAccountGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -539,6 +585,20 @@ func newAllowedUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AllowedUsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, AllowedUsersTable, AllowedUsersPrimaryKey...),
+	)
+}
+func newPaymentChannelsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentChannelsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PaymentChannelsTable, PaymentChannelsColumn),
+	)
+}
+func newSubscriptionPlansStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionPlansInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionPlansTable, SubscriptionPlansColumn),
 	)
 }
 func newAccountGroupsStep() *sqlgraph.Step {

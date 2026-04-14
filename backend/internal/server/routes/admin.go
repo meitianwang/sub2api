@@ -43,6 +43,9 @@ func RegisterAdminRoutes(
 		// 优惠码管理
 		registerPromoCodeRoutes(admin, h)
 
+		// 支付管理
+		registerPaymentAdminRoutes(admin, h)
+
 		// 系统设置
 		registerSettingsRoutes(admin, h)
 

@@ -157,8 +157,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyDocURL,
 		SettingKeyHomeContent,
 		SettingKeyHideCcsImportButton,
-		SettingKeyPurchaseSubscriptionEnabled,
-		SettingKeyPurchaseSubscriptionURL,
 		SettingKeyCustomMenuItems,
 		SettingKeyCustomEndpoints,
 		SettingKeyLinuxDoConnectEnabled,
@@ -202,8 +200,6 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
-		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
-		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		LinuxDoOAuthEnabled:              linuxDoEnabled,
@@ -249,8 +245,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		DocURL                           string          `json:"doc_url,omitempty"`
 		HomeContent                      string          `json:"home_content,omitempty"`
 		HideCcsImportButton              bool            `json:"hide_ccs_import_button"`
-		PurchaseSubscriptionEnabled      bool            `json:"purchase_subscription_enabled"`
-		PurchaseSubscriptionURL          string          `json:"purchase_subscription_url,omitempty"`
 		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
 		CustomEndpoints                  json.RawMessage `json:"custom_endpoints"`
 		LinuxDoOAuthEnabled              bool            `json:"linuxdo_oauth_enabled"`
@@ -274,8 +268,6 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		DocURL:                           settings.DocURL,
 		HomeContent:                      settings.HomeContent,
 		HideCcsImportButton:              settings.HideCcsImportButton,
-		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
-		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                  filterUserVisibleMenuItems(settings.CustomMenuItems),
 		CustomEndpoints:                  safeRawJSONArray(settings.CustomEndpoints),
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
@@ -332,8 +324,8 @@ func safeRawJSONArray(raw string) json.RawMessage {
 	return json.RawMessage("[]")
 }
 
-// GetFrameSrcOrigins returns deduplicated http(s) origins from purchase_subscription_url
-// and all custom_menu_items URLs. Used by the router layer for CSP frame-src injection.
+// GetFrameSrcOrigins returns deduplicated http(s) origins from
+// all custom_menu_items URLs. Used by the router layer for CSP frame-src injection.
 func (s *SettingService) GetFrameSrcOrigins(ctx context.Context) ([]string, error) {
 	settings, err := s.GetPublicSettings(ctx)
 	if err != nil {
@@ -350,11 +342,6 @@ func (s *SettingService) GetFrameSrcOrigins(ctx context.Context) ([]string, erro
 				origins = append(origins, origin)
 			}
 		}
-	}
-
-	// purchase subscription URL
-	if settings.PurchaseSubscriptionEnabled {
-		addOrigin(settings.PurchaseSubscriptionURL)
 	}
 
 	// all custom menu items (including admin-only, since CSP must allow all iframes)
@@ -468,8 +455,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyDocURL] = settings.DocURL
 	updates[SettingKeyHomeContent] = settings.HomeContent
 	updates[SettingKeyHideCcsImportButton] = strconv.FormatBool(settings.HideCcsImportButton)
-	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
-	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
 
@@ -801,8 +786,6 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPromoCodeEnabled:                 "true", // 默认启用优惠码功能
 		SettingKeySiteName:                         "AIInterface",
 		SettingKeySiteLogo:                         "",
-		SettingKeyPurchaseSubscriptionEnabled:      "false",
-		SettingKeyPurchaseSubscriptionURL:          "",
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
 		SettingKeyDefaultBalance:                   strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
@@ -860,8 +843,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
-		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
-		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
 		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",

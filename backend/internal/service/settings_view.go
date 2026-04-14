@@ -39,8 +39,6 @@ type SystemSettings struct {
 	DocURL                      string
 	HomeContent                 string
 	HideCcsImportButton         bool
-	PurchaseSubscriptionEnabled bool
-	PurchaseSubscriptionURL     string
 	CustomMenuItems             string // JSON array of custom menu items
 	CustomEndpoints             string // JSON array of custom endpoints
 
@@ -97,9 +95,6 @@ type PublicSettings struct {
 	DocURL                           string
 	HomeContent                      string
 	HideCcsImportButton              bool
-
-	PurchaseSubscriptionEnabled bool
-	PurchaseSubscriptionURL     string
 	CustomMenuItems             string // JSON array of custom menu items
 	CustomEndpoints             string // JSON array of custom endpoints
 
