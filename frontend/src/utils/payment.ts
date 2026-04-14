@@ -84,12 +84,13 @@ export function getPaymentStatusLabel(status: PaymentStatus): string {
 /**
  * Get human-readable label for a payment method type
  */
-export function getPaymentMethodLabel(type: PaymentType): string {
-  const labels: Record<PaymentType, string> = {
+export function getPaymentMethodLabel(type: string): string {
+  const labels: Record<string, string> = {
     alipay: '支付宝',
-    wechat: '微信支付',
+    alipay_direct: '支付宝（直连）',
+    wxpay: '微信支付',
+    wxpay_direct: '微信支付（直连）',
     stripe: 'Stripe',
-    usdt: 'USDT',
     balance: '余额支付'
   }
   return labels[type] ?? type

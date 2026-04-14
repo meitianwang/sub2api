@@ -107,15 +107,15 @@
                   <div v-else class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <button
                       v-for="method in availableMethods"
-                      :key="method.paymentType"
+                      :key="method.payment_type"
                       type="button"
                       @click="selectPaymentMethod(method)"
                       :disabled="!method.available"
                       :class="[
                         'flex items-center gap-3 rounded-lg border-2 px-4 py-3 transition-all',
                         !method.available && 'cursor-not-allowed opacity-40',
-                        selectedPaymentType === method.paymentType
-                          ? paymentMethodSelectedClass(method.paymentType)
+                        selectedPaymentType === method.payment_type
+                          ? paymentMethodSelectedClass(method.payment_type)
                           : 'border-gray-200 hover:border-gray-300 dark:border-dark-600 dark:hover:border-dark-500'
                       ]"
                     >
@@ -123,22 +123,22 @@
                       <div
                         :class="[
                           'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg',
-                          paymentMethodIconBg(method.paymentType)
+                          paymentMethodIconBg(method.payment_type)
                         ]"
                       >
                         <span class="text-sm font-bold text-white">
-                          {{ paymentMethodIconText(method.paymentType) }}
+                          {{ paymentMethodIconText(method.payment_type) }}
                         </span>
                       </div>
                       <div class="text-left">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">
-                          {{ getPaymentMethodLabel(method.paymentType) }}
+                          {{ getPaymentMethodLabel(method.payment_type) }}
                         </p>
                         <p
-                          v-if="method.feeRate > 0"
+                          v-if="Number(method.fee_rate) > 0"
                           class="text-xs text-gray-500 dark:text-gray-400"
                         >
-                          {{ method.feeRate.toFixed(1) }}%
+                          {{ Number(method.fee_rate).toFixed(1) }}%
                           {{ t('user.payment.fee') }}
                         </p>
                         <p v-else class="text-xs text-green-500">
@@ -562,7 +562,7 @@ const customAmountText = ref('')
 
 // ==================== Payment Method ====================
 
-const selectedPaymentType = ref<PaymentType | ''>('')
+const selectedPaymentType = ref('')
 
 // ==================== Cancel Dialog ====================
 
@@ -582,27 +582,25 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 // ==================== Computed ====================
 
 const availableMethods = computed<MethodLimit[]>(() => {
-  return config.value?.limits ?? []
+  return config.value?.method_limits ?? []
 })
 
 const minAmount = computed(() => {
-  const val = config.value?.settings?.min_recharge_amount
+  const val = config.value?.min_recharge_amount
   return val ? Number(val) : 1
 })
 
 const maxAmount = computed(() => {
-  const val = config.value?.settings?.max_recharge_amount
+  const val = config.value?.max_recharge_amount
   return val ? Number(val) : 10000
 })
 
 const maxPendingOrders = computed(() => {
-  const val = config.value?.settings?.max_pending_orders
-  return val ? Number(val) : 5
+  return config.value?.max_pending_orders ?? 5
 })
 
 const pendingCount = computed(() => {
-  const val = config.value?.settings?.pending_count
-  return val ? Number(val) : 0
+  return config.value?.pending_count ?? 0
 })
 
 const hasTooManyPendingOrders = computed(() => {
@@ -635,13 +633,15 @@ const amountError = computed(() => {
 const currentFeeRate = computed(() => {
   if (!selectedPaymentType.value) return 0
   const method = availableMethods.value.find(
-    (m) => m.paymentType === selectedPaymentType.value
+    (m) => m.payment_type === selectedPaymentType.value
   )
-  return method?.feeRate ?? 0
+  return method ? Number(method.fee_rate) : 0
 })
 
 const feeAmount = computed(() => {
-  return effectiveAmount.value * currentFeeRate.value
+  const rate = currentFeeRate.value
+  if (rate <= 0) return 0
+  return Math.ceil(effectiveAmount.value * rate / 100 * 100) / 100
 })
 
 const totalPayAmount = computed(() => {
@@ -801,7 +801,7 @@ function handleCustomAmountInput() {
 
 function selectPaymentMethod(method: MethodLimit) {
   if (!method.available) return
-  selectedPaymentType.value = method.paymentType
+  selectedPaymentType.value = method.payment_type
 }
 
 // ==================== QR Code Generation ====================
@@ -900,7 +900,7 @@ async function loadConfig() {
     // Auto-select first available payment method
     const firstAvailable = availableMethods.value.find((m) => m.available)
     if (firstAvailable) {
-      selectedPaymentType.value = firstAvailable.paymentType
+      selectedPaymentType.value = firstAvailable.payment_type
     }
   } catch (error: any) {
     appStore.showError(error.response?.data?.detail || t('user.payment.loadFailed'))

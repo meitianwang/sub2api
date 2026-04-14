@@ -68,19 +68,25 @@ export interface PaymentOrder {
 }
 
 export interface MethodLimit {
-  paymentType: PaymentType
+  payment_type: string
   available: boolean
-  dailyLimit: number
-  dailyUsed: number
-  remaining: number
-  singleMin: number
-  singleMax: number
-  feeRate: number
+  daily_limit: string
+  daily_used: string
+  remaining: string
+  single_min: string
+  single_max: string
+  fee_rate: string
 }
 
 export interface PaymentConfig {
-  settings: Record<string, string>
-  limits: MethodLimit[]
+  enabled_payment_types: string[]
+  min_recharge_amount: string
+  max_recharge_amount: string
+  max_daily_recharge_amount: string
+  balance_payment_disabled: boolean
+  max_pending_orders: number
+  pending_count: number
+  method_limits: MethodLimit[]
 }
 
 export interface PaymentChannel {
