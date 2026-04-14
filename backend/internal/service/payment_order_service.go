@@ -653,21 +653,23 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 	timeoutMinutes := s.configService.GetOrderTimeoutMinutes(ctx)
 	expiresAt := time.Now().Add(time.Duration(timeoutMinutes) * time.Minute)
 
-	// 7d. Create order record (rechargeCode will be set after we have the ID)
+	// 7d. Create order record (rechargeCode uses a temp placeholder, updated after we have the ID)
+	tempCode := "tmp_" + hex.EncodeToString(func() []byte { b := make([]byte, 16); rand.Read(b); return b }())
 	order := &PaymentOrder{
-		UserID:      req.UserID,
-		UserEmail:   stringPtr(user.Email),
-		UserName:    stringPtr(user.Username),
-		Amount:      orderAmount,
-		PayAmount:   &payAmount,
-		FeeRate:     &feeRate,
-		Status:      domain.PaymentOrderStatusPending,
-		PaymentType: req.PaymentType,
-		ExpiresAt:   expiresAt,
-		ClientIP:    stringPtrIfNotEmpty(req.ClientIP),
-		SrcHost:     stringPtrIfNotEmpty(req.SrcHost),
-		SrcURL:      stringPtrIfNotEmpty(req.SrcURL),
-		OrderType:   req.OrderType,
+		UserID:       req.UserID,
+		UserEmail:    stringPtr(user.Email),
+		UserName:     stringPtr(user.Username),
+		Amount:       orderAmount,
+		PayAmount:    &payAmount,
+		FeeRate:      &feeRate,
+		RechargeCode: tempCode,
+		Status:       domain.PaymentOrderStatusPending,
+		PaymentType:  req.PaymentType,
+		ExpiresAt:    expiresAt,
+		ClientIP:     stringPtrIfNotEmpty(req.ClientIP),
+		SrcHost:      stringPtrIfNotEmpty(req.SrcHost),
+		SrcURL:       stringPtrIfNotEmpty(req.SrcURL),
+		OrderType:    req.OrderType,
 	}
 
 	if plan != nil {
