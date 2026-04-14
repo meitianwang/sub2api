@@ -1,6 +1,6 @@
 # 发起第一次调用
 
-创建 API Key 后，可以通过以下示例验证接口是否正常工作。平台同时兼容 OpenAI、Anthropic 和 Gemini 三种请求格式，所有请求透明转发到上游。
+创建 API Key 后，可以通过以下示例验证接口是否正常工作。根据使用的模型系列选择对应的请求格式：OpenAI 兼容格式和 Anthropic 原生格式用于调用 Claude 模型，Gemini 原生格式用于调用 Gemini 模型。
 
 ## OpenAI 兼容格式
 
@@ -45,8 +45,8 @@ curl -X POST "{{BASE_URL}}/v1beta/models/gemini-2.5-flash:generateContent?key=sk
 
 如果返回了包含模型回复内容的 JSON 响应，说明 Key 配置正确、接口调用正常。接下来可以：
 
-- 查看「CLI 配置教程」，将 Key 配置到 Claude Code、Cursor 等工具中
-- 查看「API 接入文档」，了解更多接口参数和用法
+- 查看[「CLI 配置教程」]({{BASE_URL}}/docs/cli/claude-code)，将 Key 配置到 Claude Code、Cursor 等工具中
+- 查看[「API 接入文档」]({{BASE_URL}}/docs/api/overview)，了解更多接口参数和用法
 
 ## 常见错误排查
 
