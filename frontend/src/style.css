@@ -445,29 +445,21 @@
   .toast-info    { @apply border-l-primary-500; }
 
   /* ============================================================
-     导航栏 — 移动端：左侧抽屉；桌面端：顶部横向 Nav Bar
+     导航栏 — 移动端：左侧抽屉；桌面端：固定左侧竖向侧边栏
      ============================================================ */
   .sidebar {
     @apply fixed inset-y-0 left-0 z-40;
-    /* 移动端：全宽抽屉，纵向 */
-    @apply w-60 bg-white dark:bg-dark-900;
+    width: 240px;
+    @apply bg-white dark:bg-dark-900;
     @apply border-r border-accent-100 dark:border-dark-800;
     @apply flex flex-col;
     @apply transition-transform duration-300;
   }
 
-  /* 桌面端：横向顶部 Nav Bar，全宽 56px 高 */
+  /* 桌面端：始终可见，取消位移 */
   @media (min-width: 1024px) {
     .sidebar {
-      inset: 0 0 auto 0;          /* top:0 left:0 right:0 */
-      width: 100%;
-      height: 56px;
-      flex-direction: row;
-      align-items: center;
-      border-right: none;
-      border-bottom: 1px solid;
-      @apply border-accent-200 dark:border-dark-800;
-      transform: none !important; /* 覆盖移动端 -translate-x-full */
+      transform: none !important;
     }
   }
 
@@ -479,25 +471,8 @@
     @apply flex-shrink-0;
   }
 
-  @media (min-width: 1024px) {
-    .sidebar-header {
-      height: 100%;
-      border-bottom: none;
-      border-right: 1px solid;
-      @apply border-accent-200 dark:border-dark-800;
-      padding: 0 1.25rem;
-    }
-  }
-
   .sidebar-brand-name {
     @apply text-sm font-bold text-accent-800 dark:text-accent-100 truncate;
-  }
-
-  /* 桌面端品牌名和区块标题 → 隐藏 */
-  @media (min-width: 1024px) {
-    .sidebar-brand-name    { display: none; }
-    .sidebar-section-title { display: none; }
-    .sidebar-collapse-btn  { display: none; }
   }
 
   /* ── Nav 滚动区 ── */
@@ -508,17 +483,6 @@
     padding-right: 0.5rem;
   }
 
-  @media (min-width: 1024px) {
-    .sidebar-nav {
-      flex-direction: row;
-      align-items: center;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 0 0.5rem;
-      height: 100%;
-    }
-  }
-
   /* ── Section ── */
   .sidebar-section { @apply mb-1 w-full; }
 
@@ -526,24 +490,6 @@
     @apply px-3 py-1;
     @apply text-[9px] font-black uppercase tracking-[0.12em];
     @apply text-accent-300 dark:text-dark-600;
-  }
-
-  @media (min-width: 1024px) {
-    .sidebar-section {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      width: auto;
-      margin: 0;
-      height: 100%;
-    }
-    /* 区块之间的分隔线 */
-    .sidebar-section + .sidebar-section {
-      border-left: 1px solid;
-      @apply border-accent-200 dark:border-dark-800;
-      margin-left: 0.25rem;
-      padding-left: 0.25rem;
-    }
   }
 
   /* ── 导航链接 ── */
@@ -558,37 +504,17 @@
     @apply relative cursor-pointer;
   }
 
-  /* 桌面端：横向 pill，icon + label 并排 */
-  @media (min-width: 1024px) {
-    .sidebar-link {
-      width: auto;
-      height: 34px;
-      padding: 0 10px;
-      margin: 0 2px;
-      border-radius: 8px;
-      gap: 6px;
-      font-size: 0.8125rem; /* 13px */
-      white-space: nowrap;
-    }
-    /* 桌面端显示标签 */
-    .sidebar-link-label { display: inline; }
-  }
-
   .sidebar-link-label { }
 
   .sidebar-link-active {
     @apply text-white;
     @apply hover:text-white;
     background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
   }
 
-  @media (min-width: 1024px) {
-    .sidebar-link-active {
-      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
-    }
-    .sidebar-link-active:hover {
-      background: linear-gradient(135deg, #6d28d9, #5b21b6);
-    }
+  .sidebar-link-active:hover {
+    background: linear-gradient(135deg, #6d28d9, #5b21b6);
   }
 
   .sidebar-svg-icon svg { @apply h-5 w-5; }
@@ -600,19 +526,9 @@
     @apply py-2 px-2;
   }
 
+  /* ── 折叠按钮：桌面端隐藏 ── */
   @media (min-width: 1024px) {
-    .sidebar-bottom {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      margin-left: auto;
-      border-top: none;
-      border-left: 1px solid;
-      @apply border-accent-200 dark:border-dark-800;
-      height: 100%;
-      padding: 0 0.75rem;
-      gap: 2px;
-    }
+    .sidebar-collapse-btn { display: none; }
   }
 
   /* ============================================================
@@ -623,11 +539,6 @@
     @apply bg-white/95 backdrop-blur-sm dark:bg-dark-900/95;
     @apply border-b border-accent-200 dark:border-dark-800;
     height: 48px;
-  }
-
-  /* 桌面端：顶部 nav 占 56px，header 紧贴其下 */
-  @media (min-width: 1024px) {
-    .app-header { top: 56px; }
   }
 
   .app-header-inner {
