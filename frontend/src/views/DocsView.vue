@@ -295,10 +295,10 @@ function sectionIconClass(_icon?: string): string {
 /* ── Nav Tabs ── */
 .nav-tab { padding: 6px 16px; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; text-decoration: none; }
 .nav-tab:hover { color: #111827; background: rgba(0,0,0,0.04); }
-.nav-tab-active { color: #14b8a6; background: rgba(20,184,166,0.08); }
+.nav-tab-active { color: #7c3aed; background: rgba(124,58,237,0.08); }
 :deep(.dark) .nav-tab { color: #9ca3af; }
 :deep(.dark) .nav-tab:hover { color: #f3f4f6; background: rgba(255,255,255,0.06); }
-:deep(.dark) .nav-tab-active { color: #2dd4bf; background: rgba(20,184,166,0.12); }
+:deep(.dark) .nav-tab-active { color: #a78bfa; background: rgba(124,58,237,0.12); }
 
 /* ── Markdown Content ── */
 .docs-content { @apply text-gray-800 dark:text-gray-200 leading-relaxed; }

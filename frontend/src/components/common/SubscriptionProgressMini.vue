@@ -62,7 +62,7 @@
               <!-- Unlimited subscription badge -->
               <div
                 v-if="isUnlimited(subscription)"
-                class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 px-2.5 py-1.5 dark:from-emerald-900/20 dark:to-teal-900/20"
+                class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-50 to-purple-50 px-2.5 py-1.5 dark:from-violet-900/20 dark:to-purple-900/20"
               >
                 <span class="text-lg text-emerald-600 dark:text-emerald-400">∞</span>
                 <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">

@@ -229,14 +229,14 @@
           <!-- Today Profit -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg p-2" :class="(stats.today_profit || 0) >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-red-100 dark:bg-red-900/30'">
-                <Icon name="chart" size="md" :class="(stats.today_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
+              <div class="rounded-lg p-2" :class="(stats.today_profit || 0) >= 0 ? 'bg-violet-100 dark:bg-violet-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+                <Icon name="chart" size="md" :class="(stats.today_profit || 0) >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {{ t('admin.dashboard.todayProfit') }}
                 </p>
-                <p class="text-xl font-bold" :class="(stats.today_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
+                <p class="text-xl font-bold" :class="(stats.today_profit || 0) >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600 dark:text-red-400'">
                   ¥{{ formatCost(stats.today_profit || 0) }}
                 </p>
                 <p v-if="stats.today_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
@@ -269,14 +269,14 @@
           <!-- Total Profit -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg p-2" :class="(stats.total_profit || 0) >= 0 ? 'bg-teal-100 dark:bg-teal-900/30' : 'bg-red-100 dark:bg-red-900/30'">
-                <Icon name="chart" size="md" :class="(stats.total_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
+              <div class="rounded-lg p-2" :class="(stats.total_profit || 0) >= 0 ? 'bg-violet-100 dark:bg-violet-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+                <Icon name="chart" size="md" :class="(stats.total_profit || 0) >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600 dark:text-red-400'" :stroke-width="2" />
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {{ t('admin.dashboard.totalProfit') }}
                 </p>
-                <p class="text-xl font-bold" :class="(stats.total_profit || 0) >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'">
+                <p class="text-xl font-bold" :class="(stats.total_profit || 0) >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600 dark:text-red-400'">
                   ¥{{ formatCost(stats.total_profit || 0) }}
                 </p>
                 <p v-if="stats.total_actual_cost > 0" class="text-xs text-gray-500 dark:text-gray-400">
@@ -568,7 +568,7 @@ const userTrendChartData = computed(() => {
     '#ef4444',
     '#8b5cf6',
     '#ec4899',
-    '#14b8a6',
+    '#8b5cf6',
     '#f97316',
     '#6366f1',
     '#84cc16',

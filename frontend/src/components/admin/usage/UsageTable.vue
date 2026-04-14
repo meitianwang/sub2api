@@ -148,7 +148,7 @@
             <span
               class="font-medium"
               :class="(row.actual_cost - row.upstream_cost) >= 0
-                ? 'text-teal-600 dark:text-teal-400'
+                ? 'text-violet-600 dark:text-violet-400'
                 : 'text-red-600 dark:text-red-400'"
             >
               ¥{{ (row.actual_cost - row.upstream_cost).toFixed(6) }}

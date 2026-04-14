@@ -63,7 +63,7 @@
       <!-- Main -->
       <main class="min-w-0 flex-1">
         <!-- Banner -->
-        <div class="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 px-6 py-5">
+        <div class="relative mb-5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 px-6 py-5">
           <div class="relative">
             <div class="mb-1 flex items-center gap-3">
               <h1 class="text-xl font-bold text-white">{{ bannerTitle }}</h1>
@@ -281,10 +281,10 @@ onMounted(() => {
 <style scoped>
 .nav-tab { padding: 6px 16px; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; text-decoration: none; }
 .nav-tab:hover { color: #111827; background: rgba(0, 0, 0, 0.04); }
-.nav-tab-active { color: #14b8a6; background: rgba(20, 184, 166, 0.08); }
+.nav-tab-active { color: #7c3aed; background: rgba(124, 58, 237, 0.08); }
 .filter-tag { @apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300; }
 .filter-tag-active { @apply border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-400; }
 :deep(.dark) .nav-tab { color: #9ca3af; }
 :deep(.dark) .nav-tab:hover { color: #f3f4f6; background: rgba(255, 255, 255, 0.06); }
-:deep(.dark) .nav-tab-active { color: #2dd4bf; background: rgba(20, 184, 166, 0.12); }
+:deep(.dark) .nav-tab-active { color: #a78bfa; background: rgba(124, 58, 237, 0.12); }
 </style>
