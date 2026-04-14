@@ -159,8 +159,8 @@ export interface PaymentDashboardStats {
 // ==================== Request / Response ====================
 
 export interface CreateOrderRequest {
-  amount: number
-  payment_type: PaymentType
+  amount: string
+  payment_type: string
   order_type: OrderType
   plan_id?: number
   return_url?: string
