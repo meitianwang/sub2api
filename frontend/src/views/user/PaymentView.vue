@@ -101,7 +101,10 @@
                 <!-- Payment Method Selector -->
                 <div>
                   <label class="input-label">{{ t('user.payment.paymentType') }}</label>
-                  <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div v-if="availableMethods.length === 0 && !configLoading" class="mt-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-6 text-center text-sm text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                    {{ t('user.payment.noPaymentMethods') }}
+                  </div>
+                  <div v-else class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <button
                       v-for="method in availableMethods"
                       :key="method.paymentType"
@@ -135,7 +138,7 @@
                           v-if="method.feeRate > 0"
                           class="text-xs text-gray-500 dark:text-gray-400"
                         >
-                          {{ (method.feeRate * 100).toFixed(1) }}%
+                          {{ method.feeRate.toFixed(1) }}%
                           {{ t('user.payment.fee') }}
                         </p>
                         <p v-else class="text-xs text-green-500">
