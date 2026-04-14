@@ -445,24 +445,33 @@
   .toast-info    { @apply border-l-primary-500; }
 
   /* ============================================================
-     侧边栏 — 图标 Rail（桌面常驻 56px，移动端全宽）
+     导航栏 — 移动端：左侧抽屉；桌面端：顶部横向 Nav Bar
      ============================================================ */
   .sidebar {
     @apply fixed inset-y-0 left-0 z-40;
-    /* 移动端：全宽侧边栏 */
+    /* 移动端：全宽抽屉，纵向 */
     @apply w-60 bg-white dark:bg-dark-900;
     @apply border-r border-accent-100 dark:border-dark-800;
     @apply flex flex-col;
     @apply transition-transform duration-300;
   }
 
-  /* 桌面端：永远 56px Icon Rail */
+  /* 桌面端：横向顶部 Nav Bar，全宽 56px 高 */
   @media (min-width: 1024px) {
     .sidebar {
-      width: 56px;
+      inset: 0 0 auto 0;          /* top:0 left:0 right:0 */
+      width: 100%;
+      height: 56px;
+      flex-direction: row;
+      align-items: center;
+      border-right: none;
+      border-bottom: 1px solid;
+      @apply border-accent-200 dark:border-dark-800;
+      transform: none !important; /* 覆盖移动端 -translate-x-full */
     }
   }
 
+  /* ── Header（Logo 区域） ── */
   .sidebar-header {
     @apply flex items-center gap-3;
     @apply h-14 px-4;
@@ -470,43 +479,47 @@
     @apply flex-shrink-0;
   }
 
-  /* 桌面端 header 居中显示 logo */
   @media (min-width: 1024px) {
     .sidebar-header {
-      @apply justify-center px-0;
+      height: 100%;
+      border-bottom: none;
+      border-right: 1px solid;
+      @apply border-accent-200 dark:border-dark-800;
+      padding: 0 1.25rem;
     }
   }
 
   .sidebar-brand-name {
-    @apply text-sm font-bold text-accent-800 dark:text-accent-100;
-    @apply truncate;
+    @apply text-sm font-bold text-accent-800 dark:text-accent-100 truncate;
   }
 
-  /* 桌面端隐藏文字 */
+  /* 桌面端品牌名和区块标题 → 隐藏 */
   @media (min-width: 1024px) {
-    .sidebar-brand-name        { display: none; }
-    .sidebar-section-title     { display: none; }
-    .sidebar-link-label        { display: none; }
-    .sidebar-collapse-btn      { display: none; }
+    .sidebar-brand-name    { display: none; }
+    .sidebar-section-title { display: none; }
+    .sidebar-collapse-btn  { display: none; }
   }
 
+  /* ── Nav 滚动区 ── */
   .sidebar-nav {
     @apply flex-1 overflow-y-auto py-3;
     @apply scrollbar-hide;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
-  /* 移动端：带 padding */
-  .sidebar-nav { padding-left: 0.5rem; padding-right: 0.5rem; }
-
-  /* 桌面端：nav 居中 */
   @media (min-width: 1024px) {
     .sidebar-nav {
-      @apply flex flex-col items-center;
-      padding-left: 0;
-      padding-right: 0;
+      flex-direction: row;
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0 0.5rem;
+      height: 100%;
     }
   }
 
+  /* ── Section ── */
   .sidebar-section { @apply mb-1 w-full; }
 
   .sidebar-section-title {
@@ -515,24 +528,25 @@
     @apply text-accent-300 dark:text-dark-600;
   }
 
-  /* 桌面端区块分隔改为细线 */
-  .sidebar-section + .sidebar-section::before {
-    display: none;
-  }
-
   @media (min-width: 1024px) {
     .sidebar-section {
-      @apply w-full flex flex-col items-center;
-      margin-bottom: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: auto;
+      margin: 0;
+      height: 100%;
     }
+    /* 区块之间的分隔线 */
     .sidebar-section + .sidebar-section {
-      margin-top: 0.25rem;
-      padding-top: 0.25rem;
-      border-top: 1px solid;
-      @apply border-accent-100 dark:border-dark-800;
+      border-left: 1px solid;
+      @apply border-accent-200 dark:border-dark-800;
+      margin-left: 0.25rem;
+      padding-left: 0.25rem;
     }
   }
 
+  /* ── 导航链接 ── */
   .sidebar-link {
     @apply flex items-center gap-3 w-full;
     @apply rounded-md px-3 py-2;
@@ -540,47 +554,64 @@
     @apply text-accent-500 dark:text-dark-400;
     @apply transition-all duration-150;
     @apply hover:bg-accent-100 dark:hover:bg-dark-800;
-    @apply hover:text-accent-800 dark:hover:text-accent-100;
+    @apply hover:text-accent-700 dark:hover:text-accent-100;
     @apply relative cursor-pointer;
   }
 
-  /* 桌面端：icon 居中，正方形按钮 */
+  /* 桌面端：横向 pill，icon + label 并排 */
   @media (min-width: 1024px) {
     .sidebar-link {
-      @apply justify-center;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      padding: 0;
-      margin: 2px auto;
+      width: auto;
+      height: 34px;
+      padding: 0 10px;
+      margin: 0 2px;
+      border-radius: 8px;
+      gap: 6px;
+      font-size: 0.8125rem; /* 13px */
+      white-space: nowrap;
     }
+    /* 桌面端显示标签 */
+    .sidebar-link-label { display: inline; }
   }
 
+  .sidebar-link-label { }
+
   .sidebar-link-active {
-    @apply bg-primary-600 text-white;
-    @apply hover:bg-primary-700 hover:text-white;
+    @apply text-white;
+    @apply hover:text-white;
     background: linear-gradient(135deg, #7c3aed, #6d28d9);
   }
 
   @media (min-width: 1024px) {
     .sidebar-link-active {
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    }
+    .sidebar-link-active:hover {
+      background: linear-gradient(135deg, #6d28d9, #5b21b6);
     }
   }
 
   .sidebar-svg-icon svg { @apply h-5 w-5; }
 
-  /* 侧边栏底部 */
+  /* ── 底部工具区 ── */
   .sidebar-bottom {
     @apply flex-shrink-0;
     @apply border-t border-accent-100 dark:border-dark-800;
-    @apply py-2;
+    @apply py-2 px-2;
   }
 
   @media (min-width: 1024px) {
     .sidebar-bottom {
-      @apply flex flex-col items-center;
-      padding: 0.5rem 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-left: auto;
+      border-top: none;
+      border-left: 1px solid;
+      @apply border-accent-200 dark:border-dark-800;
+      height: 100%;
+      padding: 0 0.75rem;
+      gap: 2px;
     }
   }
 
@@ -592,6 +623,11 @@
     @apply bg-white/95 backdrop-blur-sm dark:bg-dark-900/95;
     @apply border-b border-accent-200 dark:border-dark-800;
     height: 48px;
+  }
+
+  /* 桌面端：顶部 nav 占 56px，header 紧贴其下 */
+  @media (min-width: 1024px) {
+    .app-header { top: 56px; }
   }
 
   .app-header-inner {

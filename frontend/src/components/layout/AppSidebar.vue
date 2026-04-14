@@ -1,7 +1,7 @@
 <template>
   <aside
     class="sidebar"
-    :class="{ '-translate-x-full lg:translate-x-0': !mobileOpen }"
+    :class="{ '-translate-x-full': !mobileOpen }"
   >
     <!-- Logo/Brand -->
     <router-link to="/home" class="sidebar-header no-underline" :title="t('nav.home')">

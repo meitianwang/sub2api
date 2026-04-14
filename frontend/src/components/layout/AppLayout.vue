@@ -7,7 +7,7 @@
     <AppSidebar />
 
     <!-- Main Content Area -->
-    <div class="relative min-h-screen lg:ml-14">
+    <div class="relative min-h-screen lg:pt-14">
       <!-- Header -->
       <AppHeader />
 
