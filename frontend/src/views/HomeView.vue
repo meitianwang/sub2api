@@ -40,10 +40,11 @@
     <header class="relative z-20 border-b border-gray-200/50 bg-white/70 px-6 py-3 backdrop-blur-md dark:border-dark-700/50 dark:bg-dark-900/70">
       <nav class="mx-auto flex max-w-6xl items-center justify-between">
         <!-- Logo -->
-        <div class="flex items-center">
+        <div class="flex items-center gap-2.5">
           <div class="h-9 w-9 overflow-hidden rounded-xl shadow-md">
             <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
           </div>
+          <span class="text-base font-semibold text-gray-900 dark:text-white">{{ siteName }}</span>
         </div>
 
         <!-- Center Nav -->
