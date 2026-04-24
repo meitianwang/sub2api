@@ -587,3 +587,6 @@ MIT License
 **If you find this project useful, please give it a star!**
 
 </div>
+
+邮箱: admin@sub2api.local
+密码: Admin123456!

@@ -125,31 +125,16 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 	}
 
 	order := result.Order
-	feeRate := "0"
-	payAmount := order.Amount.String()
-	if order.FeeRate != nil {
-		feeRate = order.FeeRate.String()
-	}
-	if order.PayAmount != nil {
-		payAmount = order.PayAmount.String()
-	}
 
 	// Generate status access token for anonymous order polling
 	secret := h.configService.GetStatusAccessSecret(c.Request.Context())
 	accessToken := service.CreateOrderStatusAccessToken(order.ID, subject.UserID, secret)
 
 	response.Created(c, dto.CreateOrderResponse{
-		OrderID:      order.ID,
-		Amount:       order.Amount.String(),
-		PayAmount:    payAmount,
-		FeeRate:      feeRate,
-		Status:       order.Status,
-		PaymentType:  order.PaymentType,
-		OrderType:    order.OrderType,
+		Order:        dto.UserPaymentOrderFromService(order),
 		PayURL:       result.PayURL,
 		QrCode:       result.QrCode,
 		ClientSecret: result.ClientSecret,
-		ExpiresAt:    order.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
 		AccessToken:  accessToken,
 	})
 }

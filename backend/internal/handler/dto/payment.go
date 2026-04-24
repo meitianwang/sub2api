@@ -67,18 +67,11 @@ type PaymentOrderDTO struct {
 }
 
 type CreateOrderResponse struct {
-	OrderID      int64  `json:"order_id"`
-	Amount       string `json:"amount"`
-	PayAmount    string `json:"pay_amount"`
-	FeeRate      string `json:"fee_rate"`
-	Status       string `json:"status"`
-	PaymentType  string `json:"payment_type"`
-	OrderType    string `json:"order_type"`
-	PayURL       string `json:"pay_url,omitempty"`
-	QrCode       string `json:"qr_code,omitempty"`
-	ClientSecret string `json:"client_secret,omitempty"`
-	ExpiresAt    string `json:"expires_at"`
-	AccessToken  string `json:"access_token,omitempty"`
+	Order        *UserPaymentOrderDTO `json:"order"`
+	PayURL       string               `json:"pay_url,omitempty"`
+	QrCode       string               `json:"qr_code,omitempty"`
+	ClientSecret string               `json:"client_secret,omitempty"`
+	AccessToken  string               `json:"access_token,omitempty"`
 }
 
 type PaymentAuditLogDTO struct {
