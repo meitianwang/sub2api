@@ -379,7 +379,7 @@
             </button>
             <button
               @click="handleCancelActiveOrder"
-              class="btn flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+              class="btn flex-1 border border-red-300 bg-white text-red-600 hover:border-red-400 hover:bg-red-50 dark:border-red-700 dark:bg-dark-800 dark:text-red-400 dark:hover:border-red-600 dark:hover:bg-red-900/20"
             >
               {{ t('user.payment.cancelOrder') }}
             </button>
