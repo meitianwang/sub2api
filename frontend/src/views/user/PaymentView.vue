@@ -915,7 +915,7 @@ async function handleCreateOrder() {
     loadOrders()
   } catch (error: any) {
     appStore.showError(
-      error.response?.data?.detail || t('user.payment.createFailed')
+      error?.message || error?.response?.data?.detail || t('user.payment.createFailed')
     )
     console.error('Failed to create order:', error)
   } finally {

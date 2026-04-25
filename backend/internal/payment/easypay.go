@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/domain"
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/shopspring/decimal"
 )
@@ -137,7 +138,9 @@ func (p *EasyPayProvider) CreatePayment(ctx context.Context, req service.CreateP
 		return nil, fmt.Errorf("parse response: %w", err)
 	}
 	if result.Code != 1 {
-		return nil, fmt.Errorf("easypay error: %s", result.Msg)
+		// Surface upstream merchant message to the caller so the user sees
+		// actionable feedback (e.g., "支付宝通道未开通") instead of a generic 500.
+		return nil, infraerrors.ServiceUnavailable("PAYMENT_PROVIDER_ERROR", "支付平台错误："+result.Msg)
 	}
 
 	payURL := result.PayURL
