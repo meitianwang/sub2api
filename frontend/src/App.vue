@@ -5,14 +5,13 @@ import Toast from '@/components/common/Toast.vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
 import { resolveDocumentTitle } from '@/router/title'
 import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
-import { useAppStore, useAuthStore, useSubscriptionStore, useAnnouncementStore } from '@/stores'
+import { useAppStore, useAuthStore, useAnnouncementStore } from '@/stores'
 import { getSetupStatus } from '@/api/setup'
 
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const authStore = useAuthStore()
-const subscriptionStore = useSubscriptionStore()
 const announcementStore = useAnnouncementStore()
 
 /**
@@ -53,12 +52,6 @@ watch(
   () => authStore.isAuthenticated,
   (isAuthenticated, oldValue) => {
     if (isAuthenticated) {
-      // User logged in: preload subscriptions and start polling
-      subscriptionStore.fetchActiveSubscriptions().catch((error) => {
-        console.error('Failed to preload subscriptions:', error)
-      })
-      subscriptionStore.startPolling()
-
       // Announcements: new login vs page refresh restore
       if (oldValue === false) {
         // New login: delay 3s then force fetch
@@ -71,8 +64,7 @@ watch(
       // Register visibility change listener
       document.addEventListener('visibilitychange', onVisibilityChange)
     } else {
-      // User logged out: clear data and stop polling
-      subscriptionStore.clear()
+      // User logged out: clear data
       announcementStore.reset()
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }

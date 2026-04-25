@@ -353,30 +353,6 @@
             <span v-else class="text-xs text-gray-400 dark:text-dark-500">-</span>
           </template>
 
-          <template #cell-subscriptions="{ row }">
-            <div
-              v-if="row.subscriptions && row.subscriptions.length > 0"
-              class="flex flex-wrap gap-1.5"
-            >
-              <GroupBadge
-                v-for="sub in row.subscriptions"
-                :key="sub.id"
-                :name="sub.group?.name || ''"
-                :platform="sub.group?.platform"
-                :subscription-type="sub.group?.subscription_type"
-                :days-remaining="sub.expires_at ? getDaysRemaining(sub.expires_at) : null"
-                :title="sub.expires_at ? formatDateTime(sub.expires_at) : ''"
-              />
-            </div>
-            <span
-              v-else
-              class="inline-flex items-center gap-1.5 rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-400 dark:bg-dark-700/50 dark:text-dark-500"
-            >
-              <Icon name="ban" size="xs" class="h-3.5 w-3.5" />
-              <span>{{ t('admin.users.noSubscription') }}</span>
-            </span>
-          </template>
-
           <template #cell-balance="{ value, row }">
             <div class="flex items-center gap-2">
               <div class="group relative">
@@ -607,7 +583,6 @@ import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
-import GroupBadge from '@/components/common/GroupBadge.vue'
 import Select from '@/components/common/Select.vue'
 import UserAttributesConfigModal from '@/components/user/UserAttributesConfigModal.vue'
 import UserCreateModal from '@/components/admin/user/UserCreateModal.vue'
@@ -676,7 +651,6 @@ const allColumns = computed<Column[]>(() => [
   ...attributeColumns.value,
   { key: 'role', label: t('admin.users.columns.role'), sortable: true },
   { key: 'groups', label: t('admin.users.columns.groups'), sortable: false },
-  { key: 'subscriptions', label: t('admin.users.columns.subscriptions'), sortable: false },
   { key: 'balance', label: t('admin.users.columns.balance'), sortable: true },
   { key: 'usage', label: t('admin.users.columns.usage'), sortable: false },
   { key: 'status', label: t('admin.users.columns.status'), sortable: true },
@@ -694,7 +668,7 @@ const toggleableColumns = computed(() =>
 const hiddenColumns = reactive<Set<string>>(new Set())
 
 // Default hidden columns (columns hidden by default on first load)
-const DEFAULT_HIDDEN_COLUMNS = ['notes', 'groups', 'subscriptions', 'usage']
+const DEFAULT_HIDDEN_COLUMNS = ['notes', 'groups', 'usage']
 
 // localStorage key for column settings
 const HIDDEN_COLUMNS_KEY = 'user-hidden-columns'
@@ -737,9 +711,6 @@ const toggleColumn = (key: string) => {
   if (wasHidden && (key === 'usage' || key.startsWith('attr_'))) {
     refreshCurrentPageSecondaryData()
   }
-  if (key === 'subscriptions') {
-    loadUsers()
-  }
   if (wasHidden && key === 'groups') {
     loadAllGroups()
   }
@@ -748,7 +719,6 @@ const toggleColumn = (key: string) => {
 // Check if column is visible (not in hidden set)
 const isColumnVisible = (key: string) => !hiddenColumns.has(key)
 const hasVisibleUsageColumn = computed(() => !hiddenColumns.has('usage'))
-const hasVisibleSubscriptionsColumn = computed(() => !hiddenColumns.has('subscriptions'))
 const hasVisibleGroupsColumn = computed(() => !hiddenColumns.has('groups'))
 const hasVisibleAttributeColumns = computed(() =>
   attributeDefinitions.value.some((def) => def.enabled && !hiddenColumns.has(`attr_${def.id}`))
@@ -780,7 +750,7 @@ const getUserGroups = (user: AdminUser) => {
   const exclusive: AdminGroup[] = []
   const publicGroups: AdminGroup[] = []
   for (const g of allGroups.value) {
-    if (g.status !== 'active' || g.subscription_type !== 'standard') continue
+    if (g.status !== 'active') continue
     if (g.is_exclusive) {
       if (user.allowed_groups?.includes(g.id)) {
         exclusive.push(g)
@@ -798,7 +768,7 @@ const groupFilterOptions = computed(() => {
     { value: '', label: t('admin.users.allGroups') }
   ]
   for (const g of allGroups.value) {
-    if (g.status !== 'active' || !g.is_exclusive || g.subscription_type !== 'standard') continue
+    if (g.status !== 'active' || !g.is_exclusive) continue
     options.push({ value: g.name, label: g.name })
   }
   return options
@@ -1068,14 +1038,6 @@ const balanceOperation = ref<'add' | 'subtract'>('add')
 const showBalanceHistoryModal = ref(false)
 const balanceHistoryUser = ref<AdminUser | null>(null)
 
-// 计算剩余天数
-const getDaysRemaining = (expiresAt: string): number => {
-  const now = new Date()
-  const expires = new Date(expiresAt)
-  const diffMs = expires.getTime() - now.getTime()
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-}
-
 const loadAttributeDefinitions = async () => {
   try {
     attributeDefinitions.value = await adminAPI.userAttributes.listEnabledDefinitions()
@@ -1114,8 +1076,7 @@ const loadUsers = async () => {
         status: filters.status as any,
         search: searchQuery.value || undefined,
         group_name: filters.group || undefined,
-        attributes: Object.keys(attrFilters).length > 0 ? attrFilters : undefined,
-        include_subscriptions: hasVisibleSubscriptionsColumn.value
+        attributes: Object.keys(attrFilters).length > 0 ? attrFilters : undefined
       },
       { signal }
     )

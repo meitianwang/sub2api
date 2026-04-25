@@ -43,10 +43,6 @@ func (r *paymentOrderRepository) Create(ctx context.Context, order *service.Paym
 		SetNillableClientIP(order.ClientIP).
 		SetNillableSrcHost(order.SrcHost).
 		SetNillableSrcURL(order.SrcURL).
-		SetOrderType(order.OrderType).
-		SetNillablePlanID(order.PlanID).
-		SetNillableSubscriptionGroupID(order.SubscriptionGroupID).
-		SetNillableSubscriptionDays(order.SubscriptionDays).
 		SetNillableProviderInstanceID(order.ProviderInstanceID)
 
 	created, err := builder.Save(ctx)
@@ -183,16 +179,6 @@ func (r *paymentOrderRepository) CountActiveByProviderInstanceID(ctx context.Con
 	return client.PaymentOrder.Query().
 		Where(
 			paymentorder.ProviderInstanceIDEQ(instanceID),
-			paymentorder.StatusIn(activeOrderStatuses...),
-		).
-		Count(ctx)
-}
-
-func (r *paymentOrderRepository) CountActiveByPlanID(ctx context.Context, planID int64) (int, error) {
-	client := clientFromContext(ctx, r.client)
-	return client.PaymentOrder.Query().
-		Where(
-			paymentorder.PlanIDEQ(planID),
 			paymentorder.StatusIn(activeOrderStatuses...),
 		).
 		Count(ctx)
@@ -338,9 +324,6 @@ func (r *paymentOrderRepository) ListFiltered(ctx context.Context, filter servic
 	}
 	if filter.Status != nil && *filter.Status != "" {
 		query = query.Where(paymentorder.StatusEQ(*filter.Status))
-	}
-	if filter.OrderType != nil && *filter.OrderType != "" {
-		query = query.Where(paymentorder.OrderTypeEQ(*filter.OrderType))
 	}
 	if filter.PaymentType != nil && *filter.PaymentType != "" {
 		query = query.Where(paymentorder.PaymentTypeEQ(*filter.PaymentType))
@@ -540,10 +523,6 @@ func paymentOrderToService(m *dbent.PaymentOrder) *service.PaymentOrder {
 		ClientIP:            m.ClientIP,
 		SrcHost:             m.SrcHost,
 		SrcURL:              m.SrcURL,
-		OrderType:           m.OrderType,
-		PlanID:              m.PlanID,
-		SubscriptionGroupID: m.SubscriptionGroupID,
-		SubscriptionDays:    m.SubscriptionDays,
 		ProviderInstanceID:  m.ProviderInstanceID,
 		CreatedAt:           m.CreatedAt,
 		UpdatedAt:           m.UpdatedAt,

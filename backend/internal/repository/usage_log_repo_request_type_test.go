@@ -49,7 +49,6 @@ func TestUsageLogRepositoryCreateSyncRequestTypeAndLegacyFields(t *testing.T) {
 			log.RequestedModel,
 			sqlmock.AnyArg(), // upstream_model
 			sqlmock.AnyArg(), // group_id
-			sqlmock.AnyArg(), // subscription_id
 			log.InputTokens,
 			log.OutputTokens,
 			log.CacheCreationTokens,
@@ -432,10 +431,9 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullString{Valid: true, String: "req-1"},
 			"gpt-5", // model
 			sql.NullString{Valid: true, String: "gpt-5"}, // requested_model
-			sql.NullString{},  // upstream_model
-			sql.NullInt64{},   // group_id
-			sql.NullInt64{},   // subscription_id
-			1,                 // input_tokens
+			sql.NullString{}, // upstream_model
+			sql.NullInt64{},  // group_id
+			1,                // input_tokens
 			2,                 // output_tokens
 			3,                 // cache_creation_tokens
 			4,                 // cache_read_tokens

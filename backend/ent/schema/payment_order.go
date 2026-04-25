@@ -154,20 +154,6 @@ func (PaymentOrder) Fields() []ent.Field {
 			Nillable().
 			SchemaType(map[string]string{dialect.Postgres: "text"}),
 
-		// 订单类型与订阅关联
-		field.String("order_type").
-			MaxLen(20).
-			Default(domain.PaymentOrderTypeBalance),
-		field.Int64("plan_id").
-			Optional().
-			Nillable(),
-		field.Int64("subscription_group_id").
-			Optional().
-			Nillable(),
-		field.Int("subscription_days").
-			Optional().
-			Nillable(),
-
 		// 支付服务商实例
 		field.Int64("provider_instance_id").
 			Optional().
@@ -182,10 +168,6 @@ func (PaymentOrder) Edges() []ent.Edge {
 			Field("user_id").
 			Unique().
 			Required(),
-		edge.From("plan", SubscriptionPlan.Type).
-			Ref("orders").
-			Field("plan_id").
-			Unique(),
 		edge.From("provider_instance", PaymentProviderInstance.Type).
 			Ref("orders").
 			Field("provider_instance_id").
@@ -202,7 +184,6 @@ func (PaymentOrder) Indexes() []ent.Index {
 		index.Fields("created_at"),
 		index.Fields("paid_at"),
 		index.Fields("payment_type", "paid_at"),
-		index.Fields("order_type"),
 		index.Fields("provider_instance_id", "paid_at"),
 	}
 }

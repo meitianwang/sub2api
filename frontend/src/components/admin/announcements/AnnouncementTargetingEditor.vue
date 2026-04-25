@@ -92,24 +92,7 @@
             class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-900/30"
           >
             <div class="flex flex-col gap-3 md:flex-row md:items-end">
-              <div class="w-full md:w-52">
-                <label class="input-label">{{ t('admin.announcements.form.conditionType') }}</label>
-                <Select
-                  :model-value="cond.type"
-                  :options="conditionTypeOptions"
-                  @update:model-value="(v) => setConditionType(groupIndex, condIndex, v as any)"
-                />
-              </div>
-
-              <div v-if="cond.type === 'subscription'" class="flex-1">
-                <label class="input-label">{{ t('admin.announcements.form.selectPackages') }}</label>
-                <GroupSelector
-                  v-model="subscriptionSelections[groupIndex][condIndex]"
-                  :groups="groups"
-                />
-              </div>
-
-              <div v-else class="flex flex-1 flex-col gap-3 sm:flex-row">
+              <div class="flex flex-1 flex-col gap-3 sm:flex-row">
                 <div class="w-full sm:w-44">
                   <label class="input-label">{{ t('admin.announcements.form.operator') }}</label>
                   <Select
@@ -165,26 +148,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
-  AdminGroup,
   AnnouncementTargeting,
   AnnouncementCondition,
-  AnnouncementConditionGroup,
   AnnouncementConditionType,
   AnnouncementOperator
 } from '@/types'
 
 import Select from '@/components/common/Select.vue'
-import GroupSelector from '@/components/common/GroupSelector.vue'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: AnnouncementTargeting
-  groups: AdminGroup[]
 }>()
 
 const emit = defineEmits<{
@@ -195,11 +174,6 @@ const anyOf = computed(() => props.modelValue?.any_of ?? [])
 
 type Mode = 'all' | 'custom'
 const mode = computed<Mode>(() => (anyOf.value.length === 0 ? 'all' : 'custom'))
-
-const conditionTypeOptions = computed(() => [
-  { value: 'subscription', label: t('admin.announcements.form.conditionSubscription') },
-  { value: 'balance', label: t('admin.announcements.form.conditionBalance') }
-])
 
 const balanceOperatorOptions = computed(() => [
   { value: 'gt', label: t('admin.announcements.operators.gt') },
@@ -215,15 +189,7 @@ function setMode(next: Mode) {
     return
   }
   if (anyOf.value.length === 0) {
-    emit('update:modelValue', { any_of: [{ all_of: [defaultSubscriptionCondition()] }] })
-  }
-}
-
-function defaultSubscriptionCondition(): AnnouncementCondition {
-  return {
-    type: 'subscription' as AnnouncementConditionType,
-    operator: 'in' as AnnouncementOperator,
-    group_ids: []
+    emit('update:modelValue', { any_of: [{ all_of: [defaultBalanceCondition()] }] })
   }
 }
 
@@ -236,12 +202,12 @@ function defaultBalanceCondition(): AnnouncementCondition {
 }
 
 type TargetingDraft = {
-  any_of: AnnouncementConditionGroup[]
+  any_of: NonNullable<AnnouncementTargeting['any_of']>
 }
 
 function updateTargeting(mutator: (draft: TargetingDraft) => void) {
-  const draft: TargetingDraft = JSON.parse(JSON.stringify(props.modelValue ?? { any_of: [] }))
-  if (!draft.any_of) draft.any_of = []
+  const cloned = JSON.parse(JSON.stringify(props.modelValue ?? { any_of: [] })) as { any_of?: TargetingDraft['any_of'] }
+  const draft: TargetingDraft = { any_of: cloned.any_of ?? [] }
   mutator(draft)
   emit('update:modelValue', draft)
 }
@@ -249,7 +215,7 @@ function updateTargeting(mutator: (draft: TargetingDraft) => void) {
 function addOrGroup() {
   updateTargeting((draft) => {
     if (draft.any_of.length >= 50) return
-    draft.any_of.push({ all_of: [defaultSubscriptionCondition()] })
+    draft.any_of.push({ all_of: [defaultBalanceCondition()] })
   })
 }
 
@@ -264,7 +230,7 @@ function addAndCondition(groupIndex: number) {
     const group = draft.any_of[groupIndex]
     if (!group.all_of) group.all_of = []
     if (group.all_of.length >= 50) return
-    group.all_of.push(defaultSubscriptionCondition())
+    group.all_of.push(defaultBalanceCondition())
   })
 }
 
@@ -273,19 +239,6 @@ function removeAndCondition(groupIndex: number, condIndex: number) {
     const group = draft.any_of[groupIndex]
     if (!group?.all_of) return
     group.all_of.splice(condIndex, 1)
-  })
-}
-
-function setConditionType(groupIndex: number, condIndex: number, nextType: AnnouncementConditionType) {
-  updateTargeting((draft) => {
-    const group = draft.any_of[groupIndex]
-    if (!group?.all_of) return
-
-    if (nextType === 'subscription') {
-      group.all_of[condIndex] = defaultSubscriptionCondition()
-    } else {
-      group.all_of[condIndex] = defaultBalanceCondition()
-    }
   })
 }
 
@@ -314,75 +267,6 @@ function setBalanceValue(groupIndex: number, condIndex: number, raw: string) {
   })
 }
 
-// We keep group_ids selection in a parallel reactive map because GroupSelector is numeric list.
-// Then we mirror it back to targeting.group_ids via a watcher.
-const subscriptionSelections = reactive<Record<number, Record<number, number[]>>>({})
-
-function ensureSelectionPath(groupIndex: number, condIndex: number) {
-  if (!subscriptionSelections[groupIndex]) subscriptionSelections[groupIndex] = {}
-  if (!subscriptionSelections[groupIndex][condIndex]) subscriptionSelections[groupIndex][condIndex] = []
-}
-
-// Sync from modelValue to subscriptionSelections (one-way: model -> local state)
-watch(
-  () => props.modelValue,
-  (v) => {
-    const groups = v?.any_of ?? []
-    for (let gi = 0; gi < groups.length; gi++) {
-      const allOf = groups[gi]?.all_of ?? []
-      for (let ci = 0; ci < allOf.length; ci++) {
-        const c = allOf[ci]
-        if (c?.type === 'subscription') {
-          ensureSelectionPath(gi, ci)
-          // Only update if different to avoid triggering unnecessary updates
-          const newIds = (c.group_ids ?? []).slice()
-          const currentIds = subscriptionSelections[gi]?.[ci] ?? []
-          if (JSON.stringify(newIds.sort()) !== JSON.stringify(currentIds.sort())) {
-            subscriptionSelections[gi][ci] = newIds
-          }
-        }
-      }
-    }
-  },
-  { immediate: true }
-)
-
-// Sync from subscriptionSelections to modelValue (one-way: local state -> model)
-// Use a debounced approach to avoid infinite loops
-let syncTimeout: ReturnType<typeof setTimeout> | null = null
-watch(
-  () => subscriptionSelections,
-  () => {
-    // Debounce the sync to avoid rapid fire updates
-    if (syncTimeout) clearTimeout(syncTimeout)
-
-    syncTimeout = setTimeout(() => {
-      // Build the new targeting state
-      const newTargeting: TargetingDraft = JSON.parse(JSON.stringify(props.modelValue ?? { any_of: [] }))
-      if (!newTargeting.any_of) newTargeting.any_of = []
-
-      const groups = newTargeting.any_of ?? []
-      for (let gi = 0; gi < groups.length; gi++) {
-        const allOf = groups[gi]?.all_of ?? []
-        for (let ci = 0; ci < allOf.length; ci++) {
-          const c = allOf[ci]
-          if (c?.type === 'subscription') {
-            ensureSelectionPath(gi, ci)
-            c.operator = 'in' as AnnouncementOperator
-            c.group_ids = (subscriptionSelections[gi]?.[ci] ?? []).slice()
-          }
-        }
-      }
-
-      // Only emit if there's an actual change (deep comparison)
-      if (JSON.stringify(props.modelValue) !== JSON.stringify(newTargeting)) {
-        emit('update:modelValue', newTargeting)
-      }
-    }, 0)
-  },
-  { deep: true }
-)
-
 const validationError = computed(() => {
   if (mode.value !== 'custom') return ''
 
@@ -395,12 +279,6 @@ const validationError = computed(() => {
     const allOf = g?.all_of ?? []
     if (allOf.length === 0) return t('admin.announcements.form.addAndCondition')
     if (allOf.length > 50) return 'all_of > 50'
-
-    for (const c of allOf) {
-      if (c.type === 'subscription') {
-        if (!c.group_ids || c.group_ids.length === 0) return t('admin.announcements.form.selectPackages')
-      }
-    }
   }
 
   return ''

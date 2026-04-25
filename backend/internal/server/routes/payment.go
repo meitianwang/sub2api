@@ -28,7 +28,6 @@ func registerPaymentUserRoutes(authenticated *gin.RouterGroup, h *handler.Handle
 		pay.POST("/orders/:id/refund-request", h.Payment.RequestRefund)
 		pay.GET("/config", h.Payment.GetConfig)
 		pay.GET("/channels", h.Payment.ListChannels)
-		pay.GET("/subscription-plans", h.Payment.ListPlans)
 	}
 }
 
@@ -72,15 +71,6 @@ func registerPaymentAdminRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 			channels.POST("", h.Admin.PaymentChannel.Create)
 			channels.PUT("/:id", h.Admin.PaymentChannel.Update)
 			channels.DELETE("/:id", h.Admin.PaymentChannel.Delete)
-		}
-
-		// Subscription plans
-		plans := pay.Group("/subscription-plans")
-		{
-			plans.GET("", h.Admin.PaymentSubscriptionPlan.List)
-			plans.POST("", h.Admin.PaymentSubscriptionPlan.Create)
-			plans.PUT("/:id", h.Admin.PaymentSubscriptionPlan.Update)
-			plans.DELETE("/:id", h.Admin.PaymentSubscriptionPlan.Delete)
 		}
 
 		// Dashboard

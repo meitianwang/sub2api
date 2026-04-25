@@ -15,7 +15,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
-	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/shopspring/decimal"
 )
@@ -584,94 +583,6 @@ func (_u *PaymentOrderUpdate) ClearSrcURL() *PaymentOrderUpdate {
 	return _u
 }
 
-// SetOrderType sets the "order_type" field.
-func (_u *PaymentOrderUpdate) SetOrderType(v string) *PaymentOrderUpdate {
-	_u.mutation.SetOrderType(v)
-	return _u
-}
-
-// SetNillableOrderType sets the "order_type" field if the given value is not nil.
-func (_u *PaymentOrderUpdate) SetNillableOrderType(v *string) *PaymentOrderUpdate {
-	if v != nil {
-		_u.SetOrderType(*v)
-	}
-	return _u
-}
-
-// SetPlanID sets the "plan_id" field.
-func (_u *PaymentOrderUpdate) SetPlanID(v int64) *PaymentOrderUpdate {
-	_u.mutation.SetPlanID(v)
-	return _u
-}
-
-// SetNillablePlanID sets the "plan_id" field if the given value is not nil.
-func (_u *PaymentOrderUpdate) SetNillablePlanID(v *int64) *PaymentOrderUpdate {
-	if v != nil {
-		_u.SetPlanID(*v)
-	}
-	return _u
-}
-
-// ClearPlanID clears the value of the "plan_id" field.
-func (_u *PaymentOrderUpdate) ClearPlanID() *PaymentOrderUpdate {
-	_u.mutation.ClearPlanID()
-	return _u
-}
-
-// SetSubscriptionGroupID sets the "subscription_group_id" field.
-func (_u *PaymentOrderUpdate) SetSubscriptionGroupID(v int64) *PaymentOrderUpdate {
-	_u.mutation.ResetSubscriptionGroupID()
-	_u.mutation.SetSubscriptionGroupID(v)
-	return _u
-}
-
-// SetNillableSubscriptionGroupID sets the "subscription_group_id" field if the given value is not nil.
-func (_u *PaymentOrderUpdate) SetNillableSubscriptionGroupID(v *int64) *PaymentOrderUpdate {
-	if v != nil {
-		_u.SetSubscriptionGroupID(*v)
-	}
-	return _u
-}
-
-// AddSubscriptionGroupID adds value to the "subscription_group_id" field.
-func (_u *PaymentOrderUpdate) AddSubscriptionGroupID(v int64) *PaymentOrderUpdate {
-	_u.mutation.AddSubscriptionGroupID(v)
-	return _u
-}
-
-// ClearSubscriptionGroupID clears the value of the "subscription_group_id" field.
-func (_u *PaymentOrderUpdate) ClearSubscriptionGroupID() *PaymentOrderUpdate {
-	_u.mutation.ClearSubscriptionGroupID()
-	return _u
-}
-
-// SetSubscriptionDays sets the "subscription_days" field.
-func (_u *PaymentOrderUpdate) SetSubscriptionDays(v int) *PaymentOrderUpdate {
-	_u.mutation.ResetSubscriptionDays()
-	_u.mutation.SetSubscriptionDays(v)
-	return _u
-}
-
-// SetNillableSubscriptionDays sets the "subscription_days" field if the given value is not nil.
-func (_u *PaymentOrderUpdate) SetNillableSubscriptionDays(v *int) *PaymentOrderUpdate {
-	if v != nil {
-		_u.SetSubscriptionDays(*v)
-	}
-	return _u
-}
-
-// AddSubscriptionDays adds value to the "subscription_days" field.
-func (_u *PaymentOrderUpdate) AddSubscriptionDays(v int) *PaymentOrderUpdate {
-	_u.mutation.AddSubscriptionDays(v)
-	return _u
-}
-
-// ClearSubscriptionDays clears the value of the "subscription_days" field.
-func (_u *PaymentOrderUpdate) ClearSubscriptionDays() *PaymentOrderUpdate {
-	_u.mutation.ClearSubscriptionDays()
-	return _u
-}
-
 // SetProviderInstanceID sets the "provider_instance_id" field.
 func (_u *PaymentOrderUpdate) SetProviderInstanceID(v int64) *PaymentOrderUpdate {
 	_u.mutation.SetProviderInstanceID(v)
@@ -695,11 +606,6 @@ func (_u *PaymentOrderUpdate) ClearProviderInstanceID() *PaymentOrderUpdate {
 // SetUser sets the "user" edge to the User entity.
 func (_u *PaymentOrderUpdate) SetUser(v *User) *PaymentOrderUpdate {
 	return _u.SetUserID(v.ID)
-}
-
-// SetPlan sets the "plan" edge to the SubscriptionPlan entity.
-func (_u *PaymentOrderUpdate) SetPlan(v *SubscriptionPlan) *PaymentOrderUpdate {
-	return _u.SetPlanID(v.ID)
 }
 
 // SetProviderInstance sets the "provider_instance" edge to the PaymentProviderInstance entity.
@@ -730,12 +636,6 @@ func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 // ClearUser clears the "user" edge to the User entity.
 func (_u *PaymentOrderUpdate) ClearUser() *PaymentOrderUpdate {
 	_u.mutation.ClearUser()
-	return _u
-}
-
-// ClearPlan clears the "plan" edge to the SubscriptionPlan entity.
-func (_u *PaymentOrderUpdate) ClearPlan() *PaymentOrderUpdate {
-	_u.mutation.ClearPlan()
 	return _u
 }
 
@@ -842,11 +742,6 @@ func (_u *PaymentOrderUpdate) check() error {
 	if v, ok := _u.mutation.SrcHost(); ok {
 		if err := paymentorder.SrcHostValidator(v); err != nil {
 			return &ValidationError{Name: "src_host", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.src_host": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.OrderType(); ok {
-		if err := paymentorder.OrderTypeValidator(v); err != nil {
-			return &ValidationError{Name: "order_type", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.order_type": %w`, err)}
 		}
 	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
@@ -1023,27 +918,6 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.SrcURLCleared() {
 		_spec.ClearField(paymentorder.FieldSrcURL, field.TypeString)
 	}
-	if value, ok := _u.mutation.OrderType(); ok {
-		_spec.SetField(paymentorder.FieldOrderType, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.SubscriptionGroupID(); ok {
-		_spec.SetField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSubscriptionGroupID(); ok {
-		_spec.AddField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
-	}
-	if _u.mutation.SubscriptionGroupIDCleared() {
-		_spec.ClearField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64)
-	}
-	if value, ok := _u.mutation.SubscriptionDays(); ok {
-		_spec.SetField(paymentorder.FieldSubscriptionDays, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedSubscriptionDays(); ok {
-		_spec.AddField(paymentorder.FieldSubscriptionDays, field.TypeInt, value)
-	}
-	if _u.mutation.SubscriptionDaysCleared() {
-		_spec.ClearField(paymentorder.FieldSubscriptionDays, field.TypeInt)
-	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -1066,35 +940,6 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.PlanCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   paymentorder.PlanTable,
-			Columns: []string{paymentorder.PlanColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.PlanIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   paymentorder.PlanTable,
-			Columns: []string{paymentorder.PlanColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1747,94 +1592,6 @@ func (_u *PaymentOrderUpdateOne) ClearSrcURL() *PaymentOrderUpdateOne {
 	return _u
 }
 
-// SetOrderType sets the "order_type" field.
-func (_u *PaymentOrderUpdateOne) SetOrderType(v string) *PaymentOrderUpdateOne {
-	_u.mutation.SetOrderType(v)
-	return _u
-}
-
-// SetNillableOrderType sets the "order_type" field if the given value is not nil.
-func (_u *PaymentOrderUpdateOne) SetNillableOrderType(v *string) *PaymentOrderUpdateOne {
-	if v != nil {
-		_u.SetOrderType(*v)
-	}
-	return _u
-}
-
-// SetPlanID sets the "plan_id" field.
-func (_u *PaymentOrderUpdateOne) SetPlanID(v int64) *PaymentOrderUpdateOne {
-	_u.mutation.SetPlanID(v)
-	return _u
-}
-
-// SetNillablePlanID sets the "plan_id" field if the given value is not nil.
-func (_u *PaymentOrderUpdateOne) SetNillablePlanID(v *int64) *PaymentOrderUpdateOne {
-	if v != nil {
-		_u.SetPlanID(*v)
-	}
-	return _u
-}
-
-// ClearPlanID clears the value of the "plan_id" field.
-func (_u *PaymentOrderUpdateOne) ClearPlanID() *PaymentOrderUpdateOne {
-	_u.mutation.ClearPlanID()
-	return _u
-}
-
-// SetSubscriptionGroupID sets the "subscription_group_id" field.
-func (_u *PaymentOrderUpdateOne) SetSubscriptionGroupID(v int64) *PaymentOrderUpdateOne {
-	_u.mutation.ResetSubscriptionGroupID()
-	_u.mutation.SetSubscriptionGroupID(v)
-	return _u
-}
-
-// SetNillableSubscriptionGroupID sets the "subscription_group_id" field if the given value is not nil.
-func (_u *PaymentOrderUpdateOne) SetNillableSubscriptionGroupID(v *int64) *PaymentOrderUpdateOne {
-	if v != nil {
-		_u.SetSubscriptionGroupID(*v)
-	}
-	return _u
-}
-
-// AddSubscriptionGroupID adds value to the "subscription_group_id" field.
-func (_u *PaymentOrderUpdateOne) AddSubscriptionGroupID(v int64) *PaymentOrderUpdateOne {
-	_u.mutation.AddSubscriptionGroupID(v)
-	return _u
-}
-
-// ClearSubscriptionGroupID clears the value of the "subscription_group_id" field.
-func (_u *PaymentOrderUpdateOne) ClearSubscriptionGroupID() *PaymentOrderUpdateOne {
-	_u.mutation.ClearSubscriptionGroupID()
-	return _u
-}
-
-// SetSubscriptionDays sets the "subscription_days" field.
-func (_u *PaymentOrderUpdateOne) SetSubscriptionDays(v int) *PaymentOrderUpdateOne {
-	_u.mutation.ResetSubscriptionDays()
-	_u.mutation.SetSubscriptionDays(v)
-	return _u
-}
-
-// SetNillableSubscriptionDays sets the "subscription_days" field if the given value is not nil.
-func (_u *PaymentOrderUpdateOne) SetNillableSubscriptionDays(v *int) *PaymentOrderUpdateOne {
-	if v != nil {
-		_u.SetSubscriptionDays(*v)
-	}
-	return _u
-}
-
-// AddSubscriptionDays adds value to the "subscription_days" field.
-func (_u *PaymentOrderUpdateOne) AddSubscriptionDays(v int) *PaymentOrderUpdateOne {
-	_u.mutation.AddSubscriptionDays(v)
-	return _u
-}
-
-// ClearSubscriptionDays clears the value of the "subscription_days" field.
-func (_u *PaymentOrderUpdateOne) ClearSubscriptionDays() *PaymentOrderUpdateOne {
-	_u.mutation.ClearSubscriptionDays()
-	return _u
-}
-
 // SetProviderInstanceID sets the "provider_instance_id" field.
 func (_u *PaymentOrderUpdateOne) SetProviderInstanceID(v int64) *PaymentOrderUpdateOne {
 	_u.mutation.SetProviderInstanceID(v)
@@ -1858,11 +1615,6 @@ func (_u *PaymentOrderUpdateOne) ClearProviderInstanceID() *PaymentOrderUpdateOn
 // SetUser sets the "user" edge to the User entity.
 func (_u *PaymentOrderUpdateOne) SetUser(v *User) *PaymentOrderUpdateOne {
 	return _u.SetUserID(v.ID)
-}
-
-// SetPlan sets the "plan" edge to the SubscriptionPlan entity.
-func (_u *PaymentOrderUpdateOne) SetPlan(v *SubscriptionPlan) *PaymentOrderUpdateOne {
-	return _u.SetPlanID(v.ID)
 }
 
 // SetProviderInstance sets the "provider_instance" edge to the PaymentProviderInstance entity.
@@ -1893,12 +1645,6 @@ func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 // ClearUser clears the "user" edge to the User entity.
 func (_u *PaymentOrderUpdateOne) ClearUser() *PaymentOrderUpdateOne {
 	_u.mutation.ClearUser()
-	return _u
-}
-
-// ClearPlan clears the "plan" edge to the SubscriptionPlan entity.
-func (_u *PaymentOrderUpdateOne) ClearPlan() *PaymentOrderUpdateOne {
-	_u.mutation.ClearPlan()
 	return _u
 }
 
@@ -2018,11 +1764,6 @@ func (_u *PaymentOrderUpdateOne) check() error {
 	if v, ok := _u.mutation.SrcHost(); ok {
 		if err := paymentorder.SrcHostValidator(v); err != nil {
 			return &ValidationError{Name: "src_host", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.src_host": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.OrderType(); ok {
-		if err := paymentorder.OrderTypeValidator(v); err != nil {
-			return &ValidationError{Name: "order_type", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.order_type": %w`, err)}
 		}
 	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
@@ -2216,27 +1957,6 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	if _u.mutation.SrcURLCleared() {
 		_spec.ClearField(paymentorder.FieldSrcURL, field.TypeString)
 	}
-	if value, ok := _u.mutation.OrderType(); ok {
-		_spec.SetField(paymentorder.FieldOrderType, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.SubscriptionGroupID(); ok {
-		_spec.SetField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSubscriptionGroupID(); ok {
-		_spec.AddField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
-	}
-	if _u.mutation.SubscriptionGroupIDCleared() {
-		_spec.ClearField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64)
-	}
-	if value, ok := _u.mutation.SubscriptionDays(); ok {
-		_spec.SetField(paymentorder.FieldSubscriptionDays, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedSubscriptionDays(); ok {
-		_spec.AddField(paymentorder.FieldSubscriptionDays, field.TypeInt, value)
-	}
-	if _u.mutation.SubscriptionDaysCleared() {
-		_spec.ClearField(paymentorder.FieldSubscriptionDays, field.TypeInt)
-	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -2259,35 +1979,6 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.PlanCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   paymentorder.PlanTable,
-			Columns: []string{paymentorder.PlanColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.PlanIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   paymentorder.PlanTable,
-			Columns: []string{paymentorder.PlanColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionplan.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

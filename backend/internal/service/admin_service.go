@@ -113,13 +113,9 @@ type UpdateUserInput struct {
 }
 
 type CreateGroupInput struct {
-	Name        string
-	Description string
-	IsExclusive bool
-	SubscriptionType string   // standard/subscription
-	DailyLimitUSD    *float64 // 日限额 (USD)
-	WeeklyLimitUSD   *float64 // 周限额 (USD)
-	MonthlyLimitUSD  *float64 // 月限额 (USD)
+	Name           string
+	Description    string
+	IsExclusive    bool
 	ImagePrice1K   *float64
 	ImagePrice2K   *float64
 	ImagePrice4K   *float64
@@ -142,11 +138,7 @@ type UpdateGroupInput struct {
 	Name        string
 	Description string
 	IsExclusive *bool
-	Status           string
-	SubscriptionType string   // standard/subscription
-	DailyLimitUSD    *float64 // 日限额 (USD)
-	WeeklyLimitUSD   *float64 // 周限额 (USD)
-	MonthlyLimitUSD  *float64 // 月限额 (USD)
+	Status      string
 	ImagePrice1K *float64
 	ImagePrice2K *float64
 	ImagePrice4K *float64
@@ -390,16 +382,14 @@ type adminServiceImpl struct {
 	groupRepo            GroupRepository
 	accountRepo          AccountRepository
 	proxyRepo            ProxyRepository
-	apiKeyRepo          APIKeyRepository
-	redeemCodeRepo      RedeemCodeRepository
-	billingCacheService *BillingCacheService
+	apiKeyRepo           APIKeyRepository
+	redeemCodeRepo       RedeemCodeRepository
+	billingCacheService  *BillingCacheService
 	proxyProber          ProxyExitInfoProber
 	proxyLatencyCache    ProxyLatencyCache
 	authCacheInvalidator APIKeyAuthCacheInvalidator
 	entClient            *dbent.Client // 用于开启数据库事务
 	settingService       *SettingService
-	defaultSubAssigner   DefaultSubscriptionAssigner
-	userSubRepo          UserSubscriptionRepository
 	privacyClientFactory PrivacyClientFactory
 }
 
@@ -417,8 +407,6 @@ func NewAdminService(
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
 	entClient *dbent.Client,
 	settingService *SettingService,
-	defaultSubAssigner DefaultSubscriptionAssigner,
-	userSubRepo UserSubscriptionRepository,
 	privacyClientFactory PrivacyClientFactory,
 ) AdminService {
 	return &adminServiceImpl{
@@ -427,15 +415,13 @@ func NewAdminService(
 		accountRepo:          accountRepo,
 		proxyRepo:            proxyRepo,
 		apiKeyRepo:           apiKeyRepo,
-		redeemCodeRepo:      redeemCodeRepo,
-		billingCacheService: billingCacheService,
+		redeemCodeRepo:       redeemCodeRepo,
+		billingCacheService:  billingCacheService,
 		proxyProber:          proxyProber,
 		proxyLatencyCache:    proxyLatencyCache,
 		authCacheInvalidator: authCacheInvalidator,
 		entClient:            entClient,
 		settingService:       settingService,
-		defaultSubAssigner:   defaultSubAssigner,
-		userSubRepo:          userSubRepo,
 		privacyClientFactory: privacyClientFactory,
 	}
 }
@@ -474,25 +460,7 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, err
 	}
-	s.assignDefaultSubscriptions(ctx, user.ID)
 	return user, nil
-}
-
-func (s *adminServiceImpl) assignDefaultSubscriptions(ctx context.Context, userID int64) {
-	if s.settingService == nil || s.defaultSubAssigner == nil || userID <= 0 {
-		return
-	}
-	items := s.settingService.GetDefaultSubscriptions(ctx)
-	for _, item := range items {
-		if _, _, err := s.defaultSubAssigner.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-			UserID:       userID,
-			GroupID:      item.GroupID,
-			ValidityDays: item.ValidityDays,
-			Notes:        "auto assigned by default user subscriptions setting",
-		}); err != nil {
-			logger.LegacyPrintf("service.admin", "failed to assign default subscription: user_id=%d group_id=%d err=%v", userID, item.GroupID, err)
-		}
-	}
 }
 
 func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *UpdateUserInput) (*User, error) {
@@ -684,16 +652,6 @@ func (s *adminServiceImpl) GetGroup(ctx context.Context, id int64) (*Group, erro
 }
 
 func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupInput) (*Group, error) {
-	subscriptionType := input.SubscriptionType
-	if subscriptionType == "" {
-		subscriptionType = SubscriptionTypeStandard
-	}
-
-	// 限额字段：nil/负数 表示"无限制"，0 表示"不允许用量"，正数表示具体限额
-	dailyLimit := normalizeLimit(input.DailyLimitUSD)
-	weeklyLimit := normalizeLimit(input.WeeklyLimitUSD)
-	monthlyLimit := normalizeLimit(input.MonthlyLimitUSD)
-
 	// 图片价格：负数表示清除（使用默认价格），0 保留（表示免费）
 	imagePrice1K := normalizePrice(input.ImagePrice1K)
 	imagePrice2K := normalizePrice(input.ImagePrice2K)
@@ -710,7 +668,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	}
 	// 校验无效请求兜底分组
 	if fallbackOnInvalidRequest != nil {
-		if err := s.validateFallbackGroupOnInvalidRequest(ctx, 0, subscriptionType, *fallbackOnInvalidRequest); err != nil {
+		if err := s.validateFallbackGroupOnInvalidRequest(ctx, 0, *fallbackOnInvalidRequest); err != nil {
 			return nil, err
 		}
 	}
@@ -750,16 +708,12 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	group := &Group{
 		Name:                            input.Name,
 		Description:                     input.Description,
-		IsExclusive: input.IsExclusive,
+		IsExclusive:                     input.IsExclusive,
 		Status:                          StatusActive,
-		SubscriptionType:                subscriptionType,
-		DailyLimitUSD:                   dailyLimit,
-		WeeklyLimitUSD:                  weeklyLimit,
-		MonthlyLimitUSD:                 monthlyLimit,
 		ImagePrice1K:                    imagePrice1K,
 		ImagePrice2K:                    imagePrice2K,
-		ImagePrice4K:   imagePrice4K,
-		ClaudeCodeOnly: input.ClaudeCodeOnly,
+		ImagePrice4K:                    imagePrice4K,
+		ClaudeCodeOnly:                  input.ClaudeCodeOnly,
 		FallbackGroupID:                 input.FallbackGroupID,
 		FallbackGroupIDOnInvalidRequest: fallbackOnInvalidRequest,
 		ModelRouting:                    input.ModelRouting,
@@ -779,14 +733,6 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	}
 
 	return group, nil
-}
-
-// normalizeLimit 将负数转换为 nil（表示无限制），0 保留（表示限额为零）
-func normalizeLimit(limit *float64) *float64 {
-	if limit == nil || *limit < 0 {
-		return nil
-	}
-	return limit
 }
 
 // normalizePrice 将负数转换为 nil（表示使用默认价格），0 保留（表示免费）
@@ -865,12 +811,8 @@ func (s *adminServiceImpl) validateFallbackGroup(ctx context.Context, currentGro
 
 // validateFallbackGroupOnInvalidRequest 校验无效请求兜底分组的有效性
 // currentGroupID: 当前分组 ID（新建时为 0）
-// subscriptionType: 当前分组的订阅类型
 // fallbackGroupID: 兜底分组 ID
-func (s *adminServiceImpl) validateFallbackGroupOnInvalidRequest(ctx context.Context, currentGroupID int64, subscriptionType string, fallbackGroupID int64) error {
-	if subscriptionType == SubscriptionTypeSubscription {
-		return fmt.Errorf("subscription groups cannot set invalid request fallback")
-	}
+func (s *adminServiceImpl) validateFallbackGroupOnInvalidRequest(ctx context.Context, currentGroupID int64, fallbackGroupID int64) error {
 	if currentGroupID > 0 && currentGroupID == fallbackGroupID {
 		return fmt.Errorf("cannot set self as invalid request fallback group")
 	}
@@ -878,9 +820,6 @@ func (s *adminServiceImpl) validateFallbackGroupOnInvalidRequest(ctx context.Con
 	fallbackGroup, err := s.groupRepo.GetByIDLite(ctx, fallbackGroupID)
 	if err != nil {
 		return fmt.Errorf("fallback group not found: %w", err)
-	}
-	if fallbackGroup.SubscriptionType == SubscriptionTypeSubscription {
-		return fmt.Errorf("fallback group cannot be subscription type")
 	}
 	if fallbackGroup.FallbackGroupIDOnInvalidRequest != nil {
 		return fmt.Errorf("fallback group cannot have invalid request fallback configured")
@@ -907,15 +846,6 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		group.Status = input.Status
 	}
 
-	// 订阅相关字段
-	if input.SubscriptionType != "" {
-		group.SubscriptionType = input.SubscriptionType
-	}
-	// 限额字段：nil/负数 表示"无限制"，0 表示"不允许用量"，正数表示具体限额
-	// 前端始终发送这三个字段，无需 nil 守卫
-	group.DailyLimitUSD = normalizeLimit(input.DailyLimitUSD)
-	group.WeeklyLimitUSD = normalizeLimit(input.WeeklyLimitUSD)
-	group.MonthlyLimitUSD = normalizeLimit(input.MonthlyLimitUSD)
 	// 图片生成计费配置：负数表示清除（使用默认价格）
 	if input.ImagePrice1K != nil {
 		group.ImagePrice1K = normalizePrice(input.ImagePrice1K)
@@ -951,7 +881,7 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		}
 	}
 	if fallbackOnInvalidRequest != nil {
-		if err := s.validateFallbackGroupOnInvalidRequest(ctx, id, group.SubscriptionType, *fallbackOnInvalidRequest); err != nil {
+		if err := s.validateFallbackGroupOnInvalidRequest(ctx, id, *fallbackOnInvalidRequest); err != nil {
 			return nil, err
 		}
 	}
@@ -1033,22 +963,8 @@ func (s *adminServiceImpl) DeleteGroup(ctx context.Context, id int64) error {
 		}
 	}
 
-	affectedUserIDs, err := s.groupRepo.DeleteCascade(ctx, id)
-	if err != nil {
+	if _, err := s.groupRepo.DeleteCascade(ctx, id); err != nil {
 		return err
-	}
-	// 事务成功后，异步失效受影响用户的订阅缓存
-	if len(affectedUserIDs) > 0 && s.billingCacheService != nil {
-		groupID := id
-		go func() {
-			cacheCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			for _, userID := range affectedUserIDs {
-				if err := s.billingCacheService.InvalidateSubscription(cacheCtx, userID, groupID); err != nil {
-					logger.LegacyPrintf("service.admin", "invalidate subscription cache failed: user_id=%d group_id=%d err=%v", userID, groupID, err)
-				}
-			}
-		}()
 	}
 	if s.authCacheInvalidator != nil {
 		for _, key := range groupKeys {
@@ -1104,25 +1020,13 @@ func (s *adminServiceImpl) AdminUpdateAPIKeyGroupID(ctx context.Context, keyID i
 		if group.Status != StatusActive {
 			return nil, infraerrors.BadRequest("GROUP_NOT_ACTIVE", "target group is not active")
 		}
-		// 订阅类型分组：用户须持有该分组的有效订阅才可绑定
-		if group.IsSubscriptionType() {
-			if s.userSubRepo == nil {
-				return nil, infraerrors.InternalServer("SUBSCRIPTION_REPOSITORY_UNAVAILABLE", "subscription repository is not configured")
-			}
-			if _, err := s.userSubRepo.GetActiveByUserIDAndGroupID(ctx, apiKey.UserID, *groupID); err != nil {
-				if errors.Is(err, ErrSubscriptionNotFound) {
-					return nil, infraerrors.BadRequest("SUBSCRIPTION_REQUIRED", "user does not have an active subscription for this group")
-				}
-				return nil, err
-			}
-		}
 
 		gid := *groupID
 		apiKey.GroupID = &gid
 		apiKey.Group = group
 
-		// 专属标准分组：使用事务保证「添加分组权限」与「更新 API Key」的原子性
-		if group.IsExclusive && !group.IsSubscriptionType() {
+		// 专属分组：使用事务保证「添加分组权限」与「更新 API Key」的原子性
+		if group.IsExclusive {
 			opCtx := ctx
 			var tx *dbent.Tx
 			if s.entClient == nil {
@@ -1193,9 +1097,6 @@ func (s *adminServiceImpl) ReplaceUserGroup(ctx context.Context, userID, oldGrou
 	}
 	if !newGroup.IsExclusive {
 		return nil, infraerrors.BadRequest("GROUP_NOT_EXCLUSIVE", "target group is not exclusive")
-	}
-	if newGroup.IsSubscriptionType() {
-		return nil, infraerrors.BadRequest("GROUP_IS_SUBSCRIPTION", "subscription groups are not supported for replacement")
 	}
 
 	// 事务保证原子性
@@ -1732,21 +1633,6 @@ func (s *adminServiceImpl) GetRedeemCode(ctx context.Context, id int64) (*Redeem
 }
 
 func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *GenerateRedeemCodesInput) ([]RedeemCode, error) {
-	// 如果是订阅类型，验证必须有 GroupID
-	if input.Type == RedeemTypeSubscription {
-		if input.GroupID == nil {
-			return nil, errors.New("group_id is required for subscription type")
-		}
-		// 验证分组存在且为订阅类型
-		group, err := s.groupRepo.GetByID(ctx, *input.GroupID)
-		if err != nil {
-			return nil, fmt.Errorf("group not found: %w", err)
-		}
-		if !group.IsSubscriptionType() {
-			return nil, errors.New("group must be subscription type")
-		}
-	}
-
 	codes := make([]RedeemCode, 0, input.Count)
 	for i := 0; i < input.Count; i++ {
 		codeValue, err := GenerateRedeemCode()
@@ -1758,14 +1644,6 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 			Type:   input.Type,
 			Value:  input.Value,
 			Status: StatusUnused,
-		}
-		// 订阅类型专用字段
-		if input.Type == RedeemTypeSubscription {
-			code.GroupID = input.GroupID
-			code.ValidityDays = input.ValidityDays
-			if code.ValidityDays <= 0 {
-				code.ValidityDays = 30 // 默认30天
-			}
 		}
 		if err := s.redeemCodeRepo.Create(ctx, &code); err != nil {
 			return nil, err

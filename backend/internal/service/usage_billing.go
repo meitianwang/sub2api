@@ -21,7 +21,6 @@ type UsageBillingCommand struct {
 
 	UserID              int64
 	AccountID           int64
-	SubscriptionID      *int64
 	AccountType         string
 	Model               string
 	ServiceTier         string
@@ -35,7 +34,6 @@ type UsageBillingCommand struct {
 	MediaType           string
 
 	BalanceCost         float64
-	SubscriptionCost    float64
 	APIKeyQuotaCost     float64
 	APIKeyRateLimitCost float64
 	AccountQuotaCost    float64
@@ -56,7 +54,7 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 		return ""
 	}
 	raw := fmt.Sprintf(
-		"%d|%d|%d|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%s|%d|%0.10f|%0.10f|%0.10f|%0.10f|%0.10f",
+		"%d|%d|%d|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%s|%0.10f|%0.10f|%0.10f|%0.10f",
 		c.UserID,
 		c.AccountID,
 		c.APIKeyID,
@@ -71,9 +69,7 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 		c.CacheReadTokens,
 		c.ImageCount,
 		strings.TrimSpace(c.MediaType),
-		valueOrZero(c.SubscriptionID),
 		c.BalanceCost,
-		c.SubscriptionCost,
 		c.APIKeyQuotaCost,
 		c.APIKeyRateLimitCost,
 		c.AccountQuotaCost,
@@ -91,13 +87,6 @@ func HashUsageRequestPayload(payload []byte) string {
 	}
 	sum := sha256.Sum256(payload)
 	return hex.EncodeToString(sum[:])
-}
-
-func valueOrZero(v *int64) int64 {
-	if v == nil {
-		return 0
-	}
-	return *v
 }
 
 type UsageBillingApplyResult struct {

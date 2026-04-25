@@ -6,12 +6,7 @@
       :title="description || undefined"
     >
       <!-- Row 1: platform badge (name bold) -->
-      <GroupBadge
-        :name="name"
-        :subscription-type="subscriptionType"
-        :show-rate="false"
-        class="groupOptionItemBadge"
-      />
+      <GroupBadge :name="name" class="groupOptionItemBadge" />
       <!-- Row 2: description with top spacing -->
       <span
         v-if="description"
@@ -40,18 +35,15 @@
 
 <script setup lang="ts">
 import GroupBadge from './GroupBadge.vue'
-import type { SubscriptionType } from '@/types'
 
 interface Props {
   name: string
-  subscriptionType?: SubscriptionType
   description?: string | null
   selected?: boolean
   showCheckmark?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  subscriptionType: 'standard',
   selected: false,
   showCheckmark: true
 })

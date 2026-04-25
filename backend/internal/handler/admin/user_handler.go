@@ -70,10 +70,6 @@ func (h *UserHandler) List(c *gin.Context) {
 		GroupName:  strings.TrimSpace(c.Query("group_name")),
 		Attributes: parseAttributeFilters(c),
 	}
-	if raw, ok := c.GetQuery("include_subscriptions"); ok {
-		includeSubscriptions := parseBoolQueryWithDefault(raw, true)
-		filters.IncludeSubscriptions = &includeSubscriptions
-	}
 
 	users, total, err := h.adminService.ListUsers(c.Request.Context(), page, pageSize, filters)
 	if err != nil {

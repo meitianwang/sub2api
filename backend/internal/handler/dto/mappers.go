@@ -2,7 +2,6 @@
 package dto
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -35,13 +34,6 @@ func UserFromService(u *service.User) *User {
 		for i := range u.APIKeys {
 			k := u.APIKeys[i]
 			out.APIKeys = append(out.APIKeys, *APIKeyFromService(&k))
-		}
-	}
-	if len(u.Subscriptions) > 0 {
-		out.Subscriptions = make([]UserSubscription, 0, len(u.Subscriptions))
-		for i := range u.Subscriptions {
-			s := u.Subscriptions[i]
-			out.Subscriptions = append(out.Subscriptions, *UserSubscriptionFromService(&s))
 		}
 	}
 	return out
@@ -158,10 +150,6 @@ func groupFromServiceBase(g *service.Group) Group {
 		Description:                     g.Description,
 		IsExclusive: g.IsExclusive,
 		Status:                          g.Status,
-		SubscriptionType:                g.SubscriptionType,
-		DailyLimitUSD:                   g.DailyLimitUSD,
-		WeeklyLimitUSD:                  g.WeeklyLimitUSD,
-		MonthlyLimitUSD:                 g.MonthlyLimitUSD,
 		ImagePrice1K:                    g.ImagePrice1K,
 		ImagePrice2K:                    g.ImagePrice2K,
 		ImagePrice4K:                    g.ImagePrice4K,
@@ -535,7 +523,6 @@ func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
 		InboundEndpoint:       l.InboundEndpoint,
 		UpstreamEndpoint:      l.UpstreamEndpoint,
 		GroupID:               l.GroupID,
-		SubscriptionID:        l.SubscriptionID,
 		InputTokens:           l.InputTokens,
 		OutputTokens:          l.OutputTokens,
 		CacheCreationTokens:   l.CacheCreationTokens,
@@ -564,7 +551,6 @@ func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
 		User:                  UserFromServiceShallow(l.User),
 		APIKey:                APIKeyFromService(l.APIKey),
 		Group:                 GroupFromServiceShallow(l.Group),
-		Subscription:          UserSubscriptionFromService(l.Subscription),
 	}
 }
 
@@ -641,73 +627,6 @@ func SettingFromService(s *service.Setting) *Setting {
 		Key:       s.Key,
 		Value:     s.Value,
 		UpdatedAt: s.UpdatedAt,
-	}
-}
-
-func UserSubscriptionFromService(sub *service.UserSubscription) *UserSubscription {
-	if sub == nil {
-		return nil
-	}
-	out := userSubscriptionFromServiceBase(sub)
-	return &out
-}
-
-// UserSubscriptionFromServiceAdmin converts a service UserSubscription to DTO for admin users.
-// It includes assignment metadata and notes.
-func UserSubscriptionFromServiceAdmin(sub *service.UserSubscription) *AdminUserSubscription {
-	if sub == nil {
-		return nil
-	}
-	return &AdminUserSubscription{
-		UserSubscription: userSubscriptionFromServiceBase(sub),
-		AssignedBy:       sub.AssignedBy,
-		AssignedAt:       sub.AssignedAt,
-		Notes:            sub.Notes,
-		AssignedByUser:   UserFromServiceShallow(sub.AssignedByUser),
-	}
-}
-
-func userSubscriptionFromServiceBase(sub *service.UserSubscription) UserSubscription {
-	return UserSubscription{
-		ID:                 sub.ID,
-		UserID:             sub.UserID,
-		GroupID:            sub.GroupID,
-		StartsAt:           sub.StartsAt,
-		ExpiresAt:          sub.ExpiresAt,
-		Status:             sub.Status,
-		DailyWindowStart:   sub.DailyWindowStart,
-		WeeklyWindowStart:  sub.WeeklyWindowStart,
-		MonthlyWindowStart: sub.MonthlyWindowStart,
-		DailyUsageUSD:      sub.DailyUsageUSD,
-		WeeklyUsageUSD:     sub.WeeklyUsageUSD,
-		MonthlyUsageUSD:    sub.MonthlyUsageUSD,
-		CreatedAt:          sub.CreatedAt,
-		UpdatedAt:          sub.UpdatedAt,
-		User:               UserFromServiceShallow(sub.User),
-		Group:              GroupFromServiceShallow(sub.Group),
-	}
-}
-
-func BulkAssignResultFromService(r *service.BulkAssignResult) *BulkAssignResult {
-	if r == nil {
-		return nil
-	}
-	subs := make([]AdminUserSubscription, 0, len(r.Subscriptions))
-	for i := range r.Subscriptions {
-		subs = append(subs, *UserSubscriptionFromServiceAdmin(&r.Subscriptions[i]))
-	}
-	statuses := make(map[string]string, len(r.Statuses))
-	for userID, status := range r.Statuses {
-		statuses[strconv.FormatInt(userID, 10)] = status
-	}
-	return &BulkAssignResult{
-		SuccessCount:  r.SuccessCount,
-		CreatedCount:  r.CreatedCount,
-		ReusedCount:   r.ReusedCount,
-		FailedCount:   r.FailedCount,
-		Subscriptions: subs,
-		Errors:        r.Errors,
-		Statuses:      statuses,
 	}
 }
 

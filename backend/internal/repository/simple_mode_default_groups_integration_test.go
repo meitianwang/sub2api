@@ -39,7 +39,6 @@ func TestEnsureSimpleModeDefaultGroups_IgnoresSoftDeletedGroups(t *testing.T) {
 	g, err := client.Group.Create().
 		SetName("default").
 		SetStatus(service.StatusActive).
-		SetSubscriptionType(service.SubscriptionTypeStandard).
 		SetIsExclusive(false).
 		Save(seedCtx)
 	require.NoError(t, err)

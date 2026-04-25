@@ -60,9 +60,6 @@ type SecuritySecret func(*sql.Selector)
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
 
-// SubscriptionPlan is the predicate function for subscriptionplan builders.
-type SubscriptionPlan func(*sql.Selector)
-
 // TLSFingerprintProfile is the predicate function for tlsfingerprintprofile builders.
 type TLSFingerprintProfile func(*sql.Selector)
 
@@ -83,6 +80,3 @@ type UserAttributeDefinition func(*sql.Selector)
 
 // UserAttributeValue is the predicate function for userattributevalue builders.
 type UserAttributeValue func(*sql.Selector)
-
-// UserSubscription is the predicate function for usersubscription builders.
-type UserSubscription func(*sql.Selector)

@@ -8,6 +8,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 )
 
+func ptrTime(t time.Time) *time.Time { return &t }
+
 // mockAccountRepoForGemini is a mock AccountRepository used by many test files.
 type mockAccountRepoForGemini struct {
 	accounts     []Account

@@ -21,7 +21,6 @@ type PaymentHandler struct {
 	configService *service.PaymentConfigService
 	loadBalancer  *service.PaymentLoadBalancer
 	channelRepo   service.PaymentChannelRepository
-	planRepo      service.SubscriptionPlanRepository
 }
 
 // NewPaymentHandler creates a new PaymentHandler.
@@ -30,14 +29,12 @@ func NewPaymentHandler(
 	configService *service.PaymentConfigService,
 	loadBalancer *service.PaymentLoadBalancer,
 	channelRepo service.PaymentChannelRepository,
-	planRepo service.SubscriptionPlanRepository,
 ) *PaymentHandler {
 	return &PaymentHandler{
 		orderService:  orderService,
 		configService: configService,
 		loadBalancer:  loadBalancer,
 		channelRepo:   channelRepo,
-		planRepo:      planRepo,
 	}
 }
 
@@ -52,8 +49,6 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 	var req struct {
 		Amount      string `json:"amount" binding:"required"`
 		PaymentType string `json:"payment_type" binding:"required"`
-		OrderType   string `json:"order_type"`
-		PlanID      *int64 `json:"plan_id"`
 		SrcHost     string `json:"src_host"`
 		SrcURL      string `json:"src_url"`
 		ReturnURL   string `json:"return_url"`
@@ -98,21 +93,10 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	orderType := req.OrderType
-	if orderType == "" {
-		orderType = "balance"
-	}
-	if orderType != "balance" && orderType != "subscription" {
-		response.BadRequest(c, "Invalid order type, must be 'balance' or 'subscription'")
-		return
-	}
-
 	result, err := h.orderService.CreateOrder(c.Request.Context(), service.CreateOrderRequest{
 		UserID:      subject.UserID,
 		Amount:      amount,
 		PaymentType: req.PaymentType,
-		OrderType:   orderType,
-		PlanID:      req.PlanID,
 		ClientIP:    c.ClientIP(),
 		SrcHost:     req.SrcHost,
 		SrcURL:      req.SrcURL,
@@ -313,22 +297,6 @@ func (h *PaymentHandler) ListChannels(c *gin.Context) {
 	out := make([]dto.PaymentChannelDTO, 0, len(channels))
 	for i := range channels {
 		out = append(out, *dto.PaymentChannelFromService(&channels[i]))
-	}
-
-	response.Success(c, out)
-}
-
-// ListPlans handles GET /api/v1/pay/subscription-plans
-func (h *PaymentHandler) ListPlans(c *gin.Context) {
-	plans, err := h.planRepo.ListForSale(c.Request.Context())
-	if err != nil {
-		response.ErrorFrom(c, err)
-		return
-	}
-
-	out := make([]dto.SubscriptionPlanDTO, 0, len(plans))
-	for i := range plans {
-		out = append(out, *dto.SubscriptionPlanFromService(&plans[i]))
 	}
 
 	response.Success(c, out)

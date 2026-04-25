@@ -1056,93 +1056,6 @@
               </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
-              <div class="mb-3 flex items-center justify-between">
-                <div>
-                  <label class="font-medium text-gray-900 dark:text-white">
-                    {{ t('admin.settings.defaults.defaultSubscriptions') }}
-                  </label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ t('admin.settings.defaults.defaultSubscriptionsHint') }}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  @click="addDefaultSubscription"
-                  :disabled="subscriptionGroups.length === 0"
-                >
-                  {{ t('admin.settings.defaults.addDefaultSubscription') }}
-                </button>
-              </div>
-
-              <div
-                v-if="form.default_subscriptions.length === 0"
-                class="rounded border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500 dark:border-dark-600 dark:text-gray-400"
-              >
-                {{ t('admin.settings.defaults.defaultSubscriptionsEmpty') }}
-              </div>
-
-              <div v-else class="space-y-3">
-                <div
-                  v-for="(item, index) in form.default_subscriptions"
-                  :key="`default-sub-${index}`"
-                  class="grid grid-cols-1 gap-3 rounded border border-gray-200 p-3 md:grid-cols-[1fr_160px_auto] dark:border-dark-600"
-                >
-                  <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
-                      {{ t('admin.settings.defaults.subscriptionGroup') }}
-                    </label>
-                    <Select
-                      v-model="item.group_id"
-                      class="default-sub-group-select"
-                      :options="defaultSubscriptionGroupOptions"
-                      :placeholder="t('admin.settings.defaults.subscriptionGroup')"
-                    >
-                      <template #selected="{ option }">
-                        <GroupBadge
-                          v-if="option"
-                          :name="(option as unknown as DefaultSubscriptionGroupOption).label"
-                          :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
-                        />
-                        <span v-else class="text-gray-400">
-                          {{ t('admin.settings.defaults.subscriptionGroup') }}
-                        </span>
-                      </template>
-                      <template #option="{ option, selected }">
-                        <GroupOptionItem
-                          :name="(option as unknown as DefaultSubscriptionGroupOption).label"
-                          :subscription-type="(option as unknown as DefaultSubscriptionGroupOption).subscriptionType"
-                          :description="(option as unknown as DefaultSubscriptionGroupOption).description"
-                          :selected="selected"
-                        />
-                      </template>
-                    </Select>
-                  </div>
-                  <div>
-                    <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
-                      {{ t('admin.settings.defaults.subscriptionValidityDays') }}
-                    </label>
-                    <input
-                      v-model.number="item.validity_days"
-                      type="number"
-                      min="1"
-                      max="36500"
-                      class="input h-[42px]"
-                    />
-                  </div>
-                  <div class="flex items-end">
-                    <button
-                      type="button"
-                      class="btn btn-secondary default-sub-delete-btn w-full text-red-600 hover:text-red-700 dark:text-red-400"
-                      @click="removeDefaultSubscription(index)"
-                    >
-                      {{ t('common.delete') }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         </div><!-- /Tab: Users -->
@@ -1884,15 +1797,11 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api'
 import type {
   SystemSettings,
-  UpdateSettingsRequest,
-  DefaultSubscriptionSetting
+  UpdateSettingsRequest
 } from '@/api/admin/settings'
-import type { AdminGroup } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import Select from '@/components/common/Select.vue'
-import GroupBadge from '@/components/common/GroupBadge.vue'
-import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import BackupSettings from '@/views/admin/BackupView.vue'
@@ -1940,7 +1849,6 @@ const adminApiKeyExists = ref(false)
 const adminApiKeyMasked = ref('')
 const adminApiKeyOperating = ref(false)
 const newAdminApiKey = ref('')
-const subscriptionGroups = ref<AdminGroup[]>([])
 
 // Overload Cooldown (529) 状态
 const overloadCooldownLoading = ref(true)
@@ -1984,14 +1892,6 @@ const betaPolicyForm = reactive({
   }>
 })
 
-interface DefaultSubscriptionGroupOption {
-  value: number
-  label: string
-  description: string | null
-  subscriptionType: AdminGroup['subscription_type']
-  [key: string]: unknown
-}
-
 type SettingsForm = SystemSettings & {
   smtp_password: string
   turnstile_secret_key: string
@@ -2008,7 +1908,6 @@ const form = reactive<SettingsForm>({
   totp_enabled: false,
   totp_encryption_key_configured: false,
   default_balance: 0,
-  default_subscriptions: [],
   site_name: 'AIInterface',
   site_logo: '',
   site_subtitle: 'Subscription to API Conversion Platform',
@@ -2062,15 +1961,6 @@ const form = reactive<SettingsForm>({
   enable_fingerprint_unification: true,
   enable_metadata_passthrough: false
 })
-
-const defaultSubscriptionGroupOptions = computed<DefaultSubscriptionGroupOption[]>(() =>
-  subscriptionGroups.value.map((group) => ({
-    value: group.id,
-    label: group.name,
-    description: group.description,
-    subscriptionType: group.subscription_type
-  }))
-)
 
 const registrationEmailSuffixWhitelistSeparatorKeys = new Set([' ', ',', '，', 'Enter', 'Tab'])
 
@@ -2205,14 +2095,6 @@ async function loadSettings() {
     const settings = await adminAPI.settings.getSettings()
     Object.assign(form, settings)
     form.backend_mode_enabled = settings.backend_mode_enabled
-    form.default_subscriptions = Array.isArray(settings.default_subscriptions)
-      ? settings.default_subscriptions
-          .filter((item) => item.group_id > 0 && item.validity_days > 0)
-          .map((item) => ({
-            group_id: item.group_id,
-            validity_days: item.validity_days
-          }))
-      : []
     registrationEmailSuffixWhitelistTags.value = normalizeRegistrationEmailSuffixDomains(
       settings.registration_email_suffix_whitelist
     )
@@ -2231,60 +2113,9 @@ async function loadSettings() {
   }
 }
 
-async function loadSubscriptionGroups() {
-  try {
-    const groups = await adminAPI.groups.getAll()
-    subscriptionGroups.value = groups.filter(
-      (group) => group.subscription_type === 'subscription' && group.status === 'active'
-    )
-  } catch (error) {
-    console.error('Failed to load subscription groups:', error)
-    subscriptionGroups.value = []
-  }
-}
-
-function addDefaultSubscription() {
-  if (subscriptionGroups.value.length === 0) return
-  const existing = new Set(form.default_subscriptions.map((item) => item.group_id))
-  const candidate = subscriptionGroups.value.find((group) => !existing.has(group.id))
-  if (!candidate) return
-  form.default_subscriptions.push({
-    group_id: candidate.id,
-    validity_days: 30
-  })
-}
-
-function removeDefaultSubscription(index: number) {
-  form.default_subscriptions.splice(index, 1)
-}
-
 async function saveSettings() {
   saving.value = true
   try {
-    const normalizedDefaultSubscriptions = form.default_subscriptions
-      .filter((item) => item.group_id > 0 && item.validity_days > 0)
-      .map((item: DefaultSubscriptionSetting) => ({
-        group_id: item.group_id,
-        validity_days: Math.min(36500, Math.max(1, Math.floor(item.validity_days)))
-      }))
-
-    const seenGroupIDs = new Set<number>()
-    const duplicateDefaultSubscription = normalizedDefaultSubscriptions.find((item) => {
-      if (seenGroupIDs.has(item.group_id)) {
-        return true
-      }
-      seenGroupIDs.add(item.group_id)
-      return false
-    })
-    if (duplicateDefaultSubscription) {
-      appStore.showError(
-        t('admin.settings.defaults.defaultSubscriptionsDuplicate', {
-          groupId: duplicateDefaultSubscription.group_id
-        })
-      )
-      return
-    }
-
     // Validate URL fields — novalidate disables browser-native checks, so we validate here
     const isValidHttpUrl = (url: string): boolean => {
       if (!url) return true
@@ -2309,7 +2140,6 @@ async function saveSettings() {
       password_reset_enabled: form.password_reset_enabled,
       totp_enabled: form.totp_enabled,
       default_balance: form.default_balance,
-      default_subscriptions: normalizedDefaultSubscriptions,
       site_name: form.site_name,
       site_logo: form.site_logo,
       site_subtitle: form.site_subtitle,
@@ -2643,7 +2473,6 @@ async function saveBetaPolicySettings() {
 
 onMounted(() => {
   loadSettings()
-  loadSubscriptionGroups()
   loadAdminApiKey()
   loadOverloadCooldownSettings()
   loadStreamTimeoutSettings()

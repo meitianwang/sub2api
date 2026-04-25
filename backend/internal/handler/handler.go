@@ -20,7 +20,6 @@ type AdminHandlers struct {
 	Setting               *admin.SettingHandler
 	Ops                   *admin.OpsHandler
 	System                *admin.SystemHandler
-	Subscription          *admin.SubscriptionHandler
 	Usage                 *admin.UsageHandler
 	UserAttribute         *admin.UserAttributeHandler
 	ErrorPassthrough      *admin.ErrorPassthroughHandler
@@ -32,7 +31,6 @@ type AdminHandlers struct {
 	PaymentConfig         *admin.PaymentConfigHandler
 	PaymentProviderInstance *admin.PaymentProviderInstanceHandler
 	PaymentChannel        *admin.PaymentChannelHandler
-	PaymentSubscriptionPlan *admin.PaymentSubscriptionPlanHandler
 	PaymentDashboard      *admin.PaymentDashboardHandler
 }
 
@@ -43,7 +41,6 @@ type Handlers struct {
 	APIKey          *APIKeyHandler
 	Usage           *UsageHandler
 	Redeem          *RedeemHandler
-	Subscription    *SubscriptionHandler
 	Announcement    *AnnouncementHandler
 	Admin           *AdminHandlers
 	Gateway         *GatewayHandler

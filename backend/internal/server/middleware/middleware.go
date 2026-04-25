@@ -18,8 +18,6 @@ const (
 	ContextKeyUserRole ContextKey = "user_role"
 	// ContextKeyAPIKey API密钥上下文键
 	ContextKeyAPIKey ContextKey = "api_key"
-	// ContextKeySubscription 订阅上下文键
-	ContextKeySubscription ContextKey = "subscription"
 )
 
 // ErrorResponse 标准错误响应结构

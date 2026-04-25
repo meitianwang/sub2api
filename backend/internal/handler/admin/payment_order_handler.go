@@ -43,13 +43,6 @@ func (h *PaymentOrderHandler) List(c *gin.Context) {
 		}
 		filter.Status = &v
 	}
-	if v := c.Query("order_type"); v != "" {
-		if v != "balance" && v != "subscription" {
-			response.BadRequest(c, "Invalid order_type filter, must be 'balance' or 'subscription'")
-			return
-		}
-		filter.OrderType = &v
-	}
 	if v := c.Query("payment_type"); v != "" {
 		filter.PaymentType = &v
 	}

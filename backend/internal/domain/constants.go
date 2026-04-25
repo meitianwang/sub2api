@@ -26,10 +26,9 @@ const (
 
 // Redeem type constants
 const (
-	RedeemTypeBalance      = "balance"
-	RedeemTypeConcurrency  = "concurrency"
-	RedeemTypeSubscription = "subscription"
-	RedeemTypeInvitation   = "invitation"
+	RedeemTypeBalance     = "balance"
+	RedeemTypeConcurrency = "concurrency"
+	RedeemTypeInvitation  = "invitation"
 )
 
 // PromoCode status constants
@@ -42,19 +41,6 @@ const (
 const (
 	AdjustmentTypeAdminBalance     = "admin_balance"     // 管理员调整余额
 	AdjustmentTypeAdminConcurrency = "admin_concurrency" // 管理员调整并发数
-)
-
-// Group subscription type constants
-const (
-	SubscriptionTypeStandard     = "standard"     // 标准计费模式（按余额扣费）
-	SubscriptionTypeSubscription = "subscription" // 订阅模式（按限额控制）
-)
-
-// Subscription status constants
-const (
-	SubscriptionStatusActive    = "active"
-	SubscriptionStatusExpired   = "expired"
-	SubscriptionStatusSuspended = "suspended"
 )
 
 // Payment order status constants
@@ -71,12 +57,6 @@ const (
 	PaymentOrderStatusPartiallyRefunded = "partially_refunded"
 	PaymentOrderStatusRefunded          = "refunded"
 	PaymentOrderStatusRefundFailed      = "refund_failed"
-)
-
-// Payment order type constants
-const (
-	PaymentOrderTypeBalance      = "balance"
-	PaymentOrderTypeSubscription = "subscription"
 )
 
 // Payment type constants

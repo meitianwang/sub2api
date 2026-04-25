@@ -146,16 +146,6 @@ func (s *RedeemCodeRepoSuite) TestList() {
 	s.Require().Equal(int64(2), page.Total)
 }
 
-func (s *RedeemCodeRepoSuite) TestListWithFilters_Type() {
-	s.Require().NoError(s.repo.Create(s.ctx, &service.RedeemCode{Code: "TYPE-BAL", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUnused}))
-	s.Require().NoError(s.repo.Create(s.ctx, &service.RedeemCode{Code: "TYPE-SUB", Type: service.RedeemTypeSubscription, Value: 0, Status: service.StatusUnused}))
-
-	codes, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.RedeemTypeSubscription, "", "")
-	s.Require().NoError(err)
-	s.Require().Len(codes, 1)
-	s.Require().Equal(service.RedeemTypeSubscription, codes[0].Type)
-}
-
 func (s *RedeemCodeRepoSuite) TestListWithFilters_Status() {
 	s.Require().NoError(s.repo.Create(s.ctx, &service.RedeemCode{Code: "STAT-UNUSED", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUnused}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.RedeemCode{Code: "STAT-USED", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUsed}))
@@ -180,7 +170,7 @@ func (s *RedeemCodeRepoSuite) TestListWithFilters_GroupPreload() {
 	group := s.createGroup(uniqueTestValue(s.T(), "g-preload"))
 	_, err := s.client.RedeemCode.Create().
 		SetCode("WITH-GROUP").
-		SetType(service.RedeemTypeSubscription).
+		SetType(service.RedeemTypeBalance).
 		SetStatus(service.StatusUnused).
 		SetValue(0).
 		SetNotes("").
@@ -304,7 +294,7 @@ func (s *RedeemCodeRepoSuite) TestListByUser_WithGroupPreload() {
 
 	_, err := s.client.RedeemCode.Create().
 		SetCode("WITH-GRP").
-		SetType(service.RedeemTypeSubscription).
+		SetType(service.RedeemTypeBalance).
 		SetStatus(service.StatusUsed).
 		SetValue(0).
 		SetNotes("").
@@ -351,11 +341,11 @@ func (s *RedeemCodeRepoSuite) TestCreateBatch_Filters_Use_Idempotency_ListByUser
 
 	codes := []service.RedeemCode{
 		{Code: "CODEA", Type: service.RedeemTypeBalance, Value: 1, Status: service.StatusUnused, Notes: ""},
-		{Code: "CODEB", Type: service.RedeemTypeSubscription, Value: 0, Status: service.StatusUnused, Notes: "", GroupID: &groupID, ValidityDays: 7},
+		{Code: "CODEB", Type: service.RedeemTypeBalance, Value: 0, Status: service.StatusUnused, Notes: "", GroupID: &groupID, ValidityDays: 7},
 	}
 	s.Require().NoError(s.repo.CreateBatch(s.ctx, codes), "CreateBatch")
 
-	list, page, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.RedeemTypeSubscription, service.StatusUnused, "code")
+	list, page, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.RedeemTypeBalance, service.StatusUnused, "CODEB")
 	s.Require().NoError(err, "ListWithFilters")
 	s.Require().Equal(int64(1), page.Total)
 	s.Require().Len(list, 1)

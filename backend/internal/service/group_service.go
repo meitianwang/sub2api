@@ -84,11 +84,10 @@ func (s *GroupService) Create(ctx context.Context, req CreateGroupRequest) (*Gro
 
 	// 创建分组
 	group := &Group{
-		Name:             req.Name,
-		Description:      req.Description,
-		IsExclusive:      req.IsExclusive,
-		Status:           StatusActive,
-		SubscriptionType: SubscriptionTypeStandard,
+		Name:        req.Name,
+		Description: req.Description,
+		IsExclusive: req.IsExclusive,
+		Status:      StatusActive,
 	}
 
 	if err := s.groupRepo.Create(ctx, group); err != nil {

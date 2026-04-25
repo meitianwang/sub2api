@@ -81,15 +81,6 @@ func RegisterUserRoutes(
 			redeem.GET("/history", h.Redeem.GetHistory)
 		}
 
-		// 用户订阅
-		subscriptions := authenticated.Group("/subscriptions")
-		{
-			subscriptions.GET("", h.Subscription.List)
-			subscriptions.GET("/active", h.Subscription.GetActive)
-			subscriptions.GET("/progress", h.Subscription.GetProgress)
-			subscriptions.GET("/summary", h.Subscription.GetSummary)
-		}
-
 		// 支付
 		registerPaymentUserRoutes(authenticated, h)
 	}

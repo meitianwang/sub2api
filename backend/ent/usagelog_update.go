@@ -16,7 +16,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
-	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
 // UsageLogUpdate is the builder for updating UsageLog entities.
@@ -159,26 +158,6 @@ func (_u *UsageLogUpdate) SetNillableGroupID(v *int64) *UsageLogUpdate {
 // ClearGroupID clears the value of the "group_id" field.
 func (_u *UsageLogUpdate) ClearGroupID() *UsageLogUpdate {
 	_u.mutation.ClearGroupID()
-	return _u
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (_u *UsageLogUpdate) SetSubscriptionID(v int64) *UsageLogUpdate {
-	_u.mutation.SetSubscriptionID(v)
-	return _u
-}
-
-// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
-func (_u *UsageLogUpdate) SetNillableSubscriptionID(v *int64) *UsageLogUpdate {
-	if v != nil {
-		_u.SetSubscriptionID(*v)
-	}
-	return _u
-}
-
-// ClearSubscriptionID clears the value of the "subscription_id" field.
-func (_u *UsageLogUpdate) ClearSubscriptionID() *UsageLogUpdate {
-	_u.mutation.ClearSubscriptionID()
 	return _u
 }
 
@@ -727,11 +706,6 @@ func (_u *UsageLogUpdate) SetGroup(v *Group) *UsageLogUpdate {
 	return _u.SetGroupID(v.ID)
 }
 
-// SetSubscription sets the "subscription" edge to the UserSubscription entity.
-func (_u *UsageLogUpdate) SetSubscription(v *UserSubscription) *UsageLogUpdate {
-	return _u.SetSubscriptionID(v.ID)
-}
-
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdate) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -758,12 +732,6 @@ func (_u *UsageLogUpdate) ClearAccount() *UsageLogUpdate {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *UsageLogUpdate) ClearGroup() *UsageLogUpdate {
 	_u.mutation.ClearGroup()
-	return _u
-}
-
-// ClearSubscription clears the "subscription" edge to the UserSubscription entity.
-func (_u *UsageLogUpdate) ClearSubscription() *UsageLogUpdate {
-	_u.mutation.ClearSubscription()
 	return _u
 }
 
@@ -1147,35 +1115,6 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if _u.mutation.SubscriptionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   usagelog.SubscriptionTable,
-			Columns: []string{usagelog.SubscriptionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.SubscriptionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   usagelog.SubscriptionTable,
-			Columns: []string{usagelog.SubscriptionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{usagelog.Label}
@@ -1323,26 +1262,6 @@ func (_u *UsageLogUpdateOne) SetNillableGroupID(v *int64) *UsageLogUpdateOne {
 // ClearGroupID clears the value of the "group_id" field.
 func (_u *UsageLogUpdateOne) ClearGroupID() *UsageLogUpdateOne {
 	_u.mutation.ClearGroupID()
-	return _u
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (_u *UsageLogUpdateOne) SetSubscriptionID(v int64) *UsageLogUpdateOne {
-	_u.mutation.SetSubscriptionID(v)
-	return _u
-}
-
-// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
-func (_u *UsageLogUpdateOne) SetNillableSubscriptionID(v *int64) *UsageLogUpdateOne {
-	if v != nil {
-		_u.SetSubscriptionID(*v)
-	}
-	return _u
-}
-
-// ClearSubscriptionID clears the value of the "subscription_id" field.
-func (_u *UsageLogUpdateOne) ClearSubscriptionID() *UsageLogUpdateOne {
-	_u.mutation.ClearSubscriptionID()
 	return _u
 }
 
@@ -1891,11 +1810,6 @@ func (_u *UsageLogUpdateOne) SetGroup(v *Group) *UsageLogUpdateOne {
 	return _u.SetGroupID(v.ID)
 }
 
-// SetSubscription sets the "subscription" edge to the UserSubscription entity.
-func (_u *UsageLogUpdateOne) SetSubscription(v *UserSubscription) *UsageLogUpdateOne {
-	return _u.SetSubscriptionID(v.ID)
-}
-
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdateOne) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -1922,12 +1836,6 @@ func (_u *UsageLogUpdateOne) ClearAccount() *UsageLogUpdateOne {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *UsageLogUpdateOne) ClearGroup() *UsageLogUpdateOne {
 	_u.mutation.ClearGroup()
-	return _u
-}
-
-// ClearSubscription clears the "subscription" edge to the UserSubscription entity.
-func (_u *UsageLogUpdateOne) ClearSubscription() *UsageLogUpdateOne {
-	_u.mutation.ClearSubscription()
 	return _u
 }
 
@@ -2334,35 +2242,6 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.SubscriptionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   usagelog.SubscriptionTable,
-			Columns: []string{usagelog.SubscriptionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.SubscriptionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   usagelog.SubscriptionTable,
-			Columns: []string{usagelog.SubscriptionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

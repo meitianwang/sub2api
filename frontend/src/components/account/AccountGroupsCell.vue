@@ -6,8 +6,6 @@
         v-for="group in displayGroups"
         :key="group.id"
         :name="group.name"
-        :subscription-type="group.subscription_type"
-        :show-rate="false"
         class="max-w-24"
       />
       <!-- 更多数量徽章 -->
@@ -55,8 +53,6 @@
               v-for="group in groups"
               :key="group.id"
               :name="group.name"
-              :subscription-type="group.subscription_type"
-              :show-rate="false"
             />
           </div>
         </div>

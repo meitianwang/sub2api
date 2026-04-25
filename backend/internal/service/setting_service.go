@@ -20,16 +20,8 @@ import (
 )
 
 var (
-	ErrRegistrationDisabled   = infraerrors.Forbidden("REGISTRATION_DISABLED", "registration is currently disabled")
-	ErrSettingNotFound        = infraerrors.NotFound("SETTING_NOT_FOUND", "setting not found")
-	ErrDefaultSubGroupInvalid = infraerrors.BadRequest(
-		"DEFAULT_SUBSCRIPTION_GROUP_INVALID",
-		"default subscription group must exist and be subscription type",
-	)
-	ErrDefaultSubGroupDuplicate = infraerrors.BadRequest(
-		"DEFAULT_SUBSCRIPTION_GROUP_DUPLICATE",
-		"default subscription group cannot be duplicated",
-	)
+	ErrRegistrationDisabled = infraerrors.Forbidden("REGISTRATION_DISABLED", "registration is currently disabled")
+	ErrSettingNotFound      = infraerrors.NotFound("SETTING_NOT_FOUND", "setting not found")
 )
 
 type SettingRepository interface {
@@ -91,18 +83,12 @@ const gatewayForwardingCacheTTL = 60 * time.Second
 const gatewayForwardingErrorTTL = 5 * time.Second
 const gatewayForwardingDBTimeout = 5 * time.Second
 
-// DefaultSubscriptionGroupReader validates group references used by default subscriptions.
-type DefaultSubscriptionGroupReader interface {
-	GetByID(ctx context.Context, id int64) (*Group, error)
-}
-
 // SettingService 系统设置服务
 type SettingService struct {
-	settingRepo           SettingRepository
-	defaultSubGroupReader DefaultSubscriptionGroupReader
-	cfg                   *config.Config
-	onUpdate func() // Callback when settings are updated (for cache invalidation)
-	version  string // Application version
+	settingRepo SettingRepository
+	cfg         *config.Config
+	onUpdate    func() // Callback when settings are updated (for cache invalidation)
+	version     string // Application version
 }
 
 // NewSettingService 创建系统设置服务实例
@@ -111,11 +97,6 @@ func NewSettingService(settingRepo SettingRepository, cfg *config.Config) *Setti
 		settingRepo: settingRepo,
 		cfg:         cfg,
 	}
-}
-
-// SetDefaultSubscriptionGroupReader injects an optional group reader for default subscription validation.
-func (s *SettingService) SetDefaultSubscriptionGroupReader(reader DefaultSubscriptionGroupReader) {
-	s.defaultSubGroupReader = reader
 }
 
 // GetAllSettings 获取所有系统设置
@@ -392,9 +373,6 @@ func parseCustomMenuItemURLs(raw string) []string {
 
 // UpdateSettings 更新系统设置
 func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSettings) error {
-	if err := s.validateDefaultSubscriptionGroups(ctx, settings.DefaultSubscriptions); err != nil {
-		return err
-	}
 	normalizedWhitelist, err := NormalizeRegistrationEmailSuffixWhitelist(settings.RegistrationEmailSuffixWhitelist)
 	if err != nil {
 		return infraerrors.BadRequest("INVALID_REGISTRATION_EMAIL_SUFFIX_WHITELIST", err.Error())
@@ -460,11 +438,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 
 	// 默认配置
 	updates[SettingKeyDefaultBalance] = strconv.FormatFloat(settings.DefaultBalance, 'f', 8, 64)
-	defaultSubsJSON, err := json.Marshal(settings.DefaultSubscriptions)
-	if err != nil {
-		return fmt.Errorf("marshal default subscriptions: %w", err)
-	}
-	updates[SettingKeyDefaultSubscriptions] = string(defaultSubsJSON)
 
 	// Model fallback configuration
 	updates[SettingKeyEnableModelFallback] = strconv.FormatBool(settings.EnableModelFallback)
@@ -518,45 +491,6 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 		}
 	}
 	return err
-}
-
-func (s *SettingService) validateDefaultSubscriptionGroups(ctx context.Context, items []DefaultSubscriptionSetting) error {
-	if len(items) == 0 {
-		return nil
-	}
-
-	checked := make(map[int64]struct{}, len(items))
-	for _, item := range items {
-		if item.GroupID <= 0 {
-			continue
-		}
-		if _, ok := checked[item.GroupID]; ok {
-			return ErrDefaultSubGroupDuplicate.WithMetadata(map[string]string{
-				"group_id": strconv.FormatInt(item.GroupID, 10),
-			})
-		}
-		checked[item.GroupID] = struct{}{}
-		if s.defaultSubGroupReader == nil {
-			continue
-		}
-
-		group, err := s.defaultSubGroupReader.GetByID(ctx, item.GroupID)
-		if err != nil {
-			if errors.Is(err, ErrGroupNotFound) {
-				return ErrDefaultSubGroupInvalid.WithMetadata(map[string]string{
-					"group_id": strconv.FormatInt(item.GroupID, 10),
-				})
-			}
-			return fmt.Errorf("get default subscription group %d: %w", item.GroupID, err)
-		}
-		if !group.IsSubscriptionType() {
-			return ErrDefaultSubGroupInvalid.WithMetadata(map[string]string{
-				"group_id": strconv.FormatInt(item.GroupID, 10),
-			})
-		}
-	}
-
-	return nil
 }
 
 // IsRegistrationEnabled 检查是否开放注册
@@ -757,15 +691,6 @@ func (s *SettingService) GetDefaultBalance(ctx context.Context) float64 {
 	return s.cfg.Default.UserBalance
 }
 
-// GetDefaultSubscriptions 获取新用户默认订阅配置列表。
-func (s *SettingService) GetDefaultSubscriptions(ctx context.Context) []DefaultSubscriptionSetting {
-	value, err := s.settingRepo.GetValue(ctx, SettingKeyDefaultSubscriptions)
-	if err != nil {
-		return nil
-	}
-	return parseDefaultSubscriptions(value)
-}
-
 // InitializeDefaultSettings 初始化默认设置
 func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	// 检查是否已有设置
@@ -789,7 +714,6 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyCustomEndpoints:                  "[]",
 		SettingKeyDefaultBalance:                   strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
-		SettingKeyDefaultSubscriptions:             "[]",
 		SettingKeySMTPPort:                         "587",
 		SettingKeySMTPUseTLS:                       "false",
 		// Model fallback defaults
@@ -861,7 +785,6 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	} else {
 		result.DefaultBalance = s.cfg.Default.UserBalance
 	}
-	result.DefaultSubscriptions = parseDefaultSubscriptions(settings[SettingKeyDefaultSubscriptions])
 
 	// 敏感信息直接返回，方便测试连接时使用
 	result.SMTPPassword = settings[SettingKeySMTPPassword]
@@ -946,31 +869,6 @@ func isFalseSettingValue(value string) bool {
 	default:
 		return false
 	}
-}
-
-func parseDefaultSubscriptions(raw string) []DefaultSubscriptionSetting {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil
-	}
-
-	var items []DefaultSubscriptionSetting
-	if err := json.Unmarshal([]byte(raw), &items); err != nil {
-		return nil
-	}
-
-	normalized := make([]DefaultSubscriptionSetting, 0, len(items))
-	for _, item := range items {
-		if item.GroupID <= 0 || item.ValidityDays <= 0 {
-			continue
-		}
-		if item.ValidityDays > MaxValidityDays {
-			item.ValidityDays = MaxValidityDays
-		}
-		normalized = append(normalized, item)
-	}
-
-	return normalized
 }
 
 // getStringOrDefault 获取字符串值或默认值

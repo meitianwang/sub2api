@@ -25,8 +25,7 @@ type User struct {
 	TotpEnabled         bool       // 是否启用 TOTP
 	TotpEnabledAt       *time.Time // TOTP 启用时间
 
-	APIKeys       []APIKey
-	Subscriptions []UserSubscription
+	APIKeys []APIKey
 }
 
 func (u *User) IsAdmin() bool {

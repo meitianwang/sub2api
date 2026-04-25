@@ -17,7 +17,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
-	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 )
 
@@ -29,7 +28,6 @@ type PaymentOrderQuery struct {
 	inters               []Interceptor
 	predicates           []predicate.PaymentOrder
 	withUser             *UserQuery
-	withPlan             *SubscriptionPlanQuery
 	withProviderInstance *PaymentProviderInstanceQuery
 	withAuditLogs        *PaymentAuditLogQuery
 	modifiers            []func(*sql.Selector)
@@ -84,28 +82,6 @@ func (_q *PaymentOrderQuery) QueryUser() *UserQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.UserTable, paymentorder.UserColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryPlan chains the current query on the "plan" edge.
-func (_q *PaymentOrderQuery) QueryPlan() *SubscriptionPlanQuery {
-	query := (&SubscriptionPlanClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
-			sqlgraph.To(subscriptionplan.Table, subscriptionplan.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.PlanTable, paymentorder.PlanColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -350,7 +326,6 @@ func (_q *PaymentOrderQuery) Clone() *PaymentOrderQuery {
 		inters:               append([]Interceptor{}, _q.inters...),
 		predicates:           append([]predicate.PaymentOrder{}, _q.predicates...),
 		withUser:             _q.withUser.Clone(),
-		withPlan:             _q.withPlan.Clone(),
 		withProviderInstance: _q.withProviderInstance.Clone(),
 		withAuditLogs:        _q.withAuditLogs.Clone(),
 		// clone intermediate query.
@@ -367,17 +342,6 @@ func (_q *PaymentOrderQuery) WithUser(opts ...func(*UserQuery)) *PaymentOrderQue
 		opt(query)
 	}
 	_q.withUser = query
-	return _q
-}
-
-// WithPlan tells the query-builder to eager-load the nodes that are connected to
-// the "plan" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *PaymentOrderQuery) WithPlan(opts ...func(*SubscriptionPlanQuery)) *PaymentOrderQuery {
-	query := (&SubscriptionPlanClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withPlan = query
 	return _q
 }
 
@@ -481,9 +445,8 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*PaymentOrder{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			_q.withUser != nil,
-			_q.withPlan != nil,
 			_q.withProviderInstance != nil,
 			_q.withAuditLogs != nil,
 		}
@@ -512,12 +475,6 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if query := _q.withUser; query != nil {
 		if err := _q.loadUser(ctx, query, nodes, nil,
 			func(n *PaymentOrder, e *User) { n.Edges.User = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withPlan; query != nil {
-		if err := _q.loadPlan(ctx, query, nodes, nil,
-			func(n *PaymentOrder, e *SubscriptionPlan) { n.Edges.Plan = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -559,38 +516,6 @@ func (_q *PaymentOrderQuery) loadUser(ctx context.Context, query *UserQuery, nod
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *PaymentOrderQuery) loadPlan(ctx context.Context, query *SubscriptionPlanQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *SubscriptionPlan)) error {
-	ids := make([]int64, 0, len(nodes))
-	nodeids := make(map[int64][]*PaymentOrder)
-	for i := range nodes {
-		if nodes[i].PlanID == nil {
-			continue
-		}
-		fk := *nodes[i].PlanID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(subscriptionplan.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "plan_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -691,9 +616,6 @@ func (_q *PaymentOrderQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withUser != nil {
 			_spec.Node.AddColumnOnce(paymentorder.FieldUserID)
-		}
-		if _q.withPlan != nil {
-			_spec.Node.AddColumnOnce(paymentorder.FieldPlanID)
 		}
 		if _q.withProviderInstance != nil {
 			_spec.Node.AddColumnOnce(paymentorder.FieldProviderInstanceID)

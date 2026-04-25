@@ -16,7 +16,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
-	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
 )
 
 // UsageLogCreate is the builder for creating a UsageLog entity.
@@ -95,20 +94,6 @@ func (_c *UsageLogCreate) SetGroupID(v int64) *UsageLogCreate {
 func (_c *UsageLogCreate) SetNillableGroupID(v *int64) *UsageLogCreate {
 	if v != nil {
 		_c.SetGroupID(*v)
-	}
-	return _c
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (_c *UsageLogCreate) SetSubscriptionID(v int64) *UsageLogCreate {
-	_c.mutation.SetSubscriptionID(v)
-	return _c
-}
-
-// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
-func (_c *UsageLogCreate) SetNillableSubscriptionID(v *int64) *UsageLogCreate {
-	if v != nil {
-		_c.SetSubscriptionID(*v)
 	}
 	return _c
 }
@@ -495,11 +480,6 @@ func (_c *UsageLogCreate) SetAccount(v *Account) *UsageLogCreate {
 // SetGroup sets the "group" edge to the Group entity.
 func (_c *UsageLogCreate) SetGroup(v *Group) *UsageLogCreate {
 	return _c.SetGroupID(v.ID)
-}
-
-// SetSubscription sets the "subscription" edge to the UserSubscription entity.
-func (_c *UsageLogCreate) SetSubscription(v *UserSubscription) *UsageLogCreate {
-	return _c.SetSubscriptionID(v.ID)
 }
 
 // Mutation returns the UsageLogMutation object of the builder.
@@ -953,23 +933,6 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 		_node.GroupID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.SubscriptionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   usagelog.SubscriptionTable,
-			Columns: []string{usagelog.SubscriptionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.SubscriptionID = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	return _node, _spec
 }
 
@@ -1133,24 +1096,6 @@ func (u *UsageLogUpsert) UpdateGroupID() *UsageLogUpsert {
 // ClearGroupID clears the value of the "group_id" field.
 func (u *UsageLogUpsert) ClearGroupID() *UsageLogUpsert {
 	u.SetNull(usagelog.FieldGroupID)
-	return u
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (u *UsageLogUpsert) SetSubscriptionID(v int64) *UsageLogUpsert {
-	u.Set(usagelog.FieldSubscriptionID, v)
-	return u
-}
-
-// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
-func (u *UsageLogUpsert) UpdateSubscriptionID() *UsageLogUpsert {
-	u.SetExcluded(usagelog.FieldSubscriptionID)
-	return u
-}
-
-// ClearSubscriptionID clears the value of the "subscription_id" field.
-func (u *UsageLogUpsert) ClearSubscriptionID() *UsageLogUpsert {
-	u.SetNull(usagelog.FieldSubscriptionID)
 	return u
 }
 
@@ -1785,27 +1730,6 @@ func (u *UsageLogUpsertOne) UpdateGroupID() *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) ClearGroupID() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearGroupID()
-	})
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (u *UsageLogUpsertOne) SetSubscriptionID(v int64) *UsageLogUpsertOne {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.SetSubscriptionID(v)
-	})
-}
-
-// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
-func (u *UsageLogUpsertOne) UpdateSubscriptionID() *UsageLogUpsertOne {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.UpdateSubscriptionID()
-	})
-}
-
-// ClearSubscriptionID clears the value of the "subscription_id" field.
-func (u *UsageLogUpsertOne) ClearSubscriptionID() *UsageLogUpsertOne {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.ClearSubscriptionID()
 	})
 }
 
@@ -2682,27 +2606,6 @@ func (u *UsageLogUpsertBulk) UpdateGroupID() *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) ClearGroupID() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearGroupID()
-	})
-}
-
-// SetSubscriptionID sets the "subscription_id" field.
-func (u *UsageLogUpsertBulk) SetSubscriptionID(v int64) *UsageLogUpsertBulk {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.SetSubscriptionID(v)
-	})
-}
-
-// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
-func (u *UsageLogUpsertBulk) UpdateSubscriptionID() *UsageLogUpsertBulk {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.UpdateSubscriptionID()
-	})
-}
-
-// ClearSubscriptionID clears the value of the "subscription_id" field.
-func (u *UsageLogUpsertBulk) ClearSubscriptionID() *UsageLogUpsertBulk {
-	return u.Update(func(s *UsageLogUpsert) {
-		s.ClearSubscriptionID()
 	})
 }
 

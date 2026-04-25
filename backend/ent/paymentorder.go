@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
-	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/shopspring/decimal"
 )
@@ -83,14 +82,6 @@ type PaymentOrder struct {
 	SrcHost *string `json:"src_host,omitempty"`
 	// SrcURL holds the value of the "src_url" field.
 	SrcURL *string `json:"src_url,omitempty"`
-	// OrderType holds the value of the "order_type" field.
-	OrderType string `json:"order_type,omitempty"`
-	// PlanID holds the value of the "plan_id" field.
-	PlanID *int64 `json:"plan_id,omitempty"`
-	// SubscriptionGroupID holds the value of the "subscription_group_id" field.
-	SubscriptionGroupID *int64 `json:"subscription_group_id,omitempty"`
-	// SubscriptionDays holds the value of the "subscription_days" field.
-	SubscriptionDays *int `json:"subscription_days,omitempty"`
 	// ProviderInstanceID holds the value of the "provider_instance_id" field.
 	ProviderInstanceID *int64 `json:"provider_instance_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -103,15 +94,13 @@ type PaymentOrder struct {
 type PaymentOrderEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
-	// Plan holds the value of the plan edge.
-	Plan *SubscriptionPlan `json:"plan,omitempty"`
 	// ProviderInstance holds the value of the provider_instance edge.
 	ProviderInstance *PaymentProviderInstance `json:"provider_instance,omitempty"`
 	// AuditLogs holds the value of the audit_logs edge.
 	AuditLogs []*PaymentAuditLog `json:"audit_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -125,23 +114,12 @@ func (e PaymentOrderEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
-// PlanOrErr returns the Plan value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e PaymentOrderEdges) PlanOrErr() (*SubscriptionPlan, error) {
-	if e.Plan != nil {
-		return e.Plan, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: subscriptionplan.Label}
-	}
-	return nil, &NotLoadedError{edge: "plan"}
-}
-
 // ProviderInstanceOrErr returns the ProviderInstance value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e PaymentOrderEdges) ProviderInstanceOrErr() (*PaymentProviderInstance, error) {
 	if e.ProviderInstance != nil {
 		return e.ProviderInstance, nil
-	} else if e.loadedTypes[2] {
+	} else if e.loadedTypes[1] {
 		return nil, &NotFoundError{label: paymentproviderinstance.Label}
 	}
 	return nil, &NotLoadedError{edge: "provider_instance"}
@@ -150,7 +128,7 @@ func (e PaymentOrderEdges) ProviderInstanceOrErr() (*PaymentProviderInstance, er
 // AuditLogsOrErr returns the AuditLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e PaymentOrderEdges) AuditLogsOrErr() ([]*PaymentAuditLog, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.AuditLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "audit_logs"}
@@ -167,9 +145,9 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 			values[i] = new(decimal.Decimal)
 		case paymentorder.FieldForceRefund:
 			values[i] = new(sql.NullBool)
-		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldRefundRequestedBy, paymentorder.FieldPlanID, paymentorder.FieldSubscriptionGroupID, paymentorder.FieldSubscriptionDays, paymentorder.FieldProviderInstanceID:
+		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldRefundRequestedBy, paymentorder.FieldProviderInstanceID:
 			values[i] = new(sql.NullInt64)
-		case paymentorder.FieldUserEmail, paymentorder.FieldUserName, paymentorder.FieldUserNotes, paymentorder.FieldRechargeCode, paymentorder.FieldStatus, paymentorder.FieldPaymentType, paymentorder.FieldPaymentTradeNo, paymentorder.FieldPayURL, paymentorder.FieldQrCode, paymentorder.FieldQrCodeImg, paymentorder.FieldRefundReason, paymentorder.FieldRefundRequestReason, paymentorder.FieldFailedReason, paymentorder.FieldClientIP, paymentorder.FieldSrcHost, paymentorder.FieldSrcURL, paymentorder.FieldOrderType:
+		case paymentorder.FieldUserEmail, paymentorder.FieldUserName, paymentorder.FieldUserNotes, paymentorder.FieldRechargeCode, paymentorder.FieldStatus, paymentorder.FieldPaymentType, paymentorder.FieldPaymentTradeNo, paymentorder.FieldPayURL, paymentorder.FieldQrCode, paymentorder.FieldQrCodeImg, paymentorder.FieldRefundReason, paymentorder.FieldRefundRequestReason, paymentorder.FieldFailedReason, paymentorder.FieldClientIP, paymentorder.FieldSrcHost, paymentorder.FieldSrcURL:
 			values[i] = new(sql.NullString)
 		case paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt, paymentorder.FieldRefundAt, paymentorder.FieldRefundRequestedAt, paymentorder.FieldExpiresAt, paymentorder.FieldPaidAt, paymentorder.FieldCompletedAt, paymentorder.FieldFailedAt:
 			values[i] = new(sql.NullTime)
@@ -402,33 +380,6 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				_m.SrcURL = new(string)
 				*_m.SrcURL = value.String
 			}
-		case paymentorder.FieldOrderType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field order_type", values[i])
-			} else if value.Valid {
-				_m.OrderType = value.String
-			}
-		case paymentorder.FieldPlanID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field plan_id", values[i])
-			} else if value.Valid {
-				_m.PlanID = new(int64)
-				*_m.PlanID = value.Int64
-			}
-		case paymentorder.FieldSubscriptionGroupID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field subscription_group_id", values[i])
-			} else if value.Valid {
-				_m.SubscriptionGroupID = new(int64)
-				*_m.SubscriptionGroupID = value.Int64
-			}
-		case paymentorder.FieldSubscriptionDays:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field subscription_days", values[i])
-			} else if value.Valid {
-				_m.SubscriptionDays = new(int)
-				*_m.SubscriptionDays = int(value.Int64)
-			}
 		case paymentorder.FieldProviderInstanceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field provider_instance_id", values[i])
@@ -452,11 +403,6 @@ func (_m *PaymentOrder) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the PaymentOrder entity.
 func (_m *PaymentOrder) QueryUser() *UserQuery {
 	return NewPaymentOrderClient(_m.config).QueryUser(_m)
-}
-
-// QueryPlan queries the "plan" edge of the PaymentOrder entity.
-func (_m *PaymentOrder) QueryPlan() *SubscriptionPlanQuery {
-	return NewPaymentOrderClient(_m.config).QueryPlan(_m)
 }
 
 // QueryProviderInstance queries the "provider_instance" edge of the PaymentOrder entity.
@@ -627,24 +573,6 @@ func (_m *PaymentOrder) String() string {
 	if v := _m.SrcURL; v != nil {
 		builder.WriteString("src_url=")
 		builder.WriteString(*v)
-	}
-	builder.WriteString(", ")
-	builder.WriteString("order_type=")
-	builder.WriteString(_m.OrderType)
-	builder.WriteString(", ")
-	if v := _m.PlanID; v != nil {
-		builder.WriteString("plan_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
-	builder.WriteString(", ")
-	if v := _m.SubscriptionGroupID; v != nil {
-		builder.WriteString("subscription_group_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
-	builder.WriteString(", ")
-	if v := _m.SubscriptionDays; v != nil {
-		builder.WriteString("subscription_days=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	if v := _m.ProviderInstanceID; v != nil {

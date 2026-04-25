@@ -229,72 +229,6 @@
         </div>
       </div>
 
-      <!-- Tab: Subscription Plans -->
-      <div v-show="activeTab === 'plans'">
-        <div class="card">
-          <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.payment.subscriptionPlans') }}
-            </h3>
-            <div class="flex gap-2">
-              <button @click="loadPlans" :disabled="plansLoading" class="btn btn-secondary">
-                <Icon name="refresh" size="sm" :class="plansLoading ? 'animate-spin' : ''" />
-              </button>
-              <button @click="openPlanDialog()" class="btn btn-primary">
-                <Icon name="plus" size="sm" class="mr-1" />
-                {{ t('common.create') }}
-              </button>
-            </div>
-          </div>
-
-          <DataTable :columns="planColumns" :data="plansList" :loading="plansLoading">
-            <template #cell-group_id="{ value }">
-              <span class="font-mono text-sm">{{ value ?? '-' }}</span>
-            </template>
-
-            <template #cell-price="{ value, row }">
-              <div>
-                <span class="font-medium text-gray-900 dark:text-white">{{ value }}</span>
-                <span
-                  v-if="row.original_price && Number(row.original_price) > Number(value)"
-                  class="ml-1 text-xs text-gray-400 line-through"
-                >
-                  {{ row.original_price }}
-                </span>
-              </div>
-            </template>
-
-            <template #cell-validity="{ row }">
-              <span class="text-sm text-gray-700 dark:text-gray-300">
-                {{ row.validity_days }} {{ validityUnitLabel(row.validity_unit) }}
-              </span>
-            </template>
-
-            <template #cell-for_sale="{ value }">
-              <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
-                {{ value ? t('common.yes') : t('common.no') }}
-              </span>
-            </template>
-
-            <template #cell-actions="{ row }">
-              <div class="flex items-center space-x-2">
-                <button
-                  @click="openPlanDialog(row)"
-                  class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-dark-600 dark:hover:text-gray-300"
-                >
-                  <Icon name="edit" size="sm" />
-                </button>
-                <button
-                  @click="handleDeletePlan(row)"
-                  class="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                >
-                  <Icon name="trash" size="sm" />
-                </button>
-              </div>
-            </template>
-          </DataTable>
-        </div>
-      </div>
     </div>
 
     <!-- Provider Instance Dialog -->
@@ -477,79 +411,6 @@
       </template>
     </BaseDialog>
 
-    <!-- Plan Dialog -->
-    <BaseDialog
-      :show="showPlanDialog"
-      :title="editingPlan ? t('admin.payment.editPlan') : t('admin.payment.createPlan')"
-      width="normal"
-      @close="showPlanDialog = false"
-    >
-      <form id="plan-form" @submit.prevent="savePlan" class="space-y-4">
-        <div>
-          <label class="input-label">{{ t('admin.payment.name') }}</label>
-          <input v-model="planForm.name" type="text" required class="input" />
-        </div>
-        <div>
-          <label class="input-label">{{ t('admin.payment.description') }}</label>
-          <textarea v-model="planForm.description" rows="2" class="input"></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="input-label">{{ t('admin.payment.groupId') }}</label>
-            <input v-model.number="planForm.group_id" type="number" class="input" />
-          </div>
-          <div>
-            <label class="input-label">{{ t('admin.payment.price') }}</label>
-            <input v-model="planForm.price" type="text" required class="input" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="input-label">{{ t('admin.payment.originalPrice') }}</label>
-            <input v-model="planForm.original_price" type="text" class="input" />
-          </div>
-          <div>
-            <label class="input-label">{{ t('admin.payment.productName') }}</label>
-            <input v-model="planForm.product_name" type="text" class="input" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="input-label">{{ t('admin.payment.validityDays') }}</label>
-            <input v-model.number="planForm.validity_days" type="number" min="1" required class="input" />
-          </div>
-          <div>
-            <label class="input-label">{{ t('admin.payment.validityUnit') }}</label>
-            <Select v-model="planForm.validity_unit" :options="validityUnitOptions" />
-          </div>
-        </div>
-        <div>
-          <label class="input-label">{{ t('admin.payment.features') }}</label>
-          <textarea v-model="planForm.features" rows="2" class="input" placeholder="Feature 1, Feature 2"></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="input-label">{{ t('admin.payment.sortOrder') }}</label>
-            <input v-model.number="planForm.sort_order" type="number" class="input" />
-          </div>
-          <label class="flex items-center gap-2 self-end text-sm text-gray-700 dark:text-gray-300">
-            <Toggle v-model="planForm.for_sale" />
-            {{ t('admin.payment.forSale') }}
-          </label>
-        </div>
-      </form>
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <button type="button" @click="showPlanDialog = false" class="btn btn-secondary">
-            {{ t('common.cancel') }}
-          </button>
-          <button type="submit" form="plan-form" :disabled="savingPlan" class="btn btn-primary">
-            {{ savingPlan ? t('common.saving') : t('common.save') }}
-          </button>
-        </div>
-      </template>
-    </BaseDialog>
-
     <!-- Delete Confirm -->
     <ConfirmDialog
       :show="showDeleteConfirm"
@@ -569,7 +430,7 @@ import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { paymentAdminAPI } from '@/api/admin/payment'
-import type { PaymentChannel, SubscriptionPlan, ProviderInstance, PaymentDashboardStats } from '@/types/payment'
+import type { PaymentChannel, ProviderInstance, PaymentDashboardStats } from '@/types/payment'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import DataTable from '@/components/common/DataTable.vue'
@@ -583,15 +444,14 @@ import Icon from '@/components/icons/Icon.vue'
 const { t } = useI18n()
 const appStore = useAppStore()
 
-type TabKey = 'dashboard' | 'settings' | 'providers' | 'channels' | 'plans'
+type TabKey = 'dashboard' | 'settings' | 'providers' | 'channels'
 const activeTab = ref<TabKey>('dashboard')
 
 const tabs = [
   { key: 'dashboard' as TabKey, label: t('admin.payment.dashboard') },
   { key: 'settings' as TabKey, label: t('admin.payment.settings') },
   { key: 'providers' as TabKey, label: t('admin.payment.providers') },
-  { key: 'channels' as TabKey, label: t('admin.payment.channelsTab') },
-  { key: 'plans' as TabKey, label: t('admin.payment.plansTab') }
+  { key: 'channels' as TabKey, label: t('admin.payment.channelsTab') }
 ]
 
 // ==================== Dashboard ====================
@@ -951,124 +811,6 @@ async function saveChannel() {
   }
 }
 
-// ==================== Subscription Plans ====================
-
-const plansLoading = ref(false)
-const savingPlan = ref(false)
-const plansList = ref<SubscriptionPlan[]>([])
-const showPlanDialog = ref(false)
-const editingPlan = ref<SubscriptionPlan | null>(null)
-
-const planForm = reactive({
-  group_id: null as number | null,
-  name: '',
-  description: '',
-  price: '',
-  original_price: '',
-  validity_days: 30,
-  validity_unit: 'day',
-  features: '',
-  product_name: '',
-  for_sale: false,
-  sort_order: 0
-})
-
-const validityUnitOptions = [
-  { value: 'day', label: '天 / Day' },
-  { value: 'week', label: '周 / Week' },
-  { value: 'month', label: '月 / Month' }
-]
-
-const planColumns = computed<Column[]>(() => [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: t('admin.payment.name') },
-  { key: 'group_id', label: t('admin.payment.groupId') },
-  { key: 'price', label: t('admin.payment.price'), sortable: true },
-  { key: 'validity', label: t('admin.payment.validity') },
-  { key: 'for_sale', label: t('admin.payment.forSale'), sortable: true },
-  { key: 'sort_order', label: t('admin.payment.sortOrder'), sortable: true },
-  { key: 'actions', label: t('common.actions') }
-])
-
-function validityUnitLabel(unit: string): string {
-  const map: Record<string, string> = { day: '天', week: '周', month: '月' }
-  return map[unit] || unit
-}
-
-async function loadPlans() {
-  plansLoading.value = true
-  try {
-    plansList.value = await paymentAdminAPI.listPlans()
-  } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.loadPlansFailed'))
-  } finally {
-    plansLoading.value = false
-  }
-}
-
-function openPlanDialog(plan?: SubscriptionPlan) {
-  if (plan) {
-    editingPlan.value = plan
-    planForm.group_id = plan.group_id
-    planForm.name = plan.name
-    planForm.description = plan.description || ''
-    planForm.price = String(plan.price)
-    planForm.original_price = plan.original_price ? String(plan.original_price) : ''
-    planForm.validity_days = plan.validity_days
-    planForm.validity_unit = plan.validity_unit
-    planForm.features = Array.isArray(plan.features) ? plan.features.join(',') : String(plan.features || '')
-    planForm.product_name = plan.product_name || ''
-    planForm.for_sale = plan.for_sale
-    planForm.sort_order = plan.sort_order
-  } else {
-    editingPlan.value = null
-    planForm.group_id = null
-    planForm.name = ''
-    planForm.description = ''
-    planForm.price = ''
-    planForm.original_price = ''
-    planForm.validity_days = 30
-    planForm.validity_unit = 'day'
-    planForm.features = ''
-    planForm.product_name = ''
-    planForm.for_sale = false
-    planForm.sort_order = 0
-  }
-  showPlanDialog.value = true
-}
-
-async function savePlan() {
-  savingPlan.value = true
-  try {
-    const payload: any = {
-      name: planForm.name,
-      price: planForm.price,
-      validity_days: planForm.validity_days,
-      validity_unit: planForm.validity_unit,
-      for_sale: planForm.for_sale,
-      sort_order: planForm.sort_order
-    }
-    if (planForm.group_id !== null) payload.group_id = planForm.group_id
-    if (planForm.description) payload.description = planForm.description
-    if (planForm.original_price) payload.original_price = planForm.original_price
-    if (planForm.features) payload.features = planForm.features
-    if (planForm.product_name) payload.product_name = planForm.product_name
-
-    if (editingPlan.value) {
-      await paymentAdminAPI.updatePlan(editingPlan.value.id, payload)
-    } else {
-      await paymentAdminAPI.createPlan(payload)
-    }
-    appStore.showSuccess(t('admin.payment.planSaved'))
-    showPlanDialog.value = false
-    loadPlans()
-  } catch (error: any) {
-    appStore.showError(error.response?.data?.detail || t('admin.payment.savePlanFailed'))
-  } finally {
-    savingPlan.value = false
-  }
-}
-
 // ==================== Delete ====================
 
 const showDeleteConfirm = ref(false)
@@ -1093,17 +835,6 @@ function handleDeleteChannel(channel: PaymentChannel) {
   deleteAction = async () => {
     await paymentAdminAPI.deleteChannel(channel.id)
     loadChannels()
-  }
-  showDeleteConfirm.value = true
-}
-
-function handleDeletePlan(plan: SubscriptionPlan) {
-  deleteConfirmMessage.value = t(
-    'admin.payment.deletePlanConfirm'
-  )
-  deleteAction = async () => {
-    await paymentAdminAPI.deletePlan(plan.id)
-    loadPlans()
   }
   showDeleteConfirm.value = true
 }
@@ -1140,7 +871,6 @@ watch(activeTab, (tab) => {
   if (tab === 'settings' && Object.keys(configSettings).length === 0) loadConfig()
   if (tab === 'providers' && providerInstances.value.length === 0) loadProviderInstances()
   if (tab === 'channels' && channels.value.length === 0) loadChannels()
-  if (tab === 'plans' && plansList.value.length === 0) loadPlans()
 })
 
 onMounted(() => {

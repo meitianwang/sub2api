@@ -80,53 +80,6 @@ func TestUsageBillingRepositoryApply_DeduplicatesBalanceBilling(t *testing.T) {
 	require.Equal(t, 1, dedupCount)
 }
 
-func TestUsageBillingRepositoryApply_DeduplicatesSubscriptionBilling(t *testing.T) {
-	ctx := context.Background()
-	client := testEntClient(t)
-	repo := NewUsageBillingRepository(client, integrationDB)
-
-	user := mustCreateUser(t, client, &service.User{
-		Email:        fmt.Sprintf("usage-billing-sub-user-%d@example.com", time.Now().UnixNano()),
-		PasswordHash: "hash",
-	})
-	group := mustCreateGroup(t, client, &service.Group{
-		Name:             "usage-billing-group-" + uuid.NewString(),
-		SubscriptionType: service.SubscriptionTypeSubscription,
-	})
-	apiKey := mustCreateApiKey(t, client, &service.APIKey{
-		UserID:  user.ID,
-		GroupID: &group.ID,
-		Key:     "sk-usage-billing-sub-" + uuid.NewString(),
-		Name:    "billing-sub",
-	})
-	subscription := mustCreateSubscription(t, client, &service.UserSubscription{
-		UserID:  user.ID,
-		GroupID: group.ID,
-	})
-
-	requestID := uuid.NewString()
-	cmd := &service.UsageBillingCommand{
-		RequestID:        requestID,
-		APIKeyID:         apiKey.ID,
-		UserID:           user.ID,
-		AccountID:        0,
-		SubscriptionID:   &subscription.ID,
-		SubscriptionCost: 2.5,
-	}
-
-	result1, err := repo.Apply(ctx, cmd)
-	require.NoError(t, err)
-	require.True(t, result1.Applied)
-
-	result2, err := repo.Apply(ctx, cmd)
-	require.NoError(t, err)
-	require.False(t, result2.Applied)
-
-	var dailyUsage float64
-	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT daily_usage_usd FROM user_subscriptions WHERE id = $1", subscription.ID).Scan(&dailyUsage))
-	require.InDelta(t, 2.5, dailyUsage, 0.000001)
-}
-
 func TestUsageBillingRepositoryApply_RequestFingerprintConflict(t *testing.T) {
 	ctx := context.Background()
 	client := testEntClient(t)

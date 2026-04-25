@@ -78,11 +78,7 @@
             <span
               :class="[
                 'badge',
-                value === 'balance'
-                  ? 'badge-success'
-                  : value === 'subscription'
-                    ? 'badge-warning'
-                    : 'badge-primary'
+                value === 'balance' ? 'badge-success' : 'badge-primary'
               ]"
             >
               {{ t('admin.redeem.types.' + value) }}
@@ -92,12 +88,6 @@
           <template #cell-value="{ value, row }">
             <span class="text-sm font-medium text-gray-900 dark:text-white">
               <template v-if="row.type === 'balance'">¥{{ value.toFixed(2) }}</template>
-              <template v-else-if="row.type === 'subscription'">
-                {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
-                <span v-if="row.group" class="ml-1 text-xs text-gray-500 dark:text-gray-400"
-                  >({{ row.group.name }})</span
-                >
-              </template>
               <template v-else>{{ value }}</template>
             </span>
           </template>
@@ -210,20 +200,16 @@
               <label class="input-label">{{ t('admin.redeem.codeType') }}</label>
               <Select v-model="generateForm.type" :options="typeOptions" />
             </div>
-            <!-- 余额/并发类型：显示数值输入 -->
-            <div v-if="generateForm.type !== 'subscription' && generateForm.type !== 'invitation'">
+            <!-- 余额类型：显示数值输入 -->
+            <div v-if="generateForm.type !== 'invitation'">
               <label class="input-label">
-                {{
-                  generateForm.type === 'balance'
-                    ? t('admin.redeem.amount')
-                    : t('admin.redeem.columns.value')
-                }}
+                {{ t('admin.redeem.amount') }}
               </label>
               <input
                 v-model.number="generateForm.value"
                 type="number"
-                :step="generateForm.type === 'balance' ? '0.01' : '1'"
-                :min="generateForm.type === 'balance' ? '0.01' : '1'"
+                step="0.01"
+                min="0.01"
                 required
                 class="input"
               />
@@ -234,47 +220,6 @@
                 {{ t('admin.redeem.invitationHint') }}
               </p>
             </div>
-            <!-- 订阅类型：显示分组选择和有效天数 -->
-            <template v-if="generateForm.type === 'subscription'">
-              <div>
-                <label class="input-label">{{ t('admin.redeem.selectGroup') }}</label>
-                <Select
-                  v-model="generateForm.group_id"
-                  :options="subscriptionGroupOptions"
-                  :placeholder="t('admin.redeem.selectGroupPlaceholder')"
-                >
-                  <template #selected="{ option }">
-                    <GroupBadge
-                      v-if="option"
-                      :name="(option as unknown as GroupOption).label"
-                      :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                    />
-                    <span v-else class="text-gray-400">{{
-                      t('admin.redeem.selectGroupPlaceholder')
-                    }}</span>
-                  </template>
-                  <template #option="{ option, selected }">
-                    <GroupOptionItem
-                      :name="(option as unknown as GroupOption).label"
-                      :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                      :description="(option as unknown as GroupOption).description"
-                      :selected="selected"
-                    />
-                  </template>
-                </Select>
-              </div>
-              <div>
-                <label class="input-label">{{ t('admin.redeem.validityDays') }}</label>
-                <input
-                  v-model.number="generateForm.validity_days"
-                  type="number"
-                  min="1"
-                  max="365"
-                  required
-                  class="input"
-                />
-              </div>
-            </template>
             <div>
               <label class="input-label">{{ t('admin.redeem.count') }}</label>
               <input
@@ -394,7 +339,7 @@ import { useClipboard } from '@/composables/useClipboard'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { adminAPI } from '@/api/admin'
 import { formatDateTime } from '@/utils/format'
-import type { RedeemCode, RedeemCodeType, Group, SubscriptionType } from '@/types'
+import type { RedeemCode, RedeemCodeType } from '@/types'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -402,37 +347,15 @@ import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import Select from '@/components/common/Select.vue'
-import GroupBadge from '@/components/common/GroupBadge.vue'
-import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 const { copyToClipboard: clipboardCopy } = useClipboard()
 
-interface GroupOption {
-  value: number
-  label: string
-  description: string | null
-  subscriptionType: SubscriptionType
-}
-
 const showGenerateDialog = ref(false)
 const showResultDialog = ref(false)
 const generatedCodes = ref<RedeemCode[]>([])
-const subscriptionGroups = ref<Group[]>([])
-
-// 订阅类型分组选项
-const subscriptionGroupOptions = computed(() => {
-  return subscriptionGroups.value
-    .filter((g) => g.subscription_type === 'subscription')
-    .map((g) => ({
-      value: g.id,
-      label: g.name,
-      description: g.description,
-      subscriptionType: g.subscription_type
-    }))
-})
 
 const generatedCodesText = computed(() => {
   return generatedCodes.value.map((code) => code.code).join('\n')
@@ -495,14 +418,12 @@ const columns = computed<Column[]>(() => [
 
 const typeOptions = computed(() => [
   { value: 'balance', label: t('admin.redeem.balance') },
-  { value: 'subscription', label: t('admin.redeem.subscription') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
 ])
 
 const filterTypeOptions = computed(() => [
   { value: '', label: t('admin.redeem.allTypes') },
   { value: 'balance', label: t('admin.redeem.balance') },
-  { value: 'subscription', label: t('admin.redeem.subscription') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
 ])
 
@@ -538,9 +459,7 @@ const copiedCode = ref<string | null>(null)
 const generateForm = reactive({
   type: 'balance' as RedeemCodeType,
   value: 10,
-  count: 1,
-  group_id: null as number | null,
-  validity_days: 30
+  count: 1
 })
 
 // 监听类型变化，邀请码类型时自动设置 value 为 0
@@ -620,27 +539,16 @@ const handlePageSizeChange = (pageSize: number) => {
 }
 
 const handleGenerateCodes = async () => {
-  // 订阅类型必须选择分组
-  if (generateForm.type === 'subscription' && !generateForm.group_id) {
-    appStore.showError(t('admin.redeem.groupRequired'))
-    return
-  }
-
   generating.value = true
   try {
     const result = await adminAPI.redeem.generate(
       generateForm.count,
       generateForm.type,
-      generateForm.value,
-      generateForm.type === 'subscription' ? generateForm.group_id : undefined,
-      generateForm.type === 'subscription' ? generateForm.validity_days : undefined
+      generateForm.value
     )
     showGenerateDialog.value = false
     generatedCodes.value = result
     showResultDialog.value = true
-    // 重置表单
-    generateForm.group_id = null
-    generateForm.validity_days = 30
     loadCodes()
   } catch (error: any) {
     appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToGenerate'))
@@ -726,19 +634,8 @@ const confirmDeleteUnused = async () => {
   }
 }
 
-// 加载订阅类型分组
-const loadSubscriptionGroups = async () => {
-  try {
-    const groups = await adminAPI.groups.getAll()
-    subscriptionGroups.value = groups
-  } catch (error) {
-    console.error('Error loading subscription groups:', error)
-  }
-}
-
 onMounted(() => {
   loadCodes()
-  loadSubscriptionGroups()
 })
 
 onUnmounted(() => {

@@ -51,10 +51,6 @@ const (
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
 	EdgeRedeemCodes = "redeem_codes"
-	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
-	EdgeSubscriptions = "subscriptions"
-	// EdgeAssignedSubscriptions holds the string denoting the assigned_subscriptions edge name in mutations.
-	EdgeAssignedSubscriptions = "assigned_subscriptions"
 	// EdgeAnnouncementReads holds the string denoting the announcement_reads edge name in mutations.
 	EdgeAnnouncementReads = "announcement_reads"
 	// EdgeAllowedGroups holds the string denoting the allowed_groups edge name in mutations.
@@ -85,20 +81,6 @@ const (
 	RedeemCodesInverseTable = "redeem_codes"
 	// RedeemCodesColumn is the table column denoting the redeem_codes relation/edge.
 	RedeemCodesColumn = "used_by"
-	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
-	SubscriptionsTable = "user_subscriptions"
-	// SubscriptionsInverseTable is the table name for the UserSubscription entity.
-	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
-	SubscriptionsInverseTable = "user_subscriptions"
-	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
-	SubscriptionsColumn = "user_id"
-	// AssignedSubscriptionsTable is the table that holds the assigned_subscriptions relation/edge.
-	AssignedSubscriptionsTable = "user_subscriptions"
-	// AssignedSubscriptionsInverseTable is the table name for the UserSubscription entity.
-	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
-	AssignedSubscriptionsInverseTable = "user_subscriptions"
-	// AssignedSubscriptionsColumn is the table column denoting the assigned_subscriptions relation/edge.
-	AssignedSubscriptionsColumn = "assigned_by"
 	// AnnouncementReadsTable is the table that holds the announcement_reads relation/edge.
 	AnnouncementReadsTable = "announcement_reads"
 	// AnnouncementReadsInverseTable is the table name for the AnnouncementRead entity.
@@ -345,34 +327,6 @@ func ByRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// BySubscriptionsCount orders the results by subscriptions count.
-func BySubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubscriptionsStep(), opts...)
-	}
-}
-
-// BySubscriptions orders the results by subscriptions terms.
-func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAssignedSubscriptionsCount orders the results by assigned_subscriptions count.
-func ByAssignedSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAssignedSubscriptionsStep(), opts...)
-	}
-}
-
-// ByAssignedSubscriptions orders the results by assigned_subscriptions terms.
-func ByAssignedSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAssignedSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByAnnouncementReadsCount orders the results by announcement_reads count.
 func ByAnnouncementReadsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -482,20 +436,6 @@ func newRedeemCodesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RedeemCodesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
-	)
-}
-func newSubscriptionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
-	)
-}
-func newAssignedSubscriptionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AssignedSubscriptionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AssignedSubscriptionsTable, AssignedSubscriptionsColumn),
 	)
 }
 func newAnnouncementReadsStep() *sqlgraph.Step {

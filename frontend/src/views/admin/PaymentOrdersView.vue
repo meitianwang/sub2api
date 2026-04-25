@@ -25,12 +25,6 @@
             class="w-40"
             @change="resetAndLoad"
           />
-          <Select
-            v-model="filters.order_type"
-            :options="orderTypeOptions"
-            class="w-36"
-            @change="resetAndLoad"
-          />
 
           <!-- Date Range -->
           <input
@@ -95,12 +89,6 @@
 
           <template #cell-payment_type="{ value }">
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ paymentTypeLabel(value) }}</span>
-          </template>
-
-          <template #cell-order_type="{ value }">
-            <span class="text-sm text-gray-700 dark:text-gray-300">
-              {{ value === 'balance' ? '余额 / Balance' : '订阅 / Subscription' }}
-            </span>
           </template>
 
           <template #cell-created_at="{ value }">
@@ -193,10 +181,6 @@
           <div>
             <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.paymentType') }}</span>
             <p class="text-gray-900 dark:text-white">{{ paymentTypeLabel(orderDetail.order.payment_type) }}</p>
-          </div>
-          <div>
-            <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.orderType') }}</span>
-            <p class="text-gray-900 dark:text-white">{{ orderDetail.order.order_type === 'balance' ? '余额' : '订阅' }}</p>
           </div>
           <div>
             <span class="text-gray-500 dark:text-gray-400">{{ t('admin.payment.rechargeCode') }}</span>
@@ -364,7 +348,6 @@ const processingRefund = ref(false)
 const filters = reactive({
   status: '',
   payment_type: '',
-  order_type: '',
   user_id: '',
   date_from: '',
   date_to: ''
@@ -417,12 +400,6 @@ const paymentTypeOptions = computed(() => [
   { value: 'usdt', label: 'USDT' }
 ])
 
-const orderTypeOptions = computed(() => [
-  { value: '', label: t('admin.payment.allOrderTypes') },
-  { value: 'balance', label: '余额 / Balance' },
-  { value: 'subscription', label: '订阅 / Subscription' }
-])
-
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
   { key: 'user_email', label: t('admin.payment.user') },
@@ -430,7 +407,6 @@ const columns = computed<Column[]>(() => [
   { key: 'pay_amount', label: t('admin.payment.payAmount') },
   { key: 'status', label: t('admin.payment.status'), sortable: true },
   { key: 'payment_type', label: t('admin.payment.paymentType') },
-  { key: 'order_type', label: t('admin.payment.orderType') },
   { key: 'created_at', label: t('admin.payment.createdAt'), sortable: true },
   { key: 'actions', label: t('common.actions') }
 ])
@@ -499,7 +475,6 @@ async function loadOrders() {
     }
     if (filters.status) params.status = filters.status
     if (filters.payment_type) params.payment_type = filters.payment_type
-    if (filters.order_type) params.order_type = filters.order_type
     if (filters.user_id) params.user_id = Number(filters.user_id)
     if (filters.date_from) params.date_from = new Date(filters.date_from).toISOString()
     if (filters.date_to) {

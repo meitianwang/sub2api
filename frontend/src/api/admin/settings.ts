@@ -6,11 +6,6 @@
 import { apiClient } from '../client'
 import type { CustomMenuItem, CustomEndpoint } from '@/types'
 
-export interface DefaultSubscriptionSetting {
-  group_id: number
-  validity_days: number
-}
-
 /**
  * System settings interface
  */
@@ -27,7 +22,6 @@ export interface SystemSettings {
   totp_encryption_key_configured: boolean // TOTP 加密密钥是否已配置
   // Default settings
   default_balance: number
-  default_subscriptions: DefaultSubscriptionSetting[]
   // OEM settings
   site_name: string
   site_logo: string
@@ -97,7 +91,6 @@ export interface UpdateSettingsRequest {
   invitation_code_enabled?: boolean
   totp_enabled?: boolean // TOTP 双因素认证
   default_balance?: number
-  default_subscriptions?: DefaultSubscriptionSetting[]
   site_name?: string
   site_logo?: string
   site_subtitle?: string

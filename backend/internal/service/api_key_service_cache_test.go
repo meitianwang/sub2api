@@ -203,7 +203,6 @@ func TestAPIKeyService_GetByKey_UsesL2Cache(t *testing.T) {
 				ID:                  groupID,
 				Name:                "g",
 				Status:              StatusActive,
-				SubscriptionType:    SubscriptionTypeStandard,
 				ModelRoutingEnabled: true,
 				ModelRouting: map[string][]int64{
 					"claude-opus-*": {1, 2},

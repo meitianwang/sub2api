@@ -16,13 +16,6 @@ export interface RedeemHistoryItem {
   created_at: string
   // Notes from admin for admin_balance types
   notes?: string
-  // Subscription-specific fields
-  group_id?: number
-  validity_days?: number
-  group?: {
-    id: number
-    name: string
-  }
 }
 
 /**

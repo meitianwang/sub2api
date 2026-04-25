@@ -9,13 +9,11 @@ import type {
   PaymentOrder,
   PaymentConfig,
   PaymentChannel,
-  SubscriptionPlan,
   PaymentAuditLog,
   ProviderInstance,
   PaymentDashboardStats,
   PaymentStatus,
-  PaymentType,
-  OrderType
+  PaymentType
 } from '@/types/payment'
 
 // ==================== Orders ====================
@@ -29,7 +27,6 @@ export async function listOrders(
     page_size?: number
     status?: PaymentStatus
     payment_type?: PaymentType
-    order_type?: OrderType
     user_id?: number
     search?: string
   },
@@ -186,43 +183,6 @@ export async function deleteChannel(id: number): Promise<{ message: string }> {
   return data
 }
 
-// ==================== Subscription Plans ====================
-
-/**
- * List subscription plans
- */
-export async function listPlans(): Promise<SubscriptionPlan[]> {
-  const { data } = await apiClient.get<SubscriptionPlan[]>('/admin/pay/subscription-plans')
-  return data
-}
-
-/**
- * Create a new subscription plan
- */
-export async function createPlan(plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
-  const { data } = await apiClient.post<SubscriptionPlan>('/admin/pay/subscription-plans', plan)
-  return data
-}
-
-/**
- * Update a subscription plan
- */
-export async function updatePlan(
-  id: number,
-  plan: Partial<SubscriptionPlan>
-): Promise<SubscriptionPlan> {
-  const { data } = await apiClient.put<SubscriptionPlan>(`/admin/pay/subscription-plans/${id}`, plan)
-  return data
-}
-
-/**
- * Delete a subscription plan
- */
-export async function deletePlan(id: number): Promise<{ message: string }> {
-  const { data } = await apiClient.delete<{ message: string }>(`/admin/pay/subscription-plans/${id}`)
-  return data
-}
-
 // ==================== Dashboard ====================
 
 /**
@@ -251,10 +211,6 @@ export const paymentAdminAPI = {
   createChannel,
   updateChannel,
   deleteChannel,
-  listPlans,
-  createPlan,
-  updatePlan,
-  deletePlan,
   getDashboard
 }
 

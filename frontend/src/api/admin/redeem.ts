@@ -56,29 +56,17 @@ export async function getById(id: number): Promise<RedeemCode> {
  * @param count - Number of codes to generate
  * @param type - Type of redeem code
  * @param value - Value of the code
- * @param groupId - Group ID (required for subscription type)
- * @param validityDays - Validity days (for subscription type)
  * @returns Array of generated redeem codes
  */
 export async function generate(
   count: number,
   type: RedeemCodeType,
-  value: number,
-  groupId?: number | null,
-  validityDays?: number
+  value: number
 ): Promise<RedeemCode[]> {
   const payload: GenerateRedeemCodesRequest = {
     count,
     type,
     value
-  }
-
-  // 订阅类型专用字段
-  if (type === 'subscription') {
-    payload.group_id = groupId
-    if (validityDays && validityDays > 0) {
-      payload.validity_days = validityDays
-    }
   }
 
   const { data } = await apiClient.post<RedeemCode[]>('/admin/redeem-codes/generate', payload)

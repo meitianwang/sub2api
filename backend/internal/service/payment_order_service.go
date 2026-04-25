@@ -23,11 +23,10 @@ import (
 // --- Sentinel errors ---
 
 var (
-	ErrPaymentOrderNotFound     = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
-	ErrPaymentChannelNotFound   = infraerrors.NotFound("PAYMENT_CHANNEL_NOT_FOUND", "payment channel not found")
-	ErrPaymentProviderNotFound  = infraerrors.NotFound("PAYMENT_PROVIDER_NOT_FOUND", "payment provider instance not found")
-	ErrSubscriptionPlanNotFound = infraerrors.NotFound("SUBSCRIPTION_PLAN_NOT_FOUND", "subscription plan not found")
-	ErrPaymentTypeDisabled      = infraerrors.BadRequest("PAYMENT_TYPE_DISABLED", "payment type is not enabled")
+	ErrPaymentOrderNotFound    = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
+	ErrPaymentChannelNotFound  = infraerrors.NotFound("PAYMENT_CHANNEL_NOT_FOUND", "payment channel not found")
+	ErrPaymentProviderNotFound = infraerrors.NotFound("PAYMENT_PROVIDER_NOT_FOUND", "payment provider instance not found")
+	ErrPaymentTypeDisabled     = infraerrors.BadRequest("PAYMENT_TYPE_DISABLED", "payment type is not enabled")
 	ErrPaymentAmountInvalid     = infraerrors.BadRequest("PAYMENT_AMOUNT_INVALID", "payment amount is invalid")
 	ErrTooManyPendingOrders     = infraerrors.TooManyRequests("TOO_MANY_PENDING_ORDERS", "too many pending orders")
 	ErrDailyRechargeExceeded    = infraerrors.TooManyRequests("DAILY_RECHARGE_EXCEEDED", "daily recharge limit exceeded")
@@ -59,7 +58,6 @@ type PaymentOrderRepository interface {
 
 	CountPendingByUserID(ctx context.Context, userID int64) (int, error)
 	CountActiveByProviderInstanceID(ctx context.Context, instanceID int64) (int, error)
-	CountActiveByPlanID(ctx context.Context, planID int64) (int, error)
 	SumDailyPaidByUserID(ctx context.Context, userID int64, bizDayStart time.Time) (decimal.Decimal, error)
 	SumDailyPaidByPaymentType(ctx context.Context, paymentType string, bizDayStart time.Time) (decimal.Decimal, error)
 	SumDailyPaidByInstanceID(ctx context.Context, instanceID int64, bizDayStart time.Time) (decimal.Decimal, error)
@@ -99,16 +97,6 @@ type PaymentProviderInstanceRepository interface {
 	List(ctx context.Context) ([]PaymentProviderInstance, error)
 	ListEnabled(ctx context.Context) ([]PaymentProviderInstance, error)
 	ListEnabledByProviderKey(ctx context.Context, providerKey string) ([]PaymentProviderInstance, error)
-}
-
-// SubscriptionPlanRepository defines the data access interface for subscription plans.
-type SubscriptionPlanRepository interface {
-	Create(ctx context.Context, plan *SubscriptionPlan) error
-	GetByID(ctx context.Context, id int64) (*SubscriptionPlan, error)
-	Update(ctx context.Context, plan *SubscriptionPlan) error
-	Delete(ctx context.Context, id int64) error
-	ListForSale(ctx context.Context) ([]SubscriptionPlan, error)
-	List(ctx context.Context) ([]SubscriptionPlan, error)
 }
 
 // --- PaymentConfigService ---
@@ -392,8 +380,6 @@ type CreateOrderRequest struct {
 	UserID      int64
 	Amount      decimal.Decimal
 	PaymentType string
-	OrderType   string // "balance" or "subscription"
-	PlanID      *int64
 	ClientIP    string
 	SrcHost     string
 	SrcURL      string
@@ -421,7 +407,6 @@ type RefundOrderRequest struct {
 type PaymentOrderListFilter struct {
 	UserID      *int64
 	Status      *string
-	OrderType   *string
 	PaymentType *string
 	DateFrom    *time.Time
 	DateTo      *time.Time
@@ -468,20 +453,18 @@ const defaultMaxPendingOrders = 3
 
 // PaymentOrderService handles the core payment order workflow.
 type PaymentOrderService struct {
-	orderRepo           PaymentOrderRepository
-	auditLogRepo        PaymentAuditLogRepository
-	instanceRepo        PaymentProviderInstanceRepository
-	planRepo            SubscriptionPlanRepository
-	groupRepo           GroupRepository
-	userRepo            UserRepository
-	userService         *UserService
-	configService       *PaymentConfigService
-	registry            *PaymentProviderRegistry
-	loadBalancer        *PaymentLoadBalancer
-	encryptor           SecretEncryptor
-	entClient           *dbent.Client
-	redeemService       *RedeemService
-	subscriptionService *SubscriptionService
+	orderRepo     PaymentOrderRepository
+	auditLogRepo  PaymentAuditLogRepository
+	instanceRepo  PaymentProviderInstanceRepository
+	groupRepo     GroupRepository
+	userRepo      UserRepository
+	userService   *UserService
+	configService *PaymentConfigService
+	registry      *PaymentProviderRegistry
+	loadBalancer  *PaymentLoadBalancer
+	encryptor     SecretEncryptor
+	entClient     *dbent.Client
+	redeemService *RedeemService
 }
 
 // NewPaymentOrderService creates a new PaymentOrderService.
@@ -489,7 +472,6 @@ func NewPaymentOrderService(
 	orderRepo PaymentOrderRepository,
 	auditLogRepo PaymentAuditLogRepository,
 	instanceRepo PaymentProviderInstanceRepository,
-	planRepo SubscriptionPlanRepository,
 	groupRepo GroupRepository,
 	userRepo UserRepository,
 	userService *UserService,
@@ -499,23 +481,20 @@ func NewPaymentOrderService(
 	encryptor SecretEncryptor,
 	entClient *dbent.Client,
 	redeemService *RedeemService,
-	subscriptionService *SubscriptionService,
 ) *PaymentOrderService {
 	return &PaymentOrderService{
-		orderRepo:           orderRepo,
-		auditLogRepo:        auditLogRepo,
-		instanceRepo:        instanceRepo,
-		planRepo:            planRepo,
-		groupRepo:           groupRepo,
-		userRepo:            userRepo,
-		userService:         userService,
-		configService:       configService,
-		registry:            registry,
-		loadBalancer:        loadBalancer,
-		encryptor:           encryptor,
-		entClient:           entClient,
-		redeemService:       redeemService,
-		subscriptionService: subscriptionService,
+		orderRepo:     orderRepo,
+		auditLogRepo:  auditLogRepo,
+		instanceRepo:  instanceRepo,
+		groupRepo:     groupRepo,
+		userRepo:      userRepo,
+		userService:   userService,
+		configService: configService,
+		registry:      registry,
+		loadBalancer:  loadBalancer,
+		encryptor:     encryptor,
+		entClient:     entClient,
+		redeemService: redeemService,
 	}
 }
 
@@ -540,38 +519,8 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 	}
 
 	// 2. Check balance payment disabled
-	if req.OrderType == domain.PaymentOrderTypeBalance && s.configService.IsBalancePaymentDisabled(ctx) {
+	if s.configService.IsBalancePaymentDisabled(ctx) {
 		return nil, infraerrors.Forbidden("BALANCE_PAYMENT_DISABLED", "balance recharge has been disabled")
-	}
-
-	// 2a. Validate subscription plan if orderType = subscription
-	var plan *SubscriptionPlan
-	if req.OrderType == domain.PaymentOrderTypeSubscription {
-		if req.PlanID == nil {
-			return nil, infraerrors.BadRequest("PLAN_REQUIRED", "plan_id is required for subscription orders")
-		}
-		var err error
-		plan, err = s.planRepo.GetByID(ctx, *req.PlanID)
-		if err != nil {
-			return nil, ErrSubscriptionPlanNotFound
-		}
-		if !plan.ForSale {
-			return nil, infraerrors.BadRequest("PLAN_NOT_FOR_SALE", "this plan is not available for purchase")
-		}
-		// Validate subscription group: plan must be bound to a group, group must exist and be active
-		if plan.GroupID == nil {
-			return nil, infraerrors.BadRequest("PLAN_NO_GROUP", "subscription plan is not bound to a group")
-		}
-		group, err := s.groupRepo.GetByID(ctx, *plan.GroupID)
-		if err != nil {
-			return nil, infraerrors.BadRequest("SUBSCRIPTION_GROUP_GONE", "subscription group no longer exists")
-		}
-		if group.Status != domain.StatusActive {
-			return nil, infraerrors.BadRequest("SUBSCRIPTION_GROUP_INACTIVE", "subscription group is not active")
-		}
-		if group.SubscriptionType != domain.SubscriptionTypeSubscription {
-			return nil, infraerrors.BadRequest("GROUP_NOT_SUBSCRIPTION", "group is not configured for subscriptions")
-		}
 	}
 
 	// 4. Get user and verify active
@@ -588,11 +537,8 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 		return nil, err
 	}
 
-	// 3. Determine order amount: for subscriptions use plan price, for balance use request amount
+	// 3. Determine order amount
 	orderAmount := req.Amount
-	if plan != nil {
-		orderAmount = plan.Price
-	}
 
 	// 3a. Validate amount
 	minAmount := s.configService.GetMinRechargeAmount(ctx)
@@ -669,14 +615,6 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 		ClientIP:     stringPtrIfNotEmpty(req.ClientIP),
 		SrcHost:      stringPtrIfNotEmpty(req.SrcHost),
 		SrcURL:       stringPtrIfNotEmpty(req.SrcURL),
-		OrderType:    req.OrderType,
-	}
-
-	if plan != nil {
-		order.PlanID = req.PlanID
-		order.SubscriptionGroupID = plan.GroupID
-		days := computeValidityDays(plan.ValidityDays, plan.ValidityUnit)
-		order.SubscriptionDays = &days
 	}
 
 	if err := s.orderRepo.Create(txCtx, order); err != nil {
@@ -709,7 +647,7 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 		return nil, fmt.Errorf("create payment provider: %w", err)
 	}
 
-	subject := s.buildPaymentSubject(ctx, order, plan)
+	subject := s.buildPaymentSubject(ctx, order)
 	payResp, err := provider.CreatePayment(ctx, CreatePaymentRequest{
 		OrderID:     strconv.FormatInt(order.ID, 10),
 		Amount:      payAmount,
@@ -745,7 +683,6 @@ func (s *PaymentOrderService) CreateOrder(ctx context.Context, req CreateOrderRe
 		"amount":      orderAmount.String(),
 		"payAmount":   payAmount.String(),
 		"paymentType": req.PaymentType,
-		"orderType":   req.OrderType,
 	})
 	s.writeAuditLog(ctx, order.ID, "ORDER_CREATED", string(auditDetail))
 
@@ -1024,7 +961,7 @@ func (s *PaymentOrderService) executeFulfillment(ctx context.Context, orderID in
 }
 
 // RefundOrder initiates a refund for a paid order using two-phase commit:
-// Phase 1: Deduct balance / revoke subscription (safe side — can be restored if gateway fails)
+// Phase 1: Deduct balance (safe side — can be restored if gateway fails)
 // Phase 2: Call payment gateway refund
 // If gateway fails, restore the deduction. If restore also fails, mark REFUND_FAILED for manual intervention.
 func (s *PaymentOrderService) RefundOrder(ctx context.Context, req RefundOrderRequest) error {
@@ -1075,9 +1012,8 @@ func (s *PaymentOrderService) RefundOrder(ctx context.Context, req RefundOrderRe
 		return infraerrors.Conflict("ORDER_STATUS_CHANGED", "order status changed during refund")
 	}
 
-	// Phase 1: Deduct balance or revoke subscription (safe side — easier to restore than to claw back)
-	var revokedSubID int64
-	deductErr := s.deductForRefund(ctx, order, req.Amount, &revokedSubID)
+	// Phase 1: Deduct balance (safe side — easier to restore than to claw back)
+	deductErr := s.deductForRefund(ctx, order, req.Amount)
 	if deductErr != nil {
 		// Can't deduct — roll back status
 		_, _ = s.orderRepo.UpdateStatusCAS(ctx, req.OrderID, domain.PaymentOrderStatusRefunding, previousStatus)
@@ -1103,7 +1039,7 @@ func (s *PaymentOrderService) RefundOrder(ctx context.Context, req RefundOrderRe
 
 	if refundErr != nil {
 		// Gateway refund failed — try to restore what we deducted
-		restoreErr := s.restoreAfterRefundFailure(ctx, order, req.Amount, revokedSubID)
+		restoreErr := s.restoreAfterRefundFailure(ctx, order, req.Amount)
 		if restoreErr != nil {
 			// Both gateway and restore failed — mark as REFUND_FAILED for manual intervention
 			slog.Error("CRITICAL: refund gateway failed AND restore failed",
@@ -1223,70 +1159,23 @@ func (s *PaymentOrderService) RetryRecharge(ctx context.Context, orderID int64) 
 	return s.executeFulfillment(ctx, orderID, order)
 }
 
-// deductForRefund subtracts user balance (for balance orders) or revokes subscription (for subscription orders).
-func (s *PaymentOrderService) deductForRefund(ctx context.Context, order *PaymentOrder, refundAmount decimal.Decimal, revokedSubID *int64) error {
-	switch order.OrderType {
-	case domain.PaymentOrderTypeBalance:
-		// Deduct the refund amount from user balance
-		// Note: UpdateBalance uses float64; we use InexactFloat64 with 2-decimal rounding
-		// to minimize precision loss at the boundary.
-		return s.userService.UpdateBalance(ctx, order.UserID, -refundAmount.Round(2).InexactFloat64())
-
-	case domain.PaymentOrderTypeSubscription:
-		if order.SubscriptionGroupID == nil {
-			return fmt.Errorf("missing subscription group ID on order")
-		}
-		// Find and revoke the active subscription in this group
-		sub, err := s.subscriptionService.GetActiveSubscription(ctx, order.UserID, *order.SubscriptionGroupID)
-		if err != nil {
-			return fmt.Errorf("get active subscription: %w", err)
-		}
-		if sub != nil {
-			*revokedSubID = sub.ID
-			return s.subscriptionService.RevokeSubscription(ctx, sub.ID)
-		}
-		return nil // no active subscription to revoke
-
-	default:
-		return nil
-	}
+// deductForRefund subtracts user balance for balance orders.
+func (s *PaymentOrderService) deductForRefund(ctx context.Context, order *PaymentOrder, refundAmount decimal.Decimal) error {
+	// Deduct the refund amount from user balance
+	// Note: UpdateBalance uses float64; we use InexactFloat64 with 2-decimal rounding
+	// to minimize precision loss at the boundary.
+	return s.userService.UpdateBalance(ctx, order.UserID, -refundAmount.Round(2).InexactFloat64())
 }
 
 // restoreAfterRefundFailure reverses the deduction done in Phase 1.
-func (s *PaymentOrderService) restoreAfterRefundFailure(ctx context.Context, order *PaymentOrder, refundAmount decimal.Decimal, revokedSubID int64) error {
-	switch order.OrderType {
-	case domain.PaymentOrderTypeBalance:
-		return s.userService.UpdateBalance(ctx, order.UserID, refundAmount.Round(2).InexactFloat64())
-
-	case domain.PaymentOrderTypeSubscription:
-		if revokedSubID > 0 && order.SubscriptionGroupID != nil && order.SubscriptionDays != nil {
-			_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-				UserID:       order.UserID,
-				GroupID:      *order.SubscriptionGroupID,
-				ValidityDays: *order.SubscriptionDays,
-				AssignedBy:   0,
-				Notes:        fmt.Sprintf("restore after refund failure, order #%d", order.ID),
-			})
-			return err
-		}
-		return nil
-
-	default:
-		return nil
-	}
+func (s *PaymentOrderService) restoreAfterRefundFailure(ctx context.Context, order *PaymentOrder, refundAmount decimal.Decimal) error {
+	return s.userService.UpdateBalance(ctx, order.UserID, refundAmount.Round(2).InexactFloat64())
 }
 
 // HasActiveOrdersForProviderInstance checks if there are PENDING/PAID/RECHARGING orders
 // using the given provider instance. Used to prevent unsafe credential changes or deletion.
 func (s *PaymentOrderService) HasActiveOrdersForProviderInstance(ctx context.Context, instanceID int64) (bool, error) {
 	count, err := s.orderRepo.CountActiveByProviderInstanceID(ctx, instanceID)
-	return count > 0, err
-}
-
-// HasActiveOrdersForPlan checks if there are PENDING/PAID/RECHARGING orders referencing
-// the given subscription plan. Used to prevent deletion of plans with in-flight orders.
-func (s *PaymentOrderService) HasActiveOrdersForPlan(ctx context.Context, planID int64) (bool, error) {
-	count, err := s.orderRepo.CountActiveByPlanID(ctx, planID)
 	return count > 0, err
 }
 
@@ -1330,16 +1219,9 @@ func (s *PaymentOrderService) GetDashboardStats(ctx context.Context, days int) (
 
 // --- Internal helpers ---
 
-// fulfillOrder dispatches balance recharge or subscription assignment.
+// fulfillOrder dispatches balance recharge.
 func (s *PaymentOrderService) fulfillOrder(ctx context.Context, order *PaymentOrder) error {
-	switch order.OrderType {
-	case domain.PaymentOrderTypeBalance:
-		return s.fulfillBalanceOrder(ctx, order)
-	case domain.PaymentOrderTypeSubscription:
-		return s.fulfillSubscriptionOrder(ctx, order)
-	default:
-		return fmt.Errorf("unknown order type: %s", order.OrderType)
-	}
+	return s.fulfillBalanceOrder(ctx, order)
 }
 
 func (s *PaymentOrderService) fulfillBalanceOrder(ctx context.Context, order *PaymentOrder) error {
@@ -1359,35 +1241,6 @@ func (s *PaymentOrderService) fulfillBalanceOrder(ctx context.Context, order *Pa
 		return fmt.Errorf("redeem code: %w", err)
 	}
 	return nil
-}
-
-func (s *PaymentOrderService) fulfillSubscriptionOrder(ctx context.Context, order *PaymentOrder) error {
-	if order.SubscriptionGroupID == nil || order.SubscriptionDays == nil {
-		return fmt.Errorf("missing subscription group or days")
-	}
-
-	validityDays := *order.SubscriptionDays
-
-	// For renewals, recalculate validity days from the active subscription's expiry date
-	// (matching TypeScript behavior where month-based plans compute calendar days from expiry).
-	if order.PlanID != nil {
-		activeSub, err := s.subscriptionService.GetActiveSubscription(ctx, order.UserID, *order.SubscriptionGroupID)
-		if err == nil && activeSub != nil {
-			plan, err := s.planRepo.GetByID(ctx, *order.PlanID)
-			if err == nil && plan != nil {
-				validityDays = computeValidityDays(plan.ValidityDays, plan.ValidityUnit, activeSub.ExpiresAt)
-			}
-		}
-	}
-
-	_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-		UserID:       order.UserID,
-		GroupID:      *order.SubscriptionGroupID,
-		ValidityDays: validityDays,
-		AssignedBy:   0,
-		Notes:        fmt.Sprintf("payment order #%d", order.ID),
-	})
-	return err
 }
 
 // queryProviderPaymentStatus checks with the payment provider whether an order was actually paid.
@@ -1462,20 +1315,7 @@ func (s *PaymentOrderService) tryCancelAtProvider(ctx context.Context, order *Pa
 	}
 }
 
-func (s *PaymentOrderService) buildPaymentSubject(ctx context.Context, order *PaymentOrder, plan *SubscriptionPlan) string {
-	if plan != nil {
-		if plan.ProductName != nil && *plan.ProductName != "" {
-			return *plan.ProductName
-		}
-		// Subscription fallback: "Sub2API 订阅 {groupName}"
-		if plan.GroupID != nil {
-			if group, err := s.groupRepo.GetByID(ctx, *plan.GroupID); err == nil {
-				return "Sub2API 订阅 " + group.Name
-			}
-		}
-		return "Sub2API 订阅 " + plan.Name
-	}
-
+func (s *PaymentOrderService) buildPaymentSubject(ctx context.Context, order *PaymentOrder) string {
 	// Balance order: include the actual pay amount in the subject, matching TypeScript:
 	//   `${prefix || ''} ${payAmountStr} ${suffix || ''}`.trim()
 	payAmountStr := order.Amount.String()
@@ -1527,25 +1367,6 @@ func generateRechargeCode(orderID int64) string {
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
 	return prefix + idStr + hex.EncodeToString(b)
-}
-
-// computeValidityDays converts a validity value + unit to actual days.
-// Matches the TypeScript computeValidityDays: day=value, week=value*7, month=calendar diff.
-// The optional refDate controls the starting point for month calculations (defaults to now).
-func computeValidityDays(value int, unit string, refDate ...time.Time) int {
-	switch unit {
-	case "week":
-		return value * 7
-	case "month":
-		base := time.Now()
-		if len(refDate) > 0 && !refDate[0].IsZero() {
-			base = refDate[0]
-		}
-		target := base.AddDate(0, value, 0)
-		return int(target.Sub(base).Hours()/24 + 0.5)
-	default: // "day" or unrecognized
-		return value
-	}
 }
 
 // checkCancelRateLimit checks whether the user has exceeded the cancellation rate limit.

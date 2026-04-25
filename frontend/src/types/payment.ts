@@ -22,11 +22,6 @@ export type PaymentType =
   | 'usdt'
   | 'balance'
 
-export type OrderType =
-  | 'recharge'
-  | 'balance'
-  | 'subscription'
-
 // ==================== Core Entities ====================
 
 export interface PaymentOrder {
@@ -58,10 +53,6 @@ export interface PaymentOrder {
   client_ip: string
   src_host: string
   src_url: string
-  order_type: OrderType
-  plan_id: number | null
-  subscription_group_id: number | null
-  subscription_days: number | null
   provider_instance_id: number | null
   created_at: string
   updated_at: string
@@ -100,23 +91,6 @@ export interface PaymentChannel {
   features: string[]
   sort_order: number
   enabled: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface SubscriptionPlan {
-  id: number
-  group_id: number | null
-  name: string
-  description: string
-  price: number
-  original_price: number
-  validity_days: number
-  validity_unit: string
-  features: string[]
-  product_name: string
-  for_sale: boolean
-  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -161,8 +135,6 @@ export interface PaymentDashboardStats {
 export interface CreateOrderRequest {
   amount: string
   payment_type: string
-  order_type: OrderType
-  plan_id?: number
   return_url?: string
   src_host?: string
   src_url?: string

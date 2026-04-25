@@ -74,11 +74,9 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 	setOpsRequestContext(c, modelName, stream, body)
 	setOpsEndpointContext(c, "", int16(service.RequestTypeFromLegacy(stream, false)))
 
-	subscription, _ := middleware.GetSubscriptionFromContext(c)
-
 	// Billing check
 	requestStart := time.Now()
-	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
+	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group); err != nil {
 		status, _, message := billingErrorDetails(err)
 		googleError(c, status, message)
 		return
@@ -179,7 +177,6 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 				APIKey:             apiKey,
 				User:               apiKey.User,
 				Account:            account,
-				Subscription:       subscription,
 				InboundEndpoint:    inboundEndpoint,
 				UpstreamEndpoint:   upstreamEndpoint,
 				UserAgent:          userAgent,

@@ -31,16 +31,6 @@ const (
 	FieldIsExclusive = "is_exclusive"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldSubscriptionType holds the string denoting the subscription_type field in the database.
-	FieldSubscriptionType = "subscription_type"
-	// FieldDailyLimitUsd holds the string denoting the daily_limit_usd field in the database.
-	FieldDailyLimitUsd = "daily_limit_usd"
-	// FieldWeeklyLimitUsd holds the string denoting the weekly_limit_usd field in the database.
-	FieldWeeklyLimitUsd = "weekly_limit_usd"
-	// FieldMonthlyLimitUsd holds the string denoting the monthly_limit_usd field in the database.
-	FieldMonthlyLimitUsd = "monthly_limit_usd"
-	// FieldDefaultValidityDays holds the string denoting the default_validity_days field in the database.
-	FieldDefaultValidityDays = "default_validity_days"
 	// FieldImagePrice1k holds the string denoting the image_price_1k field in the database.
 	FieldImagePrice1k = "image_price_1k"
 	// FieldImagePrice2k holds the string denoting the image_price_2k field in the database.
@@ -79,8 +69,6 @@ const (
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
 	EdgeRedeemCodes = "redeem_codes"
-	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
-	EdgeSubscriptions = "subscriptions"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
 	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
@@ -89,8 +77,6 @@ const (
 	EdgeAllowedUsers = "allowed_users"
 	// EdgePaymentChannels holds the string denoting the payment_channels edge name in mutations.
 	EdgePaymentChannels = "payment_channels"
-	// EdgeSubscriptionPlans holds the string denoting the subscription_plans edge name in mutations.
-	EdgeSubscriptionPlans = "subscription_plans"
 	// EdgeAccountGroups holds the string denoting the account_groups edge name in mutations.
 	EdgeAccountGroups = "account_groups"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
@@ -111,13 +97,6 @@ const (
 	RedeemCodesInverseTable = "redeem_codes"
 	// RedeemCodesColumn is the table column denoting the redeem_codes relation/edge.
 	RedeemCodesColumn = "group_id"
-	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
-	SubscriptionsTable = "user_subscriptions"
-	// SubscriptionsInverseTable is the table name for the UserSubscription entity.
-	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
-	SubscriptionsInverseTable = "user_subscriptions"
-	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
-	SubscriptionsColumn = "group_id"
 	// UsageLogsTable is the table that holds the usage_logs relation/edge.
 	UsageLogsTable = "usage_logs"
 	// UsageLogsInverseTable is the table name for the UsageLog entity.
@@ -142,13 +121,6 @@ const (
 	PaymentChannelsInverseTable = "payment_channels"
 	// PaymentChannelsColumn is the table column denoting the payment_channels relation/edge.
 	PaymentChannelsColumn = "group_id"
-	// SubscriptionPlansTable is the table that holds the subscription_plans relation/edge.
-	SubscriptionPlansTable = "subscription_plans"
-	// SubscriptionPlansInverseTable is the table name for the SubscriptionPlan entity.
-	// It exists in this package in order to avoid circular dependency with the "subscriptionplan" package.
-	SubscriptionPlansInverseTable = "subscription_plans"
-	// SubscriptionPlansColumn is the table column denoting the subscription_plans relation/edge.
-	SubscriptionPlansColumn = "group_id"
 	// AccountGroupsTable is the table that holds the account_groups relation/edge.
 	AccountGroupsTable = "account_groups"
 	// AccountGroupsInverseTable is the table name for the AccountGroup entity.
@@ -176,11 +148,6 @@ var Columns = []string{
 	FieldRateMultiplier,
 	FieldIsExclusive,
 	FieldStatus,
-	FieldSubscriptionType,
-	FieldDailyLimitUsd,
-	FieldWeeklyLimitUsd,
-	FieldMonthlyLimitUsd,
-	FieldDefaultValidityDays,
 	FieldImagePrice1k,
 	FieldImagePrice2k,
 	FieldImagePrice4k,
@@ -243,12 +210,6 @@ var (
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
-	// DefaultSubscriptionType holds the default value on creation for the "subscription_type" field.
-	DefaultSubscriptionType string
-	// SubscriptionTypeValidator is a validator for the "subscription_type" field. It is called by the builders before save.
-	SubscriptionTypeValidator func(string) error
-	// DefaultDefaultValidityDays holds the default value on creation for the "default_validity_days" field.
-	DefaultDefaultValidityDays int
 	// DefaultSoraStorageQuotaBytes holds the default value on creation for the "sora_storage_quota_bytes" field.
 	DefaultSoraStorageQuotaBytes int64
 	// DefaultClaudeCodeOnly holds the default value on creation for the "claude_code_only" field.
@@ -309,31 +270,6 @@ func ByIsExclusive(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
-}
-
-// BySubscriptionType orders the results by the subscription_type field.
-func BySubscriptionType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSubscriptionType, opts...).ToFunc()
-}
-
-// ByDailyLimitUsd orders the results by the daily_limit_usd field.
-func ByDailyLimitUsd(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDailyLimitUsd, opts...).ToFunc()
-}
-
-// ByWeeklyLimitUsd orders the results by the weekly_limit_usd field.
-func ByWeeklyLimitUsd(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWeeklyLimitUsd, opts...).ToFunc()
-}
-
-// ByMonthlyLimitUsd orders the results by the monthly_limit_usd field.
-func ByMonthlyLimitUsd(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMonthlyLimitUsd, opts...).ToFunc()
-}
-
-// ByDefaultValidityDays orders the results by the default_validity_days field.
-func ByDefaultValidityDays(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDefaultValidityDays, opts...).ToFunc()
 }
 
 // ByImagePrice1k orders the results by the image_price_1k field.
@@ -434,20 +370,6 @@ func ByRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// BySubscriptionsCount orders the results by subscriptions count.
-func BySubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubscriptionsStep(), opts...)
-	}
-}
-
-// BySubscriptions orders the results by subscriptions terms.
-func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByUsageLogsCount orders the results by usage_logs count.
 func ByUsageLogsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -504,20 +426,6 @@ func ByPaymentChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// BySubscriptionPlansCount orders the results by subscription_plans count.
-func BySubscriptionPlansCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubscriptionPlansStep(), opts...)
-	}
-}
-
-// BySubscriptionPlans orders the results by subscription_plans terms.
-func BySubscriptionPlans(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionPlansStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByAccountGroupsCount orders the results by account_groups count.
 func ByAccountGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -559,13 +467,6 @@ func newRedeemCodesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
 	)
 }
-func newSubscriptionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
-	)
-}
 func newUsageLogsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -592,13 +493,6 @@ func newPaymentChannelsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentChannelsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PaymentChannelsTable, PaymentChannelsColumn),
-	)
-}
-func newSubscriptionPlansStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionPlansInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionPlansTable, SubscriptionPlansColumn),
 	)
 }
 func newAccountGroupsStep() *sqlgraph.Step {

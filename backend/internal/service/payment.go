@@ -38,11 +38,7 @@ type PaymentOrder struct {
 	ClientIP            *string
 	SrcHost             *string
 	SrcURL              *string
-	OrderType           string
-	PlanID              *int64
-	SubscriptionGroupID *int64
-	SubscriptionDays    *int
-	ProviderInstanceID  *int64
+	ProviderInstanceID *int64
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
@@ -86,24 +82,6 @@ type PaymentProviderInstance struct {
 	RefundEnabled  bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-}
-
-// SubscriptionPlan is the service-layer domain model for a subscription plan.
-type SubscriptionPlan struct {
-	ID            int64
-	GroupID       *int64
-	Name          string
-	Description   *string
-	Price         decimal.Decimal
-	OriginalPrice *decimal.Decimal
-	ValidityDays  int
-	ValidityUnit  string
-	Features      *string
-	ProductName   *string
-	ForSale       bool
-	SortOrder     int
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
 }
 
 // ProviderInstanceLimits represents parsed per-type limits for a provider instance.

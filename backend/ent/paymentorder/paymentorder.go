@@ -76,20 +76,10 @@ const (
 	FieldSrcHost = "src_host"
 	// FieldSrcURL holds the string denoting the src_url field in the database.
 	FieldSrcURL = "src_url"
-	// FieldOrderType holds the string denoting the order_type field in the database.
-	FieldOrderType = "order_type"
-	// FieldPlanID holds the string denoting the plan_id field in the database.
-	FieldPlanID = "plan_id"
-	// FieldSubscriptionGroupID holds the string denoting the subscription_group_id field in the database.
-	FieldSubscriptionGroupID = "subscription_group_id"
-	// FieldSubscriptionDays holds the string denoting the subscription_days field in the database.
-	FieldSubscriptionDays = "subscription_days"
 	// FieldProviderInstanceID holds the string denoting the provider_instance_id field in the database.
 	FieldProviderInstanceID = "provider_instance_id"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
-	// EdgePlan holds the string denoting the plan edge name in mutations.
-	EdgePlan = "plan"
 	// EdgeProviderInstance holds the string denoting the provider_instance edge name in mutations.
 	EdgeProviderInstance = "provider_instance"
 	// EdgeAuditLogs holds the string denoting the audit_logs edge name in mutations.
@@ -103,13 +93,6 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_id"
-	// PlanTable is the table that holds the plan relation/edge.
-	PlanTable = "payment_orders"
-	// PlanInverseTable is the table name for the SubscriptionPlan entity.
-	// It exists in this package in order to avoid circular dependency with the "subscriptionplan" package.
-	PlanInverseTable = "subscription_plans"
-	// PlanColumn is the table column denoting the plan relation/edge.
-	PlanColumn = "plan_id"
 	// ProviderInstanceTable is the table that holds the provider_instance relation/edge.
 	ProviderInstanceTable = "payment_orders"
 	// ProviderInstanceInverseTable is the table name for the PaymentProviderInstance entity.
@@ -160,10 +143,6 @@ var Columns = []string{
 	FieldClientIP,
 	FieldSrcHost,
 	FieldSrcURL,
-	FieldOrderType,
-	FieldPlanID,
-	FieldSubscriptionGroupID,
-	FieldSubscriptionDays,
 	FieldProviderInstanceID,
 }
 
@@ -204,10 +183,6 @@ var (
 	ClientIPValidator func(string) error
 	// SrcHostValidator is a validator for the "src_host" field. It is called by the builders before save.
 	SrcHostValidator func(string) error
-	// DefaultOrderType holds the default value on creation for the "order_type" field.
-	DefaultOrderType string
-	// OrderTypeValidator is a validator for the "order_type" field. It is called by the builders before save.
-	OrderTypeValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the PaymentOrder queries.
@@ -373,26 +348,6 @@ func BySrcURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSrcURL, opts...).ToFunc()
 }
 
-// ByOrderType orders the results by the order_type field.
-func ByOrderType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOrderType, opts...).ToFunc()
-}
-
-// ByPlanID orders the results by the plan_id field.
-func ByPlanID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPlanID, opts...).ToFunc()
-}
-
-// BySubscriptionGroupID orders the results by the subscription_group_id field.
-func BySubscriptionGroupID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSubscriptionGroupID, opts...).ToFunc()
-}
-
-// BySubscriptionDays orders the results by the subscription_days field.
-func BySubscriptionDays(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSubscriptionDays, opts...).ToFunc()
-}
-
 // ByProviderInstanceID orders the results by the provider_instance_id field.
 func ByProviderInstanceID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProviderInstanceID, opts...).ToFunc()
@@ -402,13 +357,6 @@ func ByProviderInstanceID(opts ...sql.OrderTermOption) OrderOption {
 func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByPlanField orders the results by plan field.
-func ByPlanField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPlanStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -437,13 +385,6 @@ func newUserStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
-	)
-}
-func newPlanStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PlanInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, PlanTable, PlanColumn),
 	)
 }
 func newProviderInstanceStep() *sqlgraph.Step {

@@ -889,7 +889,6 @@ async function handleCreateOrder() {
     const result = await paymentAPI.createOrder({
       amount: effectiveAmount.value.toString(),
       payment_type: selectedPaymentType.value,
-      order_type: 'balance',
       src_host: window.location.hostname,
       return_url: window.location.href
     })

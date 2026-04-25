@@ -40,11 +40,9 @@ const (
 	opsErrInsufficientQuota          = "insufficient_quota"
 
 	// 上游错误码常量 — 错误分类 (normalizeOpsErrorType / classifyOpsPhase / classifyOpsIsBusinessLimited)
-	opsCodeInsufficientBalance  = "INSUFFICIENT_BALANCE"
-	opsCodeUsageLimitExceeded   = "USAGE_LIMIT_EXCEEDED"
-	opsCodeSubscriptionNotFound = "SUBSCRIPTION_NOT_FOUND"
-	opsCodeSubscriptionInvalid  = "SUBSCRIPTION_INVALID"
-	opsCodeUserInactive         = "USER_INACTIVE"
+	opsCodeInsufficientBalance = "INSUFFICIENT_BALANCE"
+	opsCodeUsageLimitExceeded  = "USAGE_LIMIT_EXCEEDED"
+	opsCodeUserInactive        = "USER_INACTIVE"
 )
 
 const (
@@ -1069,7 +1067,6 @@ func isKnownOpsErrorType(t string) bool {
 		"authentication_error",
 		"rate_limit_error",
 		"billing_error",
-		"subscription_error",
 		"upstream_error",
 		"overloaded_error",
 		"api_error",
@@ -1085,10 +1082,8 @@ func normalizeOpsErrorType(errType string, code string) string {
 		return errType
 	}
 	switch strings.TrimSpace(code) {
-	case opsCodeInsufficientBalance:
+	case opsCodeInsufficientBalance, opsCodeUsageLimitExceeded:
 		return "billing_error"
-	case opsCodeUsageLimitExceeded, opsCodeSubscriptionNotFound, opsCodeSubscriptionInvalid:
-		return "subscription_error"
 	default:
 		return "api_error"
 	}
@@ -1099,14 +1094,14 @@ func classifyOpsPhase(errType, message, code string) string {
 	// Standardized phases: request|auth|routing|upstream|network|internal
 	// Map billing/concurrency/response => request; scheduling => routing.
 	switch strings.TrimSpace(code) {
-	case opsCodeInsufficientBalance, opsCodeUsageLimitExceeded, opsCodeSubscriptionNotFound, opsCodeSubscriptionInvalid:
+	case opsCodeInsufficientBalance, opsCodeUsageLimitExceeded:
 		return "request"
 	}
 
 	switch errType {
 	case "authentication_error":
 		return "auth"
-	case "billing_error", "subscription_error":
+	case "billing_error":
 		return "request"
 	case "rate_limit_error":
 		if strings.Contains(msg, "concurrency") || strings.Contains(msg, "pending") || strings.Contains(msg, "queue") {
@@ -1129,7 +1124,7 @@ func classifyOpsPhase(errType, message, code string) string {
 
 func classifyOpsSeverity(errType string, status int) string {
 	switch errType {
-	case "invalid_request_error", "authentication_error", "billing_error", "subscription_error":
+	case "invalid_request_error", "authentication_error", "billing_error":
 		return "P3"
 	}
 	if status >= 500 {
@@ -1153,7 +1148,7 @@ func classifyOpsIsRetryable(errType string, statusCode int) bool {
 	case "rate_limit_error":
 		// May be transient (upstream or queue); retry can help.
 		return true
-	case "billing_error", "subscription_error":
+	case "billing_error":
 		return false
 	case "upstream_error", "overloaded_error":
 		return statusCode >= 500 || statusCode == 429 || statusCode == 529
@@ -1164,7 +1159,7 @@ func classifyOpsIsRetryable(errType string, statusCode int) bool {
 
 func classifyOpsIsBusinessLimited(errType, phase, code string, status int, message string) bool {
 	switch strings.TrimSpace(code) {
-	case opsCodeInsufficientBalance, opsCodeUsageLimitExceeded, opsCodeSubscriptionNotFound, opsCodeSubscriptionInvalid, opsCodeUserInactive:
+	case opsCodeInsufficientBalance, opsCodeUsageLimitExceeded, opsCodeUserInactive:
 		return true
 	}
 	if phase == "billing" || phase == "concurrency" {

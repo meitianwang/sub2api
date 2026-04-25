@@ -30,8 +30,6 @@ const (
 	FieldUpstreamModel = "upstream_model"
 	// FieldGroupID holds the string denoting the group_id field in the database.
 	FieldGroupID = "group_id"
-	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
-	FieldSubscriptionID = "subscription_id"
 	// FieldInputTokens holds the string denoting the input_tokens field in the database.
 	FieldInputTokens = "input_tokens"
 	// FieldOutputTokens holds the string denoting the output_tokens field in the database.
@@ -92,8 +90,6 @@ const (
 	EdgeAccount = "account"
 	// EdgeGroup holds the string denoting the group edge name in mutations.
 	EdgeGroup = "group"
-	// EdgeSubscription holds the string denoting the subscription edge name in mutations.
-	EdgeSubscription = "subscription"
 	// Table holds the table name of the usagelog in the database.
 	Table = "usage_logs"
 	// UserTable is the table that holds the user relation/edge.
@@ -124,13 +120,6 @@ const (
 	GroupInverseTable = "groups"
 	// GroupColumn is the table column denoting the group relation/edge.
 	GroupColumn = "group_id"
-	// SubscriptionTable is the table that holds the subscription relation/edge.
-	SubscriptionTable = "usage_logs"
-	// SubscriptionInverseTable is the table name for the UserSubscription entity.
-	// It exists in this package in order to avoid circular dependency with the "usersubscription" package.
-	SubscriptionInverseTable = "user_subscriptions"
-	// SubscriptionColumn is the table column denoting the subscription relation/edge.
-	SubscriptionColumn = "subscription_id"
 )
 
 // Columns holds all SQL columns for usagelog fields.
@@ -144,7 +133,6 @@ var Columns = []string{
 	FieldRequestedModel,
 	FieldUpstreamModel,
 	FieldGroupID,
-	FieldSubscriptionID,
 	FieldInputTokens,
 	FieldOutputTokens,
 	FieldCacheCreationTokens,
@@ -286,11 +274,6 @@ func ByUpstreamModel(opts ...sql.OrderTermOption) OrderOption {
 // ByGroupID orders the results by the group_id field.
 func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGroupID, opts...).ToFunc()
-}
-
-// BySubscriptionID orders the results by the subscription_id field.
-func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
 }
 
 // ByInputTokens orders the results by the input_tokens field.
@@ -450,13 +433,6 @@ func ByGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newGroupStep(), sql.OrderByField(field, opts...))
 	}
 }
-
-// BySubscriptionField orders the results by subscription field.
-func BySubscriptionField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionStep(), sql.OrderByField(field, opts...))
-	}
-}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -483,12 +459,5 @@ func newGroupStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GroupInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, GroupTable, GroupColumn),
-	)
-}
-func newSubscriptionStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionTable, SubscriptionColumn),
 	)
 }

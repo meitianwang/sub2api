@@ -75,7 +75,6 @@ type RedeemCodeResponse struct {
 type RedeemService struct {
 	redeemRepo           RedeemCodeRepository
 	userRepo             UserRepository
-	subscriptionService  *SubscriptionService
 	cache                RedeemCache
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
@@ -86,7 +85,6 @@ type RedeemService struct {
 func NewRedeemService(
 	redeemRepo RedeemCodeRepository,
 	userRepo UserRepository,
-	subscriptionService *SubscriptionService,
 	cache RedeemCache,
 	billingCacheService *BillingCacheService,
 	entClient *dbent.Client,
@@ -95,7 +93,6 @@ func NewRedeemService(
 	return &RedeemService{
 		redeemRepo:           redeemRepo,
 		userRepo:             userRepo,
-		subscriptionService:  subscriptionService,
 		cache:                cache,
 		billingCacheService:  billingCacheService,
 		entClient:            entClient,
@@ -282,11 +279,6 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 		return nil, ErrRedeemCodeUsed
 	}
 
-	// 验证兑换码类型的前置条件
-	if redeemCode.Type == RedeemTypeSubscription && redeemCode.GroupID == nil {
-		return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
-	}
-
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -323,22 +315,6 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 
 	case RedeemTypeConcurrency:
 		// 并发数兑换已废弃，跳过
-
-	case RedeemTypeSubscription:
-		validityDays := redeemCode.ValidityDays
-		if validityDays <= 0 {
-			validityDays = 30
-		}
-		_, _, err := s.subscriptionService.AssignOrExtendSubscription(txCtx, &AssignSubscriptionInput{
-			UserID:       userID,
-			GroupID:      *redeemCode.GroupID,
-			ValidityDays: validityDays,
-			AssignedBy:   0, // 系统分配
-			Notes:        fmt.Sprintf("通过兑换码 %s 兑换", redeemCode.Code),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("assign or extend subscription: %w", err)
-		}
 
 	default:
 		return nil, fmt.Errorf("unsupported redeem type: %s", redeemCode.Type)
@@ -379,24 +355,6 @@ func (s *RedeemService) invalidateRedeemCaches(ctx context.Context, userID int64
 	case RedeemTypeConcurrency:
 		if s.authCacheInvalidator != nil {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
-		}
-		if s.billingCacheService == nil {
-			return
-		}
-	case RedeemTypeSubscription:
-		if s.authCacheInvalidator != nil {
-			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
-		}
-		if s.billingCacheService == nil {
-			return
-		}
-		if redeemCode.GroupID != nil {
-			groupID := *redeemCode.GroupID
-			go func() {
-				cacheCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				_ = s.billingCacheService.InvalidateSubscription(cacheCtx, userID, groupID)
-			}()
 		}
 	}
 }

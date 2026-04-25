@@ -12,8 +12,7 @@ import (
 )
 
 type billingCacheWorkerStub struct {
-	balanceUpdates      int64
-	subscriptionUpdates int64
+	balanceUpdates int64
 }
 
 func (b *billingCacheWorkerStub) GetUserBalance(ctx context.Context, userID int64) (float64, error) {
@@ -31,24 +30,6 @@ func (b *billingCacheWorkerStub) DeductUserBalance(ctx context.Context, userID i
 }
 
 func (b *billingCacheWorkerStub) InvalidateUserBalance(ctx context.Context, userID int64) error {
-	return nil
-}
-
-func (b *billingCacheWorkerStub) GetSubscriptionCache(ctx context.Context, userID, groupID int64) (*SubscriptionCacheData, error) {
-	return nil, errors.New("not implemented")
-}
-
-func (b *billingCacheWorkerStub) SetSubscriptionCache(ctx context.Context, userID, groupID int64, data *SubscriptionCacheData) error {
-	atomic.AddInt64(&b.subscriptionUpdates, 1)
-	return nil
-}
-
-func (b *billingCacheWorkerStub) UpdateSubscriptionUsage(ctx context.Context, userID, groupID int64, cost float64) error {
-	atomic.AddInt64(&b.subscriptionUpdates, 1)
-	return nil
-}
-
-func (b *billingCacheWorkerStub) InvalidateSubscriptionCache(ctx context.Context, userID, groupID int64) error {
 	return nil
 }
 
@@ -70,7 +51,7 @@ func (b *billingCacheWorkerStub) InvalidateAPIKeyRateLimit(ctx context.Context, 
 
 func TestBillingCacheServiceQueueHighLoad(t *testing.T) {
 	cache := &billingCacheWorkerStub{}
-	svc := NewBillingCacheService(cache, nil, nil, nil, &config.Config{})
+	svc := NewBillingCacheService(cache, nil, nil, &config.Config{})
 	t.Cleanup(svc.Stop)
 
 	start := time.Now()
@@ -79,20 +60,14 @@ func TestBillingCacheServiceQueueHighLoad(t *testing.T) {
 	}
 	require.Less(t, time.Since(start), 2*time.Second)
 
-	svc.QueueUpdateSubscriptionUsage(1, 2, 1.5)
-
 	require.Eventually(t, func() bool {
 		return atomic.LoadInt64(&cache.balanceUpdates) > 0
-	}, 2*time.Second, 10*time.Millisecond)
-
-	require.Eventually(t, func() bool {
-		return atomic.LoadInt64(&cache.subscriptionUpdates) > 0
 	}, 2*time.Second, 10*time.Millisecond)
 }
 
 func TestBillingCacheServiceEnqueueAfterStopReturnsFalse(t *testing.T) {
 	cache := &billingCacheWorkerStub{}
-	svc := NewBillingCacheService(cache, nil, nil, nil, &config.Config{})
+	svc := NewBillingCacheService(cache, nil, nil, &config.Config{})
 	svc.Stop()
 
 	enqueued := svc.enqueueCacheWrite(cacheWriteTask{

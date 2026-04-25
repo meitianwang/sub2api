@@ -28,10 +28,9 @@ const (
 
 // Redeem type constants
 const (
-	RedeemTypeBalance      = domain.RedeemTypeBalance
-	RedeemTypeConcurrency  = domain.RedeemTypeConcurrency
-	RedeemTypeSubscription = domain.RedeemTypeSubscription
-	RedeemTypeInvitation   = domain.RedeemTypeInvitation
+	RedeemTypeBalance     = domain.RedeemTypeBalance
+	RedeemTypeConcurrency = domain.RedeemTypeConcurrency
+	RedeemTypeInvitation  = domain.RedeemTypeInvitation
 )
 
 // PromoCode status constants
@@ -44,19 +43,6 @@ const (
 const (
 	AdjustmentTypeAdminBalance     = domain.AdjustmentTypeAdminBalance     // 管理员调整余额
 	AdjustmentTypeAdminConcurrency = domain.AdjustmentTypeAdminConcurrency // 管理员调整并发数
-)
-
-// Group subscription type constants
-const (
-	SubscriptionTypeStandard     = domain.SubscriptionTypeStandard     // 标准计费模式（按余额扣费）
-	SubscriptionTypeSubscription = domain.SubscriptionTypeSubscription // 订阅模式（按限额控制）
-)
-
-// Subscription status constants
-const (
-	SubscriptionStatusActive    = domain.SubscriptionStatusActive
-	SubscriptionStatusExpired   = domain.SubscriptionStatusExpired
-	SubscriptionStatusSuspended = domain.SubscriptionStatusSuspended
 )
 
 // LinuxDoConnectSyntheticEmailDomain 是 LinuxDo Connect 用户的合成邮箱后缀（RFC 保留域名）。
@@ -110,8 +96,7 @@ const (
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"   // deprecated: 新用户默认并发量（已废弃）
-	SettingKeyDefaultBalance       = "default_balance"       // 新用户默认余额
-	SettingKeyDefaultSubscriptions = "default_subscriptions" // 新用户默认订阅列表（JSON）
+	SettingKeyDefaultBalance = "default_balance" // 新用户默认余额
 
 	// 管理员 API Key
 	SettingKeyAdminAPIKey = "admin_api_key" // 全局管理员 API Key（用于外部系统集成）

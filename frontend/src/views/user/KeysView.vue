@@ -100,7 +100,6 @@
                 <GroupBadge
                   v-if="row.group"
                   :name="row.group.name"
-                  :subscription-type="row.group.subscription_type"
                 />
                 <span v-else class="text-sm text-gray-400 dark:text-dark-500">{{
                   t('keys.noGroup')
@@ -407,16 +406,12 @@
               <GroupBadge
                 v-if="option"
                 :name="(option as unknown as GroupOption).label"
-                :subscription-type="(option as unknown as GroupOption).subscriptionType"
-
               />
               <span v-else class="text-gray-400">{{ t('keys.selectGroup') }}</span>
             </template>
             <template #option="{ option, selected }">
               <GroupOptionItem
                 :name="(option as unknown as GroupOption).label"
-                :subscription-type="(option as unknown as GroupOption).subscriptionType"
-
                 :description="(option as unknown as GroupOption).description"
                 :selected="selected"
               />
@@ -927,8 +922,6 @@
           >
             <GroupOptionItem
               :name="option.label"
-              :subscription-type="option.subscriptionType"
-
               :description="option.description"
               :selected="
                 selectedKeyForGroup?.group_id === option.value ||
@@ -970,7 +963,7 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import EndpointPopover from '@/components/keys/EndpointPopover.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
-	import type { ApiKey, Group, PublicSettings, SubscriptionType } from '@/types'
+	import type { ApiKey, Group, PublicSettings } from '@/types'
 import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
@@ -986,7 +979,6 @@ interface GroupOption {
   value: number
   label: string
   description: string | null
-  subscriptionType: SubscriptionType
 }
 
 const appStore = useAppStore()
@@ -1110,13 +1102,11 @@ const onStatusFilterChange = (value: string | number | boolean | null) => {
   onFilterChange()
 }
 
-// Convert groups to Select options format with rate multiplier and subscription type
 const groupOptions = computed(() =>
   groups.value.map((group) => ({
     value: group.id,
     label: group.name,
-    description: group.description,
-    subscriptionType: group.subscription_type
+    description: group.description
   }))
 )
 

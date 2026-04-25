@@ -75,26 +75,13 @@ func mustCreateGroup(t *testing.T, client *dbent.Client, g *service.Group) *serv
 	if g.Status == "" {
 		g.Status = service.StatusActive
 	}
-	if g.SubscriptionType == "" {
-		g.SubscriptionType = service.SubscriptionTypeStandard
-	}
 
 	create := client.Group.Create().
 		SetName(g.Name).
 		SetStatus(g.Status).
-		SetSubscriptionType(g.SubscriptionType).
 		SetIsExclusive(g.IsExclusive)
 	if g.Description != "" {
 		create.SetDescription(g.Description)
-	}
-	if g.DailyLimitUSD != nil {
-		create.SetDailyLimitUsd(*g.DailyLimitUSD)
-	}
-	if g.WeeklyLimitUSD != nil {
-		create.SetWeeklyLimitUsd(*g.WeeklyLimitUSD)
-	}
-	if g.MonthlyLimitUSD != nil {
-		create.SetMonthlyLimitUsd(*g.MonthlyLimitUSD)
 	}
 	if !g.CreatedAt.IsZero() {
 		create.SetCreatedAt(g.CreatedAt)
@@ -352,61 +339,6 @@ func mustCreateRedeemCode(t *testing.T, client *dbent.Client, c *service.RedeemC
 	c.ID = created.ID
 	c.CreatedAt = created.CreatedAt
 	return c
-}
-
-func mustCreateSubscription(t *testing.T, client *dbent.Client, s *service.UserSubscription) *service.UserSubscription {
-	t.Helper()
-	ctx := context.Background()
-
-	if s.Status == "" {
-		s.Status = service.SubscriptionStatusActive
-	}
-	now := time.Now()
-	if s.StartsAt.IsZero() {
-		s.StartsAt = now.Add(-1 * time.Hour)
-	}
-	if s.ExpiresAt.IsZero() {
-		s.ExpiresAt = now.Add(24 * time.Hour)
-	}
-	if s.AssignedAt.IsZero() {
-		s.AssignedAt = now
-	}
-	if s.CreatedAt.IsZero() {
-		s.CreatedAt = now
-	}
-	if s.UpdatedAt.IsZero() {
-		s.UpdatedAt = now
-	}
-
-	create := client.UserSubscription.Create().
-		SetUserID(s.UserID).
-		SetGroupID(s.GroupID).
-		SetStartsAt(s.StartsAt).
-		SetExpiresAt(s.ExpiresAt).
-		SetStatus(s.Status).
-		SetAssignedAt(s.AssignedAt).
-		SetNotes(s.Notes).
-		SetDailyUsageUsd(s.DailyUsageUSD).
-		SetWeeklyUsageUsd(s.WeeklyUsageUSD).
-		SetMonthlyUsageUsd(s.MonthlyUsageUSD)
-
-	if s.AssignedBy != nil {
-		create.SetAssignedBy(*s.AssignedBy)
-	}
-	if !s.CreatedAt.IsZero() {
-		create.SetCreatedAt(s.CreatedAt)
-	}
-	if !s.UpdatedAt.IsZero() {
-		create.SetUpdatedAt(s.UpdatedAt)
-	}
-
-	created, err := create.Save(ctx)
-	require.NoError(t, err, "create user subscription")
-
-	s.ID = created.ID
-	s.CreatedAt = created.CreatedAt
-	s.UpdatedAt = created.UpdatedAt
-	return s
 }
 
 func mustBindAccountToGroup(t *testing.T, client *dbent.Client, accountID, groupID int64, priority int) {

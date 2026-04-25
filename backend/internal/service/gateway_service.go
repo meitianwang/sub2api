@@ -336,8 +336,7 @@ type GatewayService struct {
 	usageLogRepo          UsageLogRepository
 	usageBillingRepo      UsageBillingRepository
 	userRepo              UserRepository
-	userSubRepo           UserSubscriptionRepository
-	cache GatewayCache
+	cache                 GatewayCache
 	digestStore           *DigestSessionStore
 	cfg                   *config.Config
 	schedulerSnapshot     *SchedulerSnapshotService
@@ -365,7 +364,6 @@ func NewGatewayService(
 	usageLogRepo UsageLogRepository,
 	usageBillingRepo UsageBillingRepository,
 	userRepo UserRepository,
-	userSubRepo UserSubscriptionRepository,
 	cache GatewayCache,
 	cfg *config.Config,
 	schedulerSnapshot *SchedulerSnapshotService,
@@ -390,8 +388,7 @@ func NewGatewayService(
 		usageLogRepo:         usageLogRepo,
 		usageBillingRepo:     usageBillingRepo,
 		userRepo:             userRepo,
-		userSubRepo: userSubRepo,
-		cache:       cache,
+		cache:                cache,
 		digestStore:          digestStore,
 		cfg:                  cfg,
 		schedulerSnapshot:    schedulerSnapshot,
@@ -403,8 +400,8 @@ func NewGatewayService(
 		deferredService:      deferredService,
 		claudeTokenProvider:  claudeTokenProvider,
 		sessionLimitCache:    sessionLimitCache,
-		rpmCache:       rpmCache,
-		settingService: settingService,
+		rpmCache:             rpmCache,
+		settingService:       settingService,
 		modelsListCache:      gocache.New(modelsListTTL, time.Minute),
 		modelsListCacheTTL:   modelsListTTL,
 		responseHeaderFilter: compileResponseHeaderFilter(cfg),
@@ -1906,7 +1903,6 @@ type RecordUsageInput struct {
 	APIKey             *APIKey
 	User               *User
 	Account            *Account
-	Subscription       *UserSubscription  // 可选：订阅信息
 	InboundEndpoint    string             // 入站端点（客户端请求路径）
 	UpstreamEndpoint   string             // 上游端点（标准化后的上游路径）
 	UserAgent          string             // 请求的 User-Agent
@@ -1936,14 +1932,12 @@ type postUsageBillingParams struct {
 	User               *User
 	APIKey             *APIKey
 	Account            *Account
-	Subscription       *UserSubscription
 	RequestPayloadHash string
-	IsSubscriptionBill bool
 	APIKeyService      APIKeyQuotaUpdater
 }
 
 // postUsageBilling 统一处理使用量记录后的扣费逻辑：
-//   - 订阅/余额扣费
+//   - 余额扣费
 //   - API Key 配额更新
 //   - API Key 限速用量更新
 //   - 账号配额用量更新（账号口径：TotalCost × 账号计费倍率）
@@ -1953,21 +1947,12 @@ func postUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *bill
 
 	cost := p.Cost
 
-	// 1. 订阅 / 余额扣费
-	if p.IsSubscriptionBill {
-		if cost.TotalCost > 0 {
-			if err := deps.userSubRepo.IncrementUsage(billingCtx, p.Subscription.ID, cost.TotalCost); err != nil {
-				slog.Error("increment subscription usage failed", "subscription_id", p.Subscription.ID, "error", err)
-			}
-			deps.billingCacheService.QueueUpdateSubscriptionUsage(p.User.ID, *p.APIKey.GroupID, cost.TotalCost)
+	// 1. 余额扣费
+	if cost.ActualCost > 0 {
+		if err := deps.userRepo.DeductBalance(billingCtx, p.User.ID, cost.ActualCost); err != nil {
+			slog.Error("deduct balance failed", "user_id", p.User.ID, "error", err)
 		}
-	} else {
-		if cost.ActualCost > 0 {
-			if err := deps.userRepo.DeductBalance(billingCtx, p.User.ID, cost.ActualCost); err != nil {
-				slog.Error("deduct balance failed", "user_id", p.User.ID, "error", err)
-			}
-			deps.billingCacheService.QueueDeductBalance(p.User.ID, cost.ActualCost)
-		}
+		deps.billingCacheService.QueueDeductBalance(p.User.ID, cost.ActualCost)
 	}
 
 	// 2. API Key 配额
@@ -2054,15 +2039,9 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 		if usageLog.ReasoningEffort != nil {
 			cmd.ReasoningEffort = *usageLog.ReasoningEffort
 		}
-		if usageLog.SubscriptionID != nil {
-			cmd.SubscriptionID = usageLog.SubscriptionID
-		}
 	}
 
-	if p.IsSubscriptionBill && p.Subscription != nil && p.Cost.TotalCost > 0 {
-		cmd.SubscriptionID = &p.Subscription.ID
-		cmd.SubscriptionCost = p.Cost.TotalCost
-	} else if p.Cost.ActualCost > 0 {
+	if p.Cost.ActualCost > 0 {
 		cmd.BalanceCost = p.Cost.ActualCost
 	}
 
@@ -2119,11 +2098,7 @@ func finalizePostUsageBilling(p *postUsageBillingParams, deps *billingDeps) {
 		return
 	}
 
-	if p.IsSubscriptionBill {
-		if p.Cost.TotalCost > 0 && p.User != nil && p.APIKey != nil && p.APIKey.GroupID != nil {
-			deps.billingCacheService.QueueUpdateSubscriptionUsage(p.User.ID, *p.APIKey.GroupID, p.Cost.TotalCost)
-		}
-	} else if p.Cost.ActualCost > 0 && p.User != nil {
+	if p.Cost.ActualCost > 0 && p.User != nil {
 		deps.billingCacheService.QueueDeductBalance(p.User.ID, p.Cost.ActualCost)
 	}
 
@@ -2156,7 +2131,6 @@ func detachStreamUpstreamContext(ctx context.Context, stream bool) (context.Cont
 type billingDeps struct {
 	accountRepo         AccountRepository
 	userRepo            UserRepository
-	userSubRepo         UserSubscriptionRepository
 	billingCacheService *BillingCacheService
 	deferredService     *DeferredService
 }
@@ -2165,7 +2139,6 @@ func (s *GatewayService) billingDeps() *billingDeps {
 	return &billingDeps{
 		accountRepo:         s.accountRepo,
 		userRepo:            s.userRepo,
-		userSubRepo:         s.userSubRepo,
 		billingCacheService: s.billingCacheService,
 		deferredService:     s.deferredService,
 	}
@@ -2196,13 +2169,12 @@ func writeUsageLogBestEffort(ctx context.Context, repo UsageLogRepository, usage
 	}
 }
 
-// RecordUsage 记录使用量并扣费（或更新订阅用量）
+// RecordUsage 记录使用量并扣费
 func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInput) error {
 	result := input.Result
 	apiKey := input.APIKey
 	user := input.User
 	account := input.Account
-	subscription := input.Subscription
 
 	// 强制缓存计费：将 input_tokens 转为 cache_read_input_tokens
 	// 用于粘性会话切换时的特殊计费处理
@@ -2265,13 +2237,6 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		}
 	}
 
-	// 判断计费方式：订阅模式 vs 余额模式
-	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
-	billingType := BillingTypeBalance
-	if isSubscriptionBilling {
-		billingType = BillingTypeSubscription
-	}
-
 	// 创建使用日志
 	durationMs := int(result.Duration.Milliseconds())
 	var imageSize *string
@@ -2310,7 +2275,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		RateMultiplier:        fixedRateMultiplier,
 		AccountRateMultiplier: &fixedRateMultiplier,
 		UpstreamCost:          cost.UpstreamCost,
-		BillingType:           billingType,
+		BillingType:           BillingTypeBalance,
 		Stream:                result.Stream,
 		DurationMs:            &durationMs,
 		FirstTokenMs:          result.FirstTokenMs,
@@ -2331,12 +2296,9 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		usageLog.IPAddress = &input.IPAddress
 	}
 
-	// 添加分组和订阅关联
+	// 添加分组关联
 	if apiKey.GroupID != nil {
 		usageLog.GroupID = apiKey.GroupID
-	}
-	if subscription != nil {
-		usageLog.SubscriptionID = &subscription.ID
 	}
 
 	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
@@ -2352,9 +2314,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			User:               user,
 			APIKey:             apiKey,
 			Account:            account,
-			Subscription:       subscription,
 			RequestPayloadHash: resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
-			IsSubscriptionBill: isSubscriptionBilling,
 			APIKeyService:      input.APIKeyService,
 		}, s.billingDeps(), s.usageBillingRepo)
 		return err
@@ -2374,7 +2334,6 @@ type RecordUsageLongContextInput struct {
 	APIKey                *APIKey
 	User                  *User
 	Account               *Account
-	Subscription          *UserSubscription  // 可选：订阅信息
 	InboundEndpoint       string             // 入站端点（客户端请求路径）
 	UpstreamEndpoint      string             // 上游端点（标准化后的上游路径）
 	UserAgent             string             // 请求的 User-Agent
@@ -2392,7 +2351,6 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	apiKey := input.APIKey
 	user := input.User
 	account := input.Account
-	subscription := input.Subscription
 
 	// 强制缓存计费：将 input_tokens 转为 cache_read_input_tokens
 	// 用于粘性会话切换时的特殊计费处理
@@ -2452,13 +2410,6 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		}
 	}
 
-	// 判断计费方式：订阅模式 vs 余额模式
-	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
-	billingType := BillingTypeBalance
-	if isSubscriptionBilling {
-		billingType = BillingTypeSubscription
-	}
-
 	// 创建使用日志
 	durationMs := int(result.Duration.Milliseconds())
 	var imageSize *string
@@ -2493,7 +2444,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		RateMultiplier:        fixedRateMultiplier,
 		AccountRateMultiplier: &fixedRateMultiplier,
 		UpstreamCost:          cost.UpstreamCost,
-		BillingType:           billingType,
+		BillingType:           BillingTypeBalance,
 		Stream:                result.Stream,
 		DurationMs:            &durationMs,
 		FirstTokenMs:          result.FirstTokenMs,
@@ -2513,12 +2464,9 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		usageLog.IPAddress = &input.IPAddress
 	}
 
-	// 添加分组和订阅关联
+	// 添加分组关联
 	if apiKey.GroupID != nil {
 		usageLog.GroupID = apiKey.GroupID
-	}
-	if subscription != nil {
-		usageLog.SubscriptionID = &subscription.ID
 	}
 
 	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
@@ -2534,9 +2482,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 			User:               user,
 			APIKey:             apiKey,
 			Account:            account,
-			Subscription:       subscription,
 			RequestPayloadHash: resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
-			IsSubscriptionBill: isSubscriptionBilling,
 			APIKeyService:      input.APIKeyService,
 		}, s.billingDeps(), s.usageBillingRepo)
 		return err

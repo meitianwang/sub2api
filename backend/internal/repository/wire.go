@@ -54,7 +54,6 @@ var ProviderSet = wire.NewSet(
 	NewDashboardAggregationRepository,
 	NewSettingRepository,
 	NewOpsRepository,
-	NewUserSubscriptionRepository,
 	NewUserAttributeDefinitionRepository,
 	NewUserAttributeValueRepository,
 	NewErrorPassthroughRepository,
@@ -63,7 +62,6 @@ var ProviderSet = wire.NewSet(
 	NewPaymentAuditLogRepository,
 	NewPaymentChannelRepository,
 	NewPaymentProviderInstanceRepository,
-	NewSubscriptionPlanRepository,
 
 	// Cache implementations
 	NewGatewayCache,

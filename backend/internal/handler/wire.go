@@ -23,7 +23,6 @@ func ProvideAdminHandlers(
 	settingHandler *admin.SettingHandler,
 	opsHandler *admin.OpsHandler,
 	systemHandler *admin.SystemHandler,
-	subscriptionHandler *admin.SubscriptionHandler,
 	usageHandler *admin.UsageHandler,
 	userAttributeHandler *admin.UserAttributeHandler,
 	errorPassthroughHandler *admin.ErrorPassthroughHandler,
@@ -35,7 +34,6 @@ func ProvideAdminHandlers(
 	paymentConfigHandler *admin.PaymentConfigHandler,
 	paymentProviderInstanceHandler *admin.PaymentProviderInstanceHandler,
 	paymentChannelHandler *admin.PaymentChannelHandler,
-	paymentSubscriptionPlanHandler *admin.PaymentSubscriptionPlanHandler,
 	paymentDashboardHandler *admin.PaymentDashboardHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
@@ -53,7 +51,6 @@ func ProvideAdminHandlers(
 		Setting:                 settingHandler,
 		Ops:                     opsHandler,
 		System:                  systemHandler,
-		Subscription:            subscriptionHandler,
 		Usage:                   usageHandler,
 		UserAttribute:           userAttributeHandler,
 		ErrorPassthrough:        errorPassthroughHandler,
@@ -65,7 +62,6 @@ func ProvideAdminHandlers(
 		PaymentConfig:           paymentConfigHandler,
 		PaymentProviderInstance: paymentProviderInstanceHandler,
 		PaymentChannel:          paymentChannelHandler,
-		PaymentSubscriptionPlan: paymentSubscriptionPlanHandler,
 		PaymentDashboard:        paymentDashboardHandler,
 	}
 }
@@ -87,7 +83,6 @@ func ProvideHandlers(
 	apiKeyHandler *APIKeyHandler,
 	usageHandler *UsageHandler,
 	redeemHandler *RedeemHandler,
-	subscriptionHandler *SubscriptionHandler,
 	announcementHandler *AnnouncementHandler,
 	adminHandlers *AdminHandlers,
 	gatewayHandler *GatewayHandler,
@@ -104,7 +99,6 @@ func ProvideHandlers(
 		APIKey:         apiKeyHandler,
 		Usage:          usageHandler,
 		Redeem:         redeemHandler,
-		Subscription:   subscriptionHandler,
 		Announcement:   announcementHandler,
 		Admin:          adminHandlers,
 		Gateway:        gatewayHandler,
@@ -123,7 +117,6 @@ var ProviderSet = wire.NewSet(
 	NewAPIKeyHandler,
 	NewUsageHandler,
 	NewRedeemHandler,
-	NewSubscriptionHandler,
 	NewAnnouncementHandler,
 	NewGatewayHandler,
 	NewTotpHandler,
@@ -148,7 +141,6 @@ var ProviderSet = wire.NewSet(
 	admin.NewSettingHandler,
 	admin.NewOpsHandler,
 	ProvideSystemHandler,
-	admin.NewSubscriptionHandler,
 	admin.NewUsageHandler,
 	admin.NewUserAttributeHandler,
 	admin.NewErrorPassthroughHandler,
@@ -160,7 +152,6 @@ var ProviderSet = wire.NewSet(
 	admin.NewPaymentConfigHandler,
 	admin.NewPaymentProviderInstanceHandler,
 	admin.NewPaymentChannelHandler,
-	admin.NewPaymentSubscriptionPlanHandler,
 	admin.NewPaymentDashboardHandler,
 
 	// AdminHandlers and Handlers constructors

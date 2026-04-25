@@ -35,22 +35,6 @@ func (s *billingCacheMissStub) InvalidateUserBalance(ctx context.Context, userID
 	return nil
 }
 
-func (s *billingCacheMissStub) GetSubscriptionCache(ctx context.Context, userID, groupID int64) (*SubscriptionCacheData, error) {
-	return nil, errors.New("cache miss")
-}
-
-func (s *billingCacheMissStub) SetSubscriptionCache(ctx context.Context, userID, groupID int64, data *SubscriptionCacheData) error {
-	return nil
-}
-
-func (s *billingCacheMissStub) UpdateSubscriptionUsage(ctx context.Context, userID, groupID int64, cost float64) error {
-	return nil
-}
-
-func (s *billingCacheMissStub) InvalidateSubscriptionCache(ctx context.Context, userID, groupID int64) error {
-	return nil
-}
-
 func (s *billingCacheMissStub) GetAPIKeyRateLimit(ctx context.Context, keyID int64) (*APIKeyRateLimitCacheData, error) {
 	return nil, errors.New("cache miss")
 }
@@ -92,7 +76,7 @@ func TestBillingCacheServiceGetUserBalance_Singleflight(t *testing.T) {
 		delay:   80 * time.Millisecond,
 		balance: 12.34,
 	}
-	svc := NewBillingCacheService(cache, userRepo, nil, nil, &config.Config{})
+	svc := NewBillingCacheService(cache, userRepo, nil, &config.Config{})
 	t.Cleanup(svc.Stop)
 
 	const goroutines = 16

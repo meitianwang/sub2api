@@ -32,7 +32,6 @@ export interface User {
   balance: number // User balance for API usage
   status: 'active' | 'disabled' // Account status
   allowed_groups: number[] | null // Allowed group IDs (null = all non-exclusive groups)
-  subscriptions?: UserSubscription[] // User's active subscriptions
   created_at: string
   updated_at: string
 }
@@ -154,7 +153,7 @@ export interface UpdateSubscriptionRequest {
 export type AnnouncementStatus = 'draft' | 'active' | 'archived'
 export type AnnouncementNotifyMode = 'silent' | 'popup'
 
-export type AnnouncementConditionType = 'subscription' | 'balance'
+export type AnnouncementConditionType = 'balance'
 
 export type AnnouncementOperator = 'in' | 'gt' | 'gte' | 'lt' | 'lte' | 'eq'
 
@@ -355,18 +354,12 @@ export interface PaginationConfig {
 
 // ==================== API Key & Group Types ====================
 
-export type SubscriptionType = 'standard' | 'subscription'
-
 export interface Group {
   id: number
   name: string
   description: string | null
   is_exclusive: boolean
   status: 'active' | 'inactive'
-  subscription_type: SubscriptionType
-  daily_limit_usd: number | null
-  weekly_limit_usd: number | null
-  monthly_limit_usd: number | null
   image_price_1k: number | null
   image_price_2k: number | null
   image_price_4k: number | null
@@ -466,10 +459,6 @@ export interface CreateGroupRequest {
   name: string
   description?: string | null
   is_exclusive?: boolean
-  subscription_type?: SubscriptionType
-  daily_limit_usd?: number | null
-  weekly_limit_usd?: number | null
-  monthly_limit_usd?: number | null
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
@@ -494,10 +483,6 @@ export interface UpdateGroupRequest {
   description?: string | null
   is_exclusive?: boolean
   status?: 'active' | 'inactive'
-  subscription_type?: SubscriptionType
-  daily_limit_usd?: number | null
-  weekly_limit_usd?: number | null
-  monthly_limit_usd?: number | null
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
@@ -920,7 +905,7 @@ export interface AdminDataImportResult {
 
 // ==================== Usage & Redeem Types ====================
 
-export type RedeemCodeType = 'balance' | 'subscription' | 'invitation'
+export type RedeemCodeType = 'balance' | 'invitation'
 export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2'
 
 export interface UsageLog {
@@ -936,7 +921,6 @@ export interface UsageLog {
   upstream_endpoint?: string | null
 
   group_id: number | null
-  subscription_id: number | null
 
   input_tokens: number
   output_tokens: number
@@ -974,7 +958,6 @@ export interface UsageLog {
   user?: User
   api_key?: ApiKey
   group?: Group
-  subscription?: UserSubscription
 }
 
 export interface UsageLogAccountSummary {
@@ -1223,66 +1206,6 @@ export interface UpdateUserRequest {
 export interface ChangePasswordRequest {
   old_password: string
   new_password: string
-}
-
-// ==================== User Subscription Types ====================
-
-export interface UserSubscription {
-  id: number
-  user_id: number
-  group_id: number
-  status: 'active' | 'expired' | 'revoked'
-  daily_usage_usd: number
-  weekly_usage_usd: number
-  monthly_usage_usd: number
-  daily_window_start: string | null
-  weekly_window_start: string | null
-  monthly_window_start: string | null
-  created_at: string
-  updated_at: string
-  expires_at: string | null
-  user?: User
-  group?: Group
-}
-
-export interface SubscriptionProgress {
-  subscription_id: number
-  daily: {
-    used: number
-    limit: number | null
-    percentage: number
-    reset_in_seconds: number | null
-  } | null
-  weekly: {
-    used: number
-    limit: number | null
-    percentage: number
-    reset_in_seconds: number | null
-  } | null
-  monthly: {
-    used: number
-    limit: number | null
-    percentage: number
-    reset_in_seconds: number | null
-  } | null
-  expires_at: string | null
-  days_remaining: number | null
-}
-
-export interface AssignSubscriptionRequest {
-  user_id: number
-  group_id: number
-  validity_days?: number
-}
-
-export interface BulkAssignSubscriptionRequest {
-  user_ids: number[]
-  group_id: number
-  validity_days?: number
-}
-
-export interface ExtendSubscriptionRequest {
-  days: number
 }
 
 // ==================== Query Parameters ====================

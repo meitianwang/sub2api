@@ -53,7 +53,6 @@ func (s *GroupRepoSuite) TestCreate() {
 		Name:             "test-create",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 
 	err := s.repo.Create(s.ctx, group)
@@ -76,7 +75,6 @@ func (s *GroupRepoSuite) TestGetByIDLite_DoesNotUseAccountCount() {
 		Name:             "lite-group",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -94,7 +92,6 @@ func (s *GroupRepoSuite) TestUpdate() {
 		Name:             "original",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -112,7 +109,6 @@ func (s *GroupRepoSuite) TestDelete() {
 		Name:             "to-delete",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -134,13 +130,11 @@ func (s *GroupRepoSuite) TestList() {
 		Name:             "g1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	groups, page, err := s.repo.List(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10})
@@ -154,13 +148,11 @@ func (s *GroupRepoSuite) TestListWithFilters_Status() {
 		Name:             "g1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
 		IsExclusive:      false,
 		Status:           service.StatusDisabled,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	groups, _, err := s.repo.ListWithFilters(s.ctx, pagination.PaginationParams{Page: 1, PageSize: 10}, service.StatusDisabled, "", nil)
@@ -174,13 +166,11 @@ func (s *GroupRepoSuite) TestListWithFilters_IsExclusive() {
 		Name:             "g1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "g2",
 		IsExclusive:      true,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	isExclusive := true
@@ -216,7 +206,6 @@ func (s *GroupRepoSuite) TestListWithFilters_Search() {
 			Name:             name,
 			IsExclusive:      false,
 			Status:           service.StatusActive,
-			SubscriptionType: service.SubscriptionTypeStandard,
 		}
 	}
 
@@ -298,19 +287,16 @@ func (s *GroupRepoSuite) TestUpdateSortOrders_BatchCaseWhen() {
 		Name:             "sort-g1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g2 := &service.Group{
 		Name:             "sort-g2",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g3 := &service.Group{
 		Name:             "sort-g3",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, g1))
 	s.Require().NoError(s.repo.Create(s.ctx, g2))
@@ -340,7 +326,6 @@ func (s *GroupRepoSuite) TestUpdateSortOrders_MissingGroupNoPartialUpdate() {
 		Name:             "sort-no-partial",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, g1))
 
@@ -365,13 +350,11 @@ func (s *GroupRepoSuite) TestListWithFilters_AccountCount() {
 		Name:             "g1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	g2 := &service.Group{
 		Name:             "g2",
 		IsExclusive:      true,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, g1))
 	s.Require().NoError(s.repo.Create(s.ctx, g2))
@@ -408,13 +391,11 @@ func (s *GroupRepoSuite) TestListActive() {
 		Name:             "active1",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 	s.Require().NoError(s.repo.Create(s.ctx, &service.Group{
 		Name:             "inactive1",
 		IsExclusive:      false,
 		Status:           service.StatusDisabled,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	groups, err := s.repo.ListActive(s.ctx)
@@ -438,7 +419,6 @@ func (s *GroupRepoSuite) TestExistsByName() {
 		Name:             "existing-group",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}))
 
 	exists, err := s.repo.ExistsByName(s.ctx, "existing-group")
@@ -457,7 +437,6 @@ func (s *GroupRepoSuite) TestGetAccountCount() {
 		Name:             "g-count",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -493,7 +472,6 @@ func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
 		Name:             "g-empty",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -509,7 +487,6 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID() {
 		Name:             "g-del",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, g))
 	var accountID int64
@@ -537,7 +514,6 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID_MultipleAccounts() {
 		Name:             "g-multi",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, g))
 
@@ -577,7 +553,6 @@ func (s *GroupRepoSuite) TestDelete_SoftDelete_NotVisibleInList() {
 		Name:             "to-soft-delete",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
@@ -606,7 +581,6 @@ func (s *GroupRepoSuite) TestDelete_SoftDeletedGroup_lockForUpdate() {
 		Name:             "lock-soft-delete",
 		IsExclusive:      false,
 		Status:           service.StatusActive,
-		SubscriptionType: service.SubscriptionTypeStandard,
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 

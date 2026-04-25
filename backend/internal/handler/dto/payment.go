@@ -18,10 +18,6 @@ type UserPaymentOrderDTO struct {
 	FeeRate             *string `json:"fee_rate,omitempty"`
 	Status              string  `json:"status"`
 	PaymentType         string  `json:"payment_type"`
-	OrderType           string  `json:"order_type"`
-	PlanID              *int64  `json:"plan_id,omitempty"`
-	SubscriptionGroupID *int64  `json:"subscription_group_id,omitempty"`
-	SubscriptionDays    *int    `json:"subscription_days,omitempty"`
 	RefundAmount        *string `json:"refund_amount,omitempty"`
 	RefundReason        *string `json:"refund_reason,omitempty"`
 	RefundAt            *string `json:"refund_at,omitempty"`
@@ -47,10 +43,6 @@ type PaymentOrderDTO struct {
 	Status              string   `json:"status"`
 	PaymentType         string   `json:"payment_type"`
 	PaymentTradeNo      *string  `json:"payment_trade_no,omitempty"`
-	OrderType           string   `json:"order_type"`
-	PlanID              *int64   `json:"plan_id,omitempty"`
-	SubscriptionGroupID *int64   `json:"subscription_group_id,omitempty"`
-	SubscriptionDays    *int     `json:"subscription_days,omitempty"`
 	ProviderInstanceID  *int64   `json:"provider_instance_id,omitempty"`
 	RefundAmount        *string  `json:"refund_amount,omitempty"`
 	RefundReason        *string  `json:"refund_reason,omitempty"`
@@ -129,23 +121,6 @@ type PaymentChannelDTO struct {
 	UpdatedAt      string  `json:"updated_at"`
 }
 
-type SubscriptionPlanDTO struct {
-	ID            int64   `json:"id"`
-	GroupID       *int64  `json:"group_id,omitempty"`
-	Name          string  `json:"name"`
-	Description   *string `json:"description,omitempty"`
-	Price         string  `json:"price"`
-	OriginalPrice *string `json:"original_price,omitempty"`
-	ValidityDays  int     `json:"validity_days"`
-	ValidityUnit  string  `json:"validity_unit"`
-	Features      *string `json:"features,omitempty"`
-	ProductName   *string `json:"product_name,omitempty"`
-	ForSale       bool    `json:"for_sale"`
-	SortOrder     int     `json:"sort_order"`
-	CreatedAt     string  `json:"created_at"`
-	UpdatedAt     string  `json:"updated_at"`
-}
-
 type PaymentDashboardDTO struct {
 	TodayAmount     string                       `json:"today_amount"`
 	TodayOrderCount int                          `json:"today_order_count"`
@@ -191,10 +166,6 @@ func UserPaymentOrderFromService(o *service.PaymentOrder) *UserPaymentOrderDTO {
 		FeeRate:             decimalPtrToStringPtr(o.FeeRate),
 		Status:              o.Status,
 		PaymentType:         o.PaymentType,
-		OrderType:           o.OrderType,
-		PlanID:              o.PlanID,
-		SubscriptionGroupID: o.SubscriptionGroupID,
-		SubscriptionDays:    o.SubscriptionDays,
 		RefundAmount:        decimalPtrToStringPtr(o.RefundAmount),
 		RefundReason:        o.RefundReason,
 		RefundAt:            formatTimePtr(o.RefundAt),
@@ -225,10 +196,6 @@ func PaymentOrderFromService(o *service.PaymentOrder) *PaymentOrderDTO {
 		Status:              o.Status,
 		PaymentType:         o.PaymentType,
 		PaymentTradeNo:      o.PaymentTradeNo,
-		OrderType:           o.OrderType,
-		PlanID:              o.PlanID,
-		SubscriptionGroupID: o.SubscriptionGroupID,
-		SubscriptionDays:    o.SubscriptionDays,
 		ProviderInstanceID:  o.ProviderInstanceID,
 		RefundAmount:        decimalPtrToStringPtr(o.RefundAmount),
 		RefundReason:        o.RefundReason,
@@ -279,24 +246,3 @@ func PaymentChannelFromService(c *service.PaymentChannel) *PaymentChannelDTO {
 	}
 }
 
-func SubscriptionPlanFromService(p *service.SubscriptionPlan) *SubscriptionPlanDTO {
-	if p == nil {
-		return nil
-	}
-	return &SubscriptionPlanDTO{
-		ID:            p.ID,
-		GroupID:       p.GroupID,
-		Name:          p.Name,
-		Description:   p.Description,
-		Price:         p.Price.String(),
-		OriginalPrice: decimalPtrToStringPtr(p.OriginalPrice),
-		ValidityDays:  p.ValidityDays,
-		ValidityUnit:  p.ValidityUnit,
-		Features:      p.Features,
-		ProductName:   p.ProductName,
-		ForSale:       p.ForSale,
-		SortOrder:     p.SortOrder,
-		CreatedAt:     formatTime(p.CreatedAt),
-		UpdatedAt:     formatTime(p.UpdatedAt),
-	}
-}

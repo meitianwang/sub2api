@@ -20,12 +20,10 @@ const (
 )
 
 const (
-	AnnouncementConditionTypeSubscription = domain.AnnouncementConditionTypeSubscription
-	AnnouncementConditionTypeBalance      = domain.AnnouncementConditionTypeBalance
+	AnnouncementConditionTypeBalance = domain.AnnouncementConditionTypeBalance
 )
 
 const (
-	AnnouncementOperatorIn  = domain.AnnouncementOperatorIn
 	AnnouncementOperatorGT  = domain.AnnouncementOperatorGT
 	AnnouncementOperatorGTE = domain.AnnouncementOperatorGTE
 	AnnouncementOperatorLT  = domain.AnnouncementOperatorLT

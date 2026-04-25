@@ -9,7 +9,6 @@ import type {
   PaymentOrder,
   PaymentConfig,
   PaymentChannel,
-  SubscriptionPlan,
   CreateOrderRequest,
   CreateOrderResponse
 } from '@/types/payment'
@@ -82,14 +81,6 @@ export async function listChannels(): Promise<PaymentChannel[]> {
   return data
 }
 
-/**
- * List available subscription plans
- */
-export async function listPlans(): Promise<SubscriptionPlan[]> {
-  const { data } = await apiClient.get<SubscriptionPlan[]>('/pay/subscription-plans')
-  return data
-}
-
 export const paymentAPI = {
   createOrder,
   listOrders,
@@ -97,8 +88,7 @@ export const paymentAPI = {
   cancelOrder,
   requestRefund,
   getConfig,
-  listChannels,
-  listPlans
+  listChannels
 }
 
 export default paymentAPI
