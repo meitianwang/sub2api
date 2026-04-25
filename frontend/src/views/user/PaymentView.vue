@@ -120,16 +120,10 @@
                       ]"
                     >
                       <!-- Payment Method Icon -->
-                      <div
-                        :class="[
-                          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg',
-                          paymentMethodIconBg(method.payment_type)
-                        ]"
-                      >
-                        <span class="text-sm font-bold text-white">
-                          {{ paymentMethodIconText(method.payment_type) }}
-                        </span>
-                      </div>
+                      <PaymentBrandIcon
+                        :type="method.payment_type"
+                        class="h-8 w-8"
+                      />
                       <div class="text-left">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">
                           {{ getPaymentMethodLabel(method.payment_type) }}
@@ -236,16 +230,10 @@
                   class="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-dark-800"
                 >
                   <div class="flex items-center gap-3">
-                    <div
-                      :class="[
-                        'flex h-10 w-10 items-center justify-center rounded-xl',
-                        paymentMethodIconBg(order.payment_type)
-                      ]"
-                    >
-                      <span class="text-xs font-bold text-white">
-                        {{ paymentMethodIconText(order.payment_type) }}
-                      </span>
-                    </div>
+                    <PaymentBrandIcon
+                      :type="order.payment_type"
+                      class="h-10 w-10"
+                    />
                     <div>
                       <div class="flex items-center gap-2">
                         <span class="text-sm font-semibold text-gray-900 dark:text-white">
@@ -318,16 +306,10 @@
                 >
                   <img :src="qrDataUrl" alt="QR Code" class="h-56 w-56" />
                   <!-- Payment method icon overlay -->
-                  <div
-                    :class="[
-                      'absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg shadow-md',
-                      paymentMethodIconBg(activeOrder.order.payment_type)
-                    ]"
-                  >
-                    <span class="text-xs font-bold text-white">
-                      {{ paymentMethodIconText(activeOrder.order.payment_type) }}
-                    </span>
-                  </div>
+                  <PaymentBrandIcon
+                    :type="activeOrder.order.payment_type"
+                    class="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 shadow-md"
+                  />
                 </div>
               </div>
 
@@ -527,6 +509,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
+import PaymentBrandIcon from '@/components/icons/PaymentBrandIcon.vue'
 import QRCode from 'qrcode'
 
 // ==================== Composables ====================
@@ -720,41 +703,14 @@ const resultMessage = computed(() => {
 
 // ==================== Payment Method Helpers ====================
 
-function paymentMethodIconBg(type: PaymentType | string): string {
-  switch (type) {
-    case 'alipay':
-      return 'bg-[#00AEEF]'
-    case 'wechat':
-      return 'bg-[#2BB741]'
-    case 'stripe':
-      return 'bg-[#635bff]'
-    case 'usdt':
-      return 'bg-emerald-500'
-    default:
-      return 'bg-gray-500'
-  }
-}
-
-function paymentMethodIconText(type: PaymentType | string): string {
-  switch (type) {
-    case 'alipay':
-      return 'A'
-    case 'wechat':
-      return 'W'
-    case 'stripe':
-      return 'S'
-    case 'usdt':
-      return 'U'
-    default:
-      return '?'
-  }
-}
-
 function paymentMethodSelectedClass(type: PaymentType | string): string {
   switch (type) {
     case 'alipay':
+    case 'alipay_direct':
       return 'border-cyan-400 bg-cyan-50 dark:border-cyan-500 dark:bg-cyan-900/20'
     case 'wechat':
+    case 'wxpay':
+    case 'wxpay_direct':
       return 'border-green-500 bg-green-50 dark:border-green-500 dark:bg-green-900/20'
     case 'stripe':
       return 'border-[#635bff] bg-violet-50 dark:border-[#635bff] dark:bg-violet-900/20'
