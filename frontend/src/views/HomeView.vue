@@ -74,9 +74,7 @@
               <span class="home-badge-dot"></span>
               AI Gateway Infrastructure
             </div>
-            <h1 class="home-hero-title">
-              <img src="/logo-wide.png" :alt="siteName" class="home-hero-logo" />
-            </h1>
+            <h1 class="home-hero-title">{{ siteName }}</h1>
             <p class="home-hero-subtitle">{{ siteSubtitle }}</p>
 
             <!-- CTA -->
@@ -527,17 +525,6 @@ onMounted(() => {
   line-height: 1.05;
   color: #ffffff;
   margin-bottom: 1.5rem;
-}
-
-.home-hero-logo {
-  display: inline-block;
-  height: clamp(70px, 11vw, 110px);
-  width: auto;
-  max-width: 100%;
-  padding: 0.5rem 1.25rem;
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 18px;
-  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.25);
 }
 
 /* Subtitle */
