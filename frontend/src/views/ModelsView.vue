@@ -37,9 +37,7 @@
             <div class="flex flex-wrap gap-2">
               <button v-for="tab in providerTabs" :key="tab.value" @click="activeProvider = tab.value"
                 :class="['filter-tag', activeProvider === tab.value ? 'filter-tag-active' : '']">
-                <span v-if="tab.icon" :class="['flex h-4 w-4 items-center justify-center rounded', tab.iconClass]">
-                  <span class="text-[8px] font-bold text-white">{{ tab.icon }}</span>
-                </span>
+                <ProviderBrandIcon v-if="tab.brand" :provider="tab.brand" class="h-4 w-4" />
                 {{ tab.label }} <span class="opacity-50">{{ tab.count }}</span>
               </button>
             </div>
@@ -113,9 +111,7 @@
             <!-- Top -->
             <div class="mb-2 flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div :class="['flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full', providerIconBg(item.provider)]">
-                  <span class="text-xs font-bold text-white">{{ providerLetter(item.provider) }}</span>
-                </div>
+                <ProviderBrandIcon :provider="item.provider" circle class="h-9 w-9" />
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.display_name }}</h3>
               </div>
               <button @click="copy(item.model_id)" class="rounded p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-dark-700" :title="t('models.copyId')">
@@ -152,6 +148,7 @@ import { useAuthStore, useAppStore } from '@/stores'
 import { apiClient } from '@/api/client'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
+import ProviderBrandIcon from '@/components/icons/ProviderBrandIcon.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -199,10 +196,10 @@ const providerTabs = computed(() => {
   for (const [p, s] of Object.entries(seen)) counts[p] = s.size
   const total = new Set(items.value.map(i => i.model_id)).size
   return [
-    { value: 'all', label: t('models.filters.all'), count: total, icon: null, iconClass: '' },
-    { value: 'claude', label: 'Claude', count: counts.claude || 0, icon: 'C', iconClass: 'bg-gradient-to-br from-orange-400 to-orange-500' },
-    { value: 'openai', label: 'OpenAI', count: counts.openai || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-green-500 to-green-600' },
-    { value: 'gemini', label: 'Google', count: counts.gemini || 0, icon: 'G', iconClass: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+    { value: 'all', label: t('models.filters.all'), count: total, brand: '' },
+    { value: 'claude', label: 'Claude', count: counts.claude || 0, brand: 'claude' },
+    { value: 'openai', label: 'OpenAI', count: counts.openai || 0, brand: 'openai' },
+    { value: 'gemini', label: 'Google', count: counts.gemini || 0, brand: 'gemini' },
   ]
 })
 
@@ -239,13 +236,6 @@ function fmtPrice(p: number): string {
   if (p < 1) return p.toFixed(3)
   return p.toFixed(2)
 }
-function providerIconBg(p: string) {
-  return p === 'claude' ? 'bg-gradient-to-br from-orange-400 to-orange-500'
-    : p === 'openai' ? 'bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-500 dark:to-gray-700'
-    : p === 'gemini' ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-    : 'bg-gradient-to-br from-gray-400 to-gray-500'
-}
-function providerLetter(p: string) { return p === 'claude' ? 'C' : p === 'openai' ? 'G' : p === 'gemini' ? 'G' : '?' }
 function providerLabel(p: string) { return p === 'claude' ? 'Anthropic' : p === 'openai' ? 'OpenAI' : p === 'gemini' ? 'Google' : p }
 function providerBadge(p: string) {
   return p === 'claude' ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
