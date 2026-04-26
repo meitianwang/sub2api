@@ -811,7 +811,9 @@ func (h *GatewayHandler) mapUpstreamError(statusCode int) (int, string, string) 
 	case 529:
 		return http.StatusServiceUnavailable, "overloaded_error", "Upstream service overloaded, please retry later"
 	case 500, 502, 503, 504:
-		return http.StatusBadGateway, "upstream_error", "Upstream service temporarily unavailable"
+		// 用 503 而不是 502：Cloudflare 默认会把 502 替换成纯白页吞掉 JSON body，
+		// 503 通常透传给客户端，方便定位真实的上游错误。
+		return http.StatusServiceUnavailable, "upstream_error", "Upstream service temporarily unavailable"
 	default:
 		return http.StatusBadGateway, "upstream_error", "Upstream request failed"
 	}
