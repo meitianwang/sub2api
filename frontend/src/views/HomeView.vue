@@ -184,23 +184,17 @@
         <section class="home-providers">
           <div class="home-providers-list">
             <div class="home-provider home-provider-active">
-              <div class="home-provider-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
-                <span>C</span>
-              </div>
+              <ProviderBrandIcon provider="claude" class="home-provider-brand" />
               <span>{{ t('home.providers.claude') }}</span>
               <span class="home-provider-badge">{{ t('home.providers.supported') }}</span>
             </div>
             <div class="home-provider home-provider-active">
-              <div class="home-provider-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
-                <span>G</span>
-              </div>
+              <ProviderBrandIcon provider="openai" class="home-provider-brand" />
               <span>GPT</span>
               <span class="home-provider-badge">{{ t('home.providers.supported') }}</span>
             </div>
             <div class="home-provider home-provider-active">
-              <div class="home-provider-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
-                <span>G</span>
-              </div>
+              <ProviderBrandIcon provider="gemini" class="home-provider-brand" />
               <span>{{ t('home.providers.gemini') }}</span>
               <span class="home-provider-badge">{{ t('home.providers.supported') }}</span>
             </div>
@@ -239,6 +233,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
+import ProviderBrandIcon from '@/components/icons/ProviderBrandIcon.vue'
 
 const { t } = useI18n()
 
@@ -798,6 +793,11 @@ onMounted(() => {
   font-size: 11px;
   font-weight: 800;
   color: white;
+}
+.home-provider-brand {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px !important;
 }
 
 .home-provider-badge {
