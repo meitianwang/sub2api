@@ -134,6 +134,19 @@ export default {
     },
     filters: {
       all: 'All',
+    },
+    detail: {
+      modelId: 'Model ID',
+      provider: 'Provider',
+      group: 'Token Group',
+      pricing: 'Pricing',
+      example: 'Example Call',
+      formatAnthropic: 'Anthropic Format',
+      formatOpenAI: 'OpenAI Format',
+      formatGemini: 'Gemini Format',
+      copy: 'Copy',
+      copied: 'Copied',
+      close: 'Close',
     }
   },
 

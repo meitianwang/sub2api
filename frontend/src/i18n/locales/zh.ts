@@ -134,6 +134,19 @@ export default {
     },
     filters: {
       all: '全部',
+    },
+    detail: {
+      modelId: '模型 ID',
+      provider: '供应商',
+      group: '令牌分组',
+      pricing: '价格',
+      example: '调用示例',
+      formatAnthropic: 'Anthropic 格式',
+      formatOpenAI: 'OpenAI 格式',
+      formatGemini: 'Gemini 格式',
+      copy: '复制',
+      copied: '已复制',
+      close: '关闭',
     }
   },
 

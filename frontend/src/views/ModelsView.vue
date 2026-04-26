@@ -107,14 +107,15 @@
         <!-- Cards -->
         <div v-else-if="filtered.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div v-for="item in filtered" :key="item.model_id + '-' + item.group_id"
-            class="group rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-dark-600">
+            @click="openDrawer(item)"
+            class="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-800 dark:hover:border-dark-600">
             <!-- Top -->
             <div class="mb-2 flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
                 <ProviderBrandIcon :provider="item.provider" circle class="h-9 w-9" />
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.display_name }}</h3>
               </div>
-              <button @click="copy(item.model_id)" class="rounded p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-dark-700" :title="t('models.copyId')">
+              <button @click.stop="copy(item.model_id)" class="rounded p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-dark-700" :title="t('models.copyId')">
                 <Icon :name="copiedId === item.model_id ? 'check' : 'copy'" size="sm" />
               </button>
             </div>
@@ -138,6 +139,8 @@
         </div>
       </main>
     </div>
+
+    <ModelDetailDrawer :open="drawerOpen" :model="drawerModel" @close="closeDrawer" />
   </div>
 </template>
 
@@ -149,6 +152,8 @@ import { apiClient } from '@/api/client'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
 import ProviderBrandIcon from '@/components/icons/ProviderBrandIcon.vue'
+import ModelDetailDrawer from '@/components/models/ModelDetailDrawer.vue'
+import { providerLabel, fmtPrice, type ModelEntry } from '@/components/models/providerUtils'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -167,13 +172,6 @@ function toggleTheme() {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// Data
-interface ModelEntry {
-  model_id: string; display_name: string; provider: string
-  group_id: number; group_name: string
-  input_price: number; output_price: number
-}
-
 const items = ref<ModelEntry[]>([])
 const loading = ref(true)
 const searchQuery = ref('')
@@ -181,6 +179,11 @@ const activeProvider = ref('all')
 const activeGroup = ref('')
 const sortBy = ref<'default' | 'price-asc' | 'price-desc'>('default')
 const copiedId = ref('')
+
+const drawerModel = ref<ModelEntry | null>(null)
+const drawerOpen = computed(() => drawerModel.value !== null)
+function openDrawer(item: ModelEntry) { drawerModel.value = item }
+function closeDrawer() { drawerModel.value = null }
 
 // Derived
 const allGroups = computed(() => [...new Set(items.value.map(i => i.group_name))].sort())
@@ -230,13 +233,6 @@ function toggleSort() {
   else sortBy.value = 'default'
 }
 
-// Helpers
-function fmtPrice(p: number): string {
-  if (p < 0.01) return p.toFixed(4)
-  if (p < 1) return p.toFixed(3)
-  return p.toFixed(2)
-}
-function providerLabel(p: string) { return p === 'claude' ? 'Anthropic' : p === 'openai' ? 'OpenAI' : p === 'gemini' ? 'Google' : p }
 function providerBadge(p: string) {
   return p === 'claude' ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
     : p === 'openai' ? 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300'
