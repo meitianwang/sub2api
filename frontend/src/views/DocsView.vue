@@ -9,9 +9,8 @@
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <router-link to="/home" class="flex items-center">
-            <div class="h-9 w-9 overflow-hidden rounded-xl shadow-md">
-              <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
-            </div>
+            <img src="/logo-wide.png" alt="Logo" class="block h-8 w-auto dark:hidden" />
+            <img src="/logo-wide-dark.png" alt="Logo" class="hidden h-8 w-auto dark:block" />
           </router-link>
         </div>
         <div class="hidden items-center gap-1 sm:flex">
@@ -163,7 +162,6 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'AIInterface')
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const apiBaseUrl = computed(() => appStore.cachedPublicSettings?.api_base_url || window.location.origin)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard')
