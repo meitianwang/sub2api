@@ -32,7 +32,6 @@ type SystemSettings struct {
 	LinuxDoConnectRedirectURL            string
 
 	SiteName                    string
-	SiteLogo                    string
 	SiteSubtitle                string
 	APIBaseURL                  string
 	ContactInfo                 string
@@ -82,7 +81,6 @@ type PublicSettings struct {
 	TurnstileEnabled                 bool
 	TurnstileSiteKey                 string
 	SiteName                         string
-	SiteLogo                         string
 	SiteSubtitle                     string
 	APIBaseURL                       string
 	ContactInfo                      string

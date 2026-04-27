@@ -25,7 +25,6 @@ export const useAppStore = defineStore('app', () => {
   const publicSettingsLoaded = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
   const siteName = ref<string>('AIInterface')
-  const siteLogo = ref<string>('')
   const siteVersion = ref<string>('')
   const contactInfo = ref<string>('')
   const apiBaseUrl = ref<string>('')
@@ -286,7 +285,6 @@ export const useAppStore = defineStore('app', () => {
   function applySettings(config: PublicSettings): void {
     cachedPublicSettings.value = config
     siteName.value = config.site_name || 'AIInterface'
-    siteLogo.value = config.site_logo || ''
     siteVersion.value = config.version || ''
     contactInfo.value = config.contact_info || ''
     apiBaseUrl.value = config.api_base_url || ''
@@ -320,7 +318,6 @@ export const useAppStore = defineStore('app', () => {
         turnstile_enabled: false,
         turnstile_site_key: '',
         site_name: siteName.value,
-        site_logo: siteLogo.value,
         site_subtitle: '',
         api_base_url: apiBaseUrl.value,
         contact_info: contactInfo.value,
@@ -386,7 +383,6 @@ export const useAppStore = defineStore('app', () => {
     // Public settings state
     publicSettingsLoaded,
     siteName,
-    siteLogo,
     siteVersion,
     contactInfo,
     apiBaseUrl,

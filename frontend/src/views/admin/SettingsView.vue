@@ -1354,21 +1354,6 @@
               </p>
             </div>
 
-            <!-- Site Logo Upload -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('admin.settings.site.siteLogo') }}
-              </label>
-              <ImageUpload
-                v-model="form.site_logo"
-                mode="image"
-                :upload-label="t('admin.settings.site.uploadImage')"
-                :remove-label="t('admin.settings.site.remove')"
-                :hint="t('admin.settings.site.logoHint')"
-                :max-size="300 * 1024"
-              />
-            </div>
-
             <!-- Home Content -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1909,7 +1894,6 @@ const form = reactive<SettingsForm>({
   totp_encryption_key_configured: false,
   default_balance: 0,
   site_name: 'AIInterface',
-  site_logo: '',
   site_subtitle: 'Subscription to API Conversion Platform',
   api_base_url: '',
   contact_info: '',
@@ -2141,7 +2125,6 @@ async function saveSettings() {
       totp_enabled: form.totp_enabled,
       default_balance: form.default_balance,
       site_name: form.site_name,
-      site_logo: form.site_logo,
       site_subtitle: form.site_subtitle,
       api_base_url: form.api_base_url,
       contact_info: form.contact_info,

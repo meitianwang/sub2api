@@ -4401,13 +4401,6 @@ export default {
         docUrl: '文档链接',
         docUrlHint: '外部文档网站的链接。留空则使用内置文档页面。',
         docUrlPlaceholder: 'https://docs.example.com',
-        siteLogo: '站点Logo',
-        uploadImage: '上传图片',
-        remove: '移除',
-        logoHint: 'PNG、JPG 或 SVG 格式，最大 300KB。建议：80x80px 正方形图片。',
-        logoSizeError: '图片大小超过 300KB 限制（{size}KB）',
-        logoTypeError: '请选择图片文件',
-        logoReadError: '读取图片文件失败',
         homeContent: '首页内容',
         homeContentPlaceholder:
           '在此输入首页内容，支持 Markdown & HTML 代码。如果输入的是一个链接，则会使用该链接作为 iframe 的 src 属性。',

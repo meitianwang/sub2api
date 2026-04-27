@@ -24,7 +24,6 @@ export interface SystemSettings {
   default_balance: number
   // OEM settings
   site_name: string
-  site_logo: string
   site_subtitle: string
   api_base_url: string
   contact_info: string
@@ -92,7 +91,6 @@ export interface UpdateSettingsRequest {
   totp_enabled?: boolean // TOTP 双因素认证
   default_balance?: number
   site_name?: string
-  site_logo?: string
   site_subtitle?: string
   api_base_url?: string
   contact_info?: string
