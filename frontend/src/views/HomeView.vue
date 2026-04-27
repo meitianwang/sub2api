@@ -25,8 +25,9 @@
     <header class="home-header">
       <nav class="home-nav">
         <!-- Logo -->
-        <router-link to="/home" class="home-nav-logo" :aria-label="siteName">
-          <img src="/logo-wide-dark.png" :alt="siteName" class="home-nav-brand" />
+        <router-link to="/home" class="home-nav-logo">
+          <img src="/logo.png" alt="" class="home-nav-icon" />
+          <span class="home-nav-name">AIGateway</span>
         </router-link>
 
         <!-- Center Nav -->
@@ -355,12 +356,20 @@ onMounted(() => {
 .home-nav-logo {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
 }
-.home-nav-brand {
+.home-nav-icon {
   height: 32px;
-  width: auto;
+  width: 32px;
   display: block;
+  object-fit: contain;
+}
+.home-nav-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
 .home-nav-links {

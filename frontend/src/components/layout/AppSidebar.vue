@@ -6,8 +6,8 @@
     <!-- Logo/Brand -->
     <router-link to="/home" class="sidebar-header no-underline" :title="t('nav.home')">
       <template v-if="settingsLoaded">
-        <img src="/logo-wide.png" :alt="siteName" class="block h-8 w-auto dark:hidden" />
-        <img src="/logo-wide-dark.png" :alt="siteName" class="hidden h-8 w-auto dark:block" />
+        <img src="/logo.png" alt="" class="h-8 w-8 flex-shrink-0" />
+        <span class="sidebar-brand-name">AIGateway</span>
       </template>
     </router-link>
 
@@ -146,7 +146,6 @@ const isAdmin = computed(() => authStore.isAdmin)
 const isDark = ref(document.documentElement.classList.contains('dark'))
 
 // Site settings from appStore (cached, no flicker)
-const siteName = computed(() => appStore.siteName)
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
 // SVG Icon Components

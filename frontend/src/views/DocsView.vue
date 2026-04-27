@@ -8,9 +8,9 @@
           <button @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:text-dark-400 dark:hover:bg-dark-800 lg:hidden">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <router-link to="/home" class="flex items-center">
-            <img src="/logo-wide.png" alt="Logo" class="block h-8 w-auto dark:hidden" />
-            <img src="/logo-wide-dark.png" alt="Logo" class="hidden h-8 w-auto dark:block" />
+          <router-link to="/home" class="flex items-center gap-2">
+            <img src="/logo.png" alt="" class="h-8 w-8" />
+            <span class="text-base font-bold tracking-tight text-gray-900 dark:text-white">AIGateway</span>
           </router-link>
         </div>
         <div class="hidden items-center gap-1 sm:flex">

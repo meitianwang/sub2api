@@ -15,7 +15,10 @@
       </div>
       <!-- Brand mark -->
       <div class="auth-brand-mark" v-if="settingsLoaded">
-        <img src="/logo-wide-dark.png" :alt="siteName" class="auth-brand-wide" />
+        <div class="auth-brand-row">
+          <img src="/logo.png" alt="" class="auth-brand-icon" />
+          <span class="auth-brand-name">AIGateway</span>
+        </div>
         <span class="auth-brand-tagline">{{ siteSubtitle }}</span>
       </div>
       <!-- Bottom quote -->
@@ -29,8 +32,8 @@
       <div class="auth-form-container">
         <!-- Mobile logo (hidden on desktop) -->
         <div class="auth-mobile-logo" v-if="settingsLoaded">
-          <img src="/logo-wide.png" :alt="siteName" class="block h-8 w-auto dark:hidden" />
-          <img src="/logo-wide-dark.png" :alt="siteName" class="hidden h-8 w-auto dark:block" />
+          <img src="/logo.png" alt="" class="h-8 w-8" />
+          <span class="text-base font-bold tracking-tight text-gray-900 dark:text-white">AIGateway</span>
         </div>
 
         <!-- Form card -->
@@ -164,10 +167,24 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-.auth-brand-wide {
-  height: 44px;
-  width: auto;
+.auth-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.auth-brand-icon {
+  width: 40px;
+  height: 40px;
   display: block;
+  object-fit: contain;
+}
+
+.auth-brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fafafa;
+  letter-spacing: -0.01em;
 }
 
 .auth-brand-tagline {

@@ -3,9 +3,9 @@
     <!-- Header -->
     <header class="sticky top-0 z-30 border-b border-gray-200/50 bg-white/70 px-6 py-3 backdrop-blur-md dark:border-dark-700/50 dark:bg-dark-900/70">
       <nav class="mx-auto flex max-w-7xl items-center justify-between">
-        <router-link to="/home" class="flex items-center">
-          <img src="/logo-wide.png" alt="Logo" class="block h-8 w-auto dark:hidden" />
-          <img src="/logo-wide-dark.png" alt="Logo" class="hidden h-8 w-auto dark:block" />
+        <router-link to="/home" class="flex items-center gap-2">
+          <img src="/logo.png" alt="" class="h-8 w-8" />
+          <span class="text-base font-bold tracking-tight text-gray-900 dark:text-white">AIGateway</span>
         </router-link>
         <div class="hidden items-center gap-1 sm:flex">
           <router-link to="/home" class="nav-tab">{{ t('nav.home') }}</router-link>

@@ -3,9 +3,9 @@
     <!-- Header (same pattern as HomeView) -->
     <header class="relative z-20 px-6 py-4">
       <nav class="mx-auto flex max-w-6xl items-center justify-between">
-        <router-link to="/home" class="flex items-center">
-          <img src="/logo-wide.png" :alt="siteName" class="block h-9 w-auto dark:hidden" />
-          <img src="/logo-wide-dark.png" :alt="siteName" class="hidden h-9 w-auto dark:block" />
+        <router-link to="/home" class="flex items-center gap-2">
+          <img src="/logo.png" alt="" class="h-9 w-9" />
+          <span class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">AIGateway</span>
         </router-link>
         <div class="flex items-center gap-3">
           <LocaleSwitcher />
