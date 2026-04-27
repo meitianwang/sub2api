@@ -14,14 +14,9 @@
         <div class="auth-corner-line auth-corner-br"></div>
       </div>
       <!-- Brand mark -->
-      <div class="auth-brand-mark">
-        <div class="auth-brand-logo" v-if="settingsLoaded">
-          <img :src="siteLogo || '/logo.png'" alt="Logo" />
-        </div>
-        <div class="auth-brand-text" v-if="settingsLoaded">
-          <span class="auth-brand-name">{{ siteName }}</span>
-          <span class="auth-brand-tagline">{{ siteSubtitle }}</span>
-        </div>
+      <div class="auth-brand-mark" v-if="settingsLoaded">
+        <img src="/logo-wide-dark.png" :alt="siteName" class="auth-brand-wide" />
+        <span class="auth-brand-tagline">{{ siteSubtitle }}</span>
       </div>
       <!-- Bottom quote -->
       <div class="auth-panel-footer">
@@ -34,10 +29,8 @@
       <div class="auth-form-container">
         <!-- Mobile logo (hidden on desktop) -->
         <div class="auth-mobile-logo" v-if="settingsLoaded">
-          <div class="auth-mobile-logo-img">
-            <img :src="siteLogo || '/logo.png'" alt="Logo" />
-          </div>
-          <span class="auth-mobile-logo-name">{{ siteName }}</span>
+          <img src="/logo-wide.png" :alt="siteName" class="block h-8 w-auto dark:hidden" />
+          <img src="/logo-wide-dark.png" :alt="siteName" class="hidden h-8 w-auto dark:block" />
         </div>
 
         <!-- Form card -->
@@ -62,12 +55,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
-import { sanitizeUrl } from '@/utils/url'
 
 const appStore = useAppStore()
 
 const siteName = computed(() => appStore.siteName || 'AIInterface')
-const siteLogo = computed(() => sanitizeUrl(appStore.siteLogo || '', { allowRelative: true, allowDataUrl: true }))
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'Subscription to API Conversion Platform')
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
@@ -168,36 +159,17 @@ onMounted(() => {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
-  gap: 0.875rem;
-}
-
-.auth-brand-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  background: rgba(139, 92, 246, 0.1);
-  flex-shrink: 0;
-}
-.auth-brand-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.auth-brand-text {
-  display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
-.auth-brand-name {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #fafafa;
-  letter-spacing: -0.01em;
+
+.auth-brand-wide {
+  height: 44px;
+  width: auto;
+  display: block;
 }
+
 .auth-brand-tagline {
   font-size: 0.75rem;
   color: #6b6b76;
@@ -235,40 +207,12 @@ onMounted(() => {
 .auth-mobile-logo {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
   margin-bottom: 2rem;
 }
 @media (min-width: 1024px) {
   .auth-mobile-logo {
     display: none;
   }
-}
-.auth-mobile-logo-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f0ebff;
-  border: 1px solid #e4d9fe;
-  flex-shrink: 0;
-}
-.dark .auth-mobile-logo-img {
-  background: rgba(139, 92, 246, 0.1);
-  border-color: rgba(139, 92, 246, 0.2);
-}
-.auth-mobile-logo-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.auth-mobile-logo-name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #18181b;
-  letter-spacing: -0.01em;
-}
-.dark .auth-mobile-logo-name {
-  color: #fafafa;
 }
 
 /* Form card */

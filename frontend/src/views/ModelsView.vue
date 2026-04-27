@@ -4,9 +4,8 @@
     <header class="sticky top-0 z-30 border-b border-gray-200/50 bg-white/70 px-6 py-3 backdrop-blur-md dark:border-dark-700/50 dark:bg-dark-900/70">
       <nav class="mx-auto flex max-w-7xl items-center justify-between">
         <router-link to="/home" class="flex items-center">
-          <div class="h-9 w-9 overflow-hidden rounded-xl shadow-md">
-            <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
-          </div>
+          <img src="/logo-wide.png" alt="Logo" class="block h-8 w-auto dark:hidden" />
+          <img src="/logo-wide-dark.png" alt="Logo" class="hidden h-8 w-auto dark:block" />
         </router-link>
         <div class="hidden items-center gap-1 sm:flex">
           <router-link to="/home" class="nav-tab">{{ t('nav.home') }}</router-link>
@@ -159,7 +158,6 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')

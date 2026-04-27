@@ -5,11 +5,10 @@
   >
     <!-- Logo/Brand -->
     <router-link to="/home" class="sidebar-header no-underline" :title="t('nav.home')">
-      <!-- Custom Logo or Default Logo -->
-      <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-glow">
-        <img v-if="settingsLoaded" :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
-      </div>
-      <span class="sidebar-brand-name">{{ siteName }}</span>
+      <template v-if="settingsLoaded">
+        <img src="/logo-wide.png" :alt="siteName" class="block h-8 w-auto dark:hidden" />
+        <img src="/logo-wide-dark.png" :alt="siteName" class="hidden h-8 w-auto dark:block" />
+      </template>
     </router-link>
 
     <!-- Navigation -->
@@ -148,7 +147,6 @@ const isDark = ref(document.documentElement.classList.contains('dark'))
 
 // Site settings from appStore (cached, no flicker)
 const siteName = computed(() => appStore.siteName)
-const siteLogo = computed(() => appStore.siteLogo)
 const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
 // SVG Icon Components

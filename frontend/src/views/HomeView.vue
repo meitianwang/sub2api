@@ -25,12 +25,9 @@
     <header class="home-header">
       <nav class="home-nav">
         <!-- Logo -->
-        <div class="home-nav-logo">
-          <div class="home-logo-img">
-            <img :src="siteLogo || '/logo.png'" alt="Logo" />
-          </div>
-          <span class="home-logo-name">{{ siteName }}</span>
-        </div>
+        <router-link to="/home" class="home-nav-logo" :aria-label="siteName">
+          <img src="/logo-wide-dark.png" :alt="siteName" class="home-nav-brand" />
+        </router-link>
 
         <!-- Center Nav -->
         <div class="home-nav-links">
@@ -241,7 +238,6 @@ const authStore = useAuthStore()
 const appStore = useAppStore()
 
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'AIInterface')
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'AI API Gateway Platform')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
@@ -359,22 +355,12 @@ onMounted(() => {
 .home-nav-logo {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  text-decoration: none;
 }
-.home-logo-img {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
-  overflow: hidden;
-  flex-shrink: 0;
-  border: 1px solid rgba(139,92,246,0.2);
-}
-.home-logo-img img { width: 100%; height: 100%; object-fit: contain; }
-.home-logo-name {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.01em;
+.home-nav-brand {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .home-nav-links {
