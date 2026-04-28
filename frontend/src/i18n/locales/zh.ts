@@ -2,6 +2,7 @@ export default {
   // Home Page
   home: {
     docs: '文档',
+    terms: '服务条款',
     login: '登录',
     switchToLight: '切换到浅色模式',
     switchToDark: '切换到深色模式',

@@ -3,6 +3,7 @@ export default {
   home: {
     // Nav / shared
     docs: 'Docs',
+    terms: 'Terms',
     login: 'Login',
     switchToLight: 'Switch to Light Mode',
     switchToDark: 'Switch to Dark Mode',
