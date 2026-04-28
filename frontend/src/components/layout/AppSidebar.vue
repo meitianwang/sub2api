@@ -6,7 +6,7 @@
     <!-- Logo/Brand -->
     <router-link to="/home" class="sidebar-header no-underline" :title="t('nav.home')">
       <template v-if="settingsLoaded">
-        <img src="/logo.png" alt="" class="h-8 w-8 flex-shrink-0" />
+        <img src="/logo.png" alt="" class="h-7 w-7 flex-shrink-0" />
         <span class="sidebar-brand-name">AIGateway</span>
       </template>
     </router-link>

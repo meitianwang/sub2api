@@ -298,6 +298,15 @@ export default {
     }
   },
 
+  // Docs page (the public /docs view)
+  docs: {
+    toc: '目录',
+    notFound: {
+      title: '页面未找到',
+      hint: '请从左侧导航选择一个文档页面'
+    }
+  },
+
   // Navigation
   nav: {
     dashboard: '仪表盘',

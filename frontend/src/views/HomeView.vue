@@ -13,45 +13,7 @@
 
   <!-- Default Home Page -->
   <div v-else class="flex min-h-screen flex-col bg-white text-gray-900 dark:bg-gray-950 dark:text-white">
-    <!-- Header -->
-    <header class="border-b border-gray-200 dark:border-gray-800">
-      <nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <router-link to="/home" class="flex items-center gap-2">
-          <img src="/logo.png" alt="" class="h-7 w-7" />
-          <span class="text-base font-semibold tracking-tight">AIGateway</span>
-        </router-link>
-
-        <div class="hidden items-center gap-1 sm:flex">
-          <router-link to="/home" class="nav-link nav-link-active">{{ t('nav.home') }}</router-link>
-          <router-link to="/models" class="nav-link">{{ t('nav.models') }}</router-link>
-          <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="nav-link">{{ t('nav.docs') }}</a>
-          <router-link v-else to="/docs" class="nav-link">{{ t('nav.docs') }}</router-link>
-          <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="nav-link">{{ t('nav.console') }}</router-link>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <LocaleSwitcher />
-          <button
-            @click="toggleTheme"
-            class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-            :aria-label="isDark ? t('home.switchToLight') : t('home.switchToDark')"
-          >
-            <Icon v-if="isDark" name="sun" size="sm" />
-            <Icon v-else name="moon" size="sm" />
-          </button>
-          <router-link
-            v-if="isAuthenticated"
-            :to="dashboardPath"
-            class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-[11px] font-semibold text-white dark:bg-white dark:text-gray-900"
-          >{{ userInitial }}</router-link>
-          <router-link
-            v-else
-            to="/login"
-            class="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
-          >{{ t('home.login') }}</router-link>
-        </div>
-      </nav>
-    </header>
+    <PublicNav active="home" />
 
     <!-- Main -->
     <main class="flex-1">
@@ -192,7 +154,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
-import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
+import PublicNav from '@/components/common/PublicNav.vue'
 import Icon from '@/components/icons/Icon.vue'
 import ProviderBrandIcon from '@/components/icons/ProviderBrandIcon.vue'
 import { usePublicModels } from '@/composables/usePublicModels'
@@ -213,12 +175,9 @@ const isHomeContentUrl = computed(() => {
   return content.startsWith('http://') || content.startsWith('https://')
 })
 
-const isDark = ref(document.documentElement.classList.contains('dark'))
 const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const isAdmin = computed(() => authStore.isAdmin)
-const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
-const userInitial = computed(() => authStore.user?.email?.charAt(0).toUpperCase() || '')
+const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
 const currentYear = computed(() => new Date().getFullYear())
 
 // Public models (shared with /models page via composable)
@@ -275,36 +234,9 @@ function reloadPricing() {
   void fetchModels(true)
 }
 
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-function initTheme() {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
-  }
-}
-
 onMounted(() => {
-  initTheme()
   authStore.checkAuth()
   if (!appStore.publicSettingsLoaded) appStore.fetchPublicSettings()
   void fetchModels()
 })
 </script>
-
-<style scoped>
-.nav-link {
-  @apply rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors;
-  @apply hover:bg-gray-100 hover:text-gray-900;
-  @apply dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
-  text-decoration: none;
-}
-.nav-link-active {
-  @apply text-gray-900 dark:text-white;
-}
-</style>

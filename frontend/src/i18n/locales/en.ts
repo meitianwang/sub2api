@@ -299,6 +299,15 @@ export default {
     }
   },
 
+  // Docs page (the public /docs view)
+  docs: {
+    toc: 'Contents',
+    notFound: {
+      title: 'Page not found',
+      hint: 'Choose a page from the sidebar.'
+    }
+  },
+
   // Navigation
   nav: {
     dashboard: 'Dashboard',
