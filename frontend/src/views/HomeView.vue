@@ -143,7 +143,6 @@
         <div class="flex items-center gap-5">
           <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.docs') }}</a>
           <router-link v-else to="/docs" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.docs') }}</router-link>
-          <a :href="githubUrl" target="_blank" rel="noopener noreferrer" class="hover:text-gray-900 dark:hover:text-white">GitHub</a>
         </div>
       </div>
     </footer>
@@ -175,7 +174,6 @@ const isHomeContentUrl = computed(() => {
   return content.startsWith('http://') || content.startsWith('https://')
 })
 
-const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
 const currentYear = computed(() => new Date().getFullYear())
