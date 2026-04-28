@@ -23,8 +23,7 @@
       ]">
         <nav class="p-4">
           <div v-for="section in docsStructure" :key="section.id" class="mb-5">
-            <h3 class="mb-1.5 flex items-center gap-2 px-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-500">
-              <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-gray-100 text-[11px] dark:bg-gray-800">{{ sectionIcon(section.icon) }}</span>
+            <h3 class="mb-1.5 px-2 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-500">
               {{ section.title }}
             </h3>
             <ul>
@@ -228,18 +227,6 @@ watch([currentSection, currentPage], setupScrollSpy)
 onMounted(setupScrollSpy)
 onUnmounted(() => observer?.disconnect())
 
-// Section icons
-function sectionIcon(icon?: string): string {
-  const icons: Record<string, string> = {
-    rocket: '\u{1F680}',
-    cube: '\u{1F4E6}',
-    terminal: '\u{1F4BB}',
-    code: '\u{1F4C4}',
-    puzzle: '\u{1F9E9}',
-    question: '\u{2753}',
-  }
-  return icon ? icons[icon] || '' : ''
-}
 </script>
 
 <style scoped>
