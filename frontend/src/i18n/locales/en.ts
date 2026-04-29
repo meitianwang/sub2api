@@ -300,6 +300,98 @@ export default {
     }
   },
 
+  // Terms of Service page (/terms)
+  terms: {
+    title: 'Terms of Service',
+    effectiveDate: 'Effective: April 29, 2026',
+    intro: {
+      welcome: 'Welcome to AIInterface ("the Platform" or "we"). These Terms of Service ("Terms") form the agreement between you and AIInterface concerning your use of the Platform\'s API gateway, model aggregation, and related tools (collectively, the "Service"). By registering an account, depositing funds, or making API calls, you acknowledge that you have read and agree to these Terms in full. If you do not agree, do not use the Service.',
+      notTargeted: 'The Service is not designed for or directed at residents of any particular country or jurisdiction. You are responsible for ensuring that your use of the Service complies with the laws of your jurisdiction. If the laws of your jurisdiction prohibit or restrict your use of the Service, you must immediately cease use. You bear sole responsibility for any consequences arising from your use of the Service in violation of local law.',
+    },
+    A: {
+      title: 'A. The Service',
+      p1: 'The Platform aggregates third-party AI models including Claude, GPT, and Gemini, and provides model routing, billing, and key management through a unified API protocol. The Platform is not the provider of the underlying models; the capabilities, availability, and outputs of the models themselves are determined by their original vendors.',
+      p2: 'You may choose at your discretion to invoke third-party model functionality made available through the Platform; the Platform is not responsible for such third-party functionality itself. If you provide feedback to the Platform, we may use such feedback at our discretion without any obligation to you.',
+    },
+    B: {
+      title: 'B. Account and Registration',
+      p1: 'You must register an account using a valid email address. You are responsible for safeguarding your account, password, and API Keys, and may not resell, lend, or otherwise share your credentials with any unauthorized third party. You bear sole responsibility for any fees and consequences arising from credential leaks caused by your own actions.',
+      p2: 'If you discover that your account or API Key has been compromised, attacked, or used for abnormal calls, you must immediately rotate your keys and notify the Platform via the contact information below.',
+    },
+    C: {
+      title: 'C. Fees and Billing',
+      p1: 'The Platform operates on a prepaid, pay-per-token basis. You must first deposit a balance, which is then deducted at the per-model real-time rate when you make API calls. Per-model input/output rates are published on the "Models & Pricing" page; the Platform reserves the right to adjust prices in response to upstream cost changes, with prior in-product notice.',
+      p2: 'You must pay all fees incurred under your account in a timely manner. When your balance is depleted, the Platform may suspend your access to the Service until you top up. Fees do not include any taxes, duties, or similar charges that may arise from your use of the Service; you are solely responsible for such taxes.',
+    },
+    D: {
+      title: 'D. Refund Policy',
+      items: {
+        scope: { label: 'Scope', body: 'Refund requests based on your own reasons (including but not limited to no longer needing the Service, change of plans, or dissatisfaction with model output) may be denied at the Platform\'s discretion. Refund requests on a pro-rata basis may be made when the Service is unavailable for an extended period due to the Platform\'s fault and your account holds a balance throughout the unavailability.' },
+        method: { label: 'Method', body: 'For refund requests within 90 days of deposit, refunds will be returned via the original payment channel. For requests after 90 days, since the original channel cannot accept returns, you must separately provide a receiving account whose holder identity matches the original payer.' },
+        review: { label: 'Review and Documentation', body: 'All refund requests are subject to Platform review. You must submit: (a) original payment receipts (screenshots, transaction IDs); (b) identity information matching the payment account; (c) for requests that cannot be returned via the original channel, receiving account information matching the original payer\'s identity. The Platform may require additional supporting documentation.' },
+        antiFraud: { label: 'Anti-Fraud', body: 'To prevent fraud, money laundering, and abuse of incentives, the Platform reserves the right to conduct additional review of refund requests, including verifying that the payer and recipient identities match. Where a request is suspected of fraud, the Platform may deny the refund and suspend the relevant account.' },
+        finalInterpretation: { label: 'Final Interpretation', body: 'The Platform reserves the final right to interpret this refund policy and may deny any request that does not meet the conditions herein.' },
+      },
+    },
+    E: {
+      title: 'E. Acceptable Use',
+      intro: 'You may not (and may not assist any third party in) using the Platform to:',
+      list: {
+        laws: 'Violate any laws or regulations binding on you, or harm the public interest;',
+        harmfulContent: 'Generate or disseminate content that is violent, pornographic, terrorist, discriminatory, fraudulent, or otherwise unlawful or harmful;',
+        reverseEngineering: 'Reverse engineer, scrape, or replicate the Platform\'s implementation;',
+        compete: 'Build a competing aggregation service or resell the Platform\'s API;',
+        attack: 'Launch denial-of-service attacks against the Platform or upstream services, bypass rate limits, or otherwise call the Service maliciously;',
+        ip: 'Infringe on the intellectual property, privacy, reputation, or other lawful rights of others;',
+        other: 'Engage in any other conduct that may harm the Platform, other users, or upstream model providers.',
+      },
+      outputDisclaimer: 'You are responsible for evaluating whether model outputs are appropriate for your use case, and for conducting human review where necessary. Outputs may contain inaccurate, outdated, or biased information; you must not rely on outputs as factual statements without independent verification, and must not use them for medical, legal, financial, or other critical decisions that may affect personal safety or property.',
+    },
+    F: {
+      title: 'F. Intellectual Property',
+      p1: 'To the extent permitted by applicable law: you retain all rights to the inputs you submit to the Service ("Inputs"); you own the outputs the Service generates in response to your Inputs ("Outputs"). The Platform does not use your Inputs or Outputs to train any model. The foregoing rights allocation is conditioned on your compliance with these Terms.',
+      p2: 'The Platform\'s code, trademarks, brand marks, documentation, and website design constitute the Platform\'s intellectual property; you may not copy, modify, or use such property for any purpose except as expressly authorized in these Terms.',
+    },
+    G: {
+      title: 'G. Privacy',
+      p1: 'The Platform collects and processes your account information, call logs, and billing data only to the extent necessary to provide the Service. The content of your requests and responses is not used for model training and is not disclosed to unrelated third parties; however, the Platform may forward necessary information (such as request bodies and model IDs) to upstream model providers in order to fulfill your requests, and such forwarding is subject to those providers\' own privacy policies.',
+    },
+    H: {
+      title: 'H. Service Availability and Disclaimers',
+      p1: 'The Service is provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied, including but not limited to: (a) accuracy, completeness, error-free operation, or uninterrupted availability of the Service or Outputs; (b) availability, quality, or compliance of any third-party model or interface; (c) fitness of the Service for your particular business needs.',
+      p2: 'The Platform is not liable for service interruptions or anomalies caused by: (a) force majeure (such as natural disasters, war, or government action); (b) upstream model providers\' rate limiting, suspension, price adjustments, or service termination; (c) issues with your network carrier, device, or browser; (d) suspensions resulting from your breach of these Terms.',
+    },
+    I: {
+      title: 'I. Limitation of Liability',
+      p1: 'To the maximum extent permitted by applicable law, the Platform and its affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or in connection with these Terms or your use of the Service, including but not limited to lost profits, lost business, lost data, or loss of goodwill. Regardless of the cause of action, the Platform\'s total cumulative liability to you shall not exceed the fees actually paid by you for the Service during the 12-month period immediately preceding the event giving rise to the claim.',
+    },
+    J: {
+      title: 'J. Termination and Suspension',
+      p1: 'You may stop using the Service and cancel your account at any time; remaining balance will be handled in accordance with the Refund Policy. If you materially breach these Terms (including but not limited to the prohibited conduct in Section E), the Platform may immediately suspend or terminate your access to the Service and reserves the right to pursue legal remedies.',
+      p2: 'The Platform may also suspend your access to the Service in the following circumstances: (a) the Platform reasonably determines your use poses a risk to the Service or other users; (b) upstream services cease providing capabilities to the Platform for any reason; (c) the Platform\'s provision of the Service to you is prohibited by applicable law.',
+    },
+    K: {
+      title: 'K. Modifications',
+      p1: 'The Platform may update these Terms from time to time. Updated Terms will be published on this page; for material changes, we will provide notice 30 days in advance via in-product announcements or to your registered email. Your continued use of the Service after the effective date of the updated Terms constitutes acceptance. If you do not accept the updated Terms, you must stop using the Service and request account cancellation.',
+    },
+    L: {
+      title: 'L. Governing Law and Dispute Resolution',
+      p1: 'These Terms, including their formation, validity, interpretation, performance, and dispute resolution, shall be governed by the laws of the Republic of Singapore ("Singapore Law"), without regard to its conflict of laws principles.',
+      p2: 'Any dispute, claim, or controversy arising from or in connection with these Terms or the Service shall first be addressed by good-faith negotiation between the parties. If the parties cannot resolve the matter, the dispute shall be referred to and finally resolved by binding arbitration administered by the Singapore International Arbitration Centre (SIAC) in accordance with its rules in force at the time the proceedings commence. The arbitral tribunal shall consist of one arbitrator, the seat of arbitration shall be Singapore, and the language of the arbitration shall be English (unless the parties agree in writing to conduct proceedings in Chinese). The arbitral award shall be final and binding on both parties.',
+      p3: 'To the maximum extent permitted by applicable law, you agree to waive any right to bring claims against the Platform on a class, consolidated, or representative basis; any dispute shall be brought solely in your individual capacity.',
+    },
+    M: {
+      title: 'M. Contact',
+      p1: 'If you have any questions about these Terms or wish to submit refund, abuse, or privacy-related requests, please contact us at:',
+      email: 'Email',
+    },
+    footer: {
+      home: 'Home',
+      docs: 'Docs',
+      copyright: 'All rights reserved.',
+    },
+  },
+
   // Docs page (the public /docs view)
   docs: {
     toc: 'Contents',
