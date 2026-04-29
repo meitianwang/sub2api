@@ -145,6 +145,7 @@
           <router-link v-else to="/docs" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.docs') }}</router-link>
           <router-link to="/terms" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.terms') }}</router-link>
           <router-link to="/usage-policy" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.usagePolicy') }}</router-link>
+          <router-link to="/supported-regions" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.supportedRegions') }}</router-link>
         </div>
       </div>
     </footer>

@@ -5,6 +5,7 @@ export default {
     docs: 'Docs',
     terms: 'Terms',
     usagePolicy: 'Usage Policy',
+    supportedRegions: 'Supported Regions',
     login: 'Login',
     switchToLight: 'Switch to Light Mode',
     switchToDark: 'Switch to Dark Mode',
@@ -561,6 +562,59 @@ export default {
       home: 'Home',
       docs: 'Docs',
       terms: 'Terms',
+    },
+  },
+
+  // Supported Regions page (/supported-regions)
+  supportedRegions: {
+    title: 'Supported Regions',
+    effectiveDate: 'Effective: April 29, 2026',
+    intro: 'AIInterface operates as a global API gateway service governed by the laws of the Republic of Singapore (see Section L of our Terms of Service). To the maximum extent permitted by applicable law, we provide commercial API access to developers and businesses worldwide.',
+    general: {
+      title: 'General Availability',
+      body: 'The Service is globally available by default, except in the restricted regions listed below. "Restricted" includes outright inability to register or top up, ongoing call restrictions, or suspension of service required by law.',
+    },
+    restricted: {
+      title: 'Restricted Regions',
+      intro: 'We do not provide service to residents, organizations, or entities controlled by parties from any of the following:',
+      list: {
+        singapore: 'Countries, regions, or persons subject to financial sanctions, export controls, or targeted sanctions administered by the Republic of Singapore;',
+        un: 'Countries, regions, or persons subject to UN Security Council sanctions resolutions;',
+        local: 'Jurisdictions where local law comprehensively prohibits the use of AI services, cross-border data transfer, or similar internet-based services;',
+        upstream: 'Regions subject to comprehensive sanctions administered by the jurisdictions of upstream model providers (such as US OFAC), including but not limited to the Crimea, Donetsk, Luhansk, Kherson, and Zaporizhzhia regions of Ukraine, and North Korea, Iran, Syria, and Cuba — these may directly affect upstream providers\' ability to serve you.',
+      },
+      footer: 'If you are unsure whether your location falls under a restricted region, please contact us via the channel below before registering or depositing funds.',
+    },
+    upstream: {
+      title: 'Upstream Regional Restrictions',
+      p1: 'The Service aggregates multiple upstream AI model providers (Anthropic, OpenAI, Google, and others). Each upstream provider has its own supported-region policy — the upstream may decline requests from particular regions or impose additional compliance requirements on you. This is a separate layer of analysis from AIInterface\'s own availability.',
+      p2: 'Possible scenarios include:',
+      list: {
+        ipBlock: 'An upstream model returns errors for specific IP ranges or regions;',
+        rateLimit: 'An upstream model rate-limits or restricts registration in specific regions;',
+        contentReview: 'An upstream model triggers its own geographic compliance review based on the content of your request.',
+      },
+      p3: 'If you cannot access a particular model due to upstream restrictions, we are not responsible, and such restrictions do not constitute unavailability of the Service as a whole. Before integrating, we recommend consulting each upstream provider\'s official supported-region documentation.',
+    },
+    obligation: {
+      title: 'Your Compliance Obligation',
+      body: 'Regardless of where you are based, you are responsible for ensuring that your use of the Service complies with the laws of your jurisdiction (see introduction to Terms of Service). If your jurisdiction prohibits or restricts your use of the Service, AI tools, or cross-border data transfer, you must cease use and bear sole responsibility for any consequences of using the Service in violation of local law.',
+    },
+    updates: {
+      title: 'Updates to this Policy',
+      body: 'We may modify this policy in response to legal changes, sanctions updates, or upstream provider policy adjustments. Material changes will be announced in-product and take effect immediately for new calls; existing balances will be handled in accordance with the Terms of Service refund policy.',
+    },
+    contact: {
+      title: 'Asking About Availability',
+      body: 'If you have questions about availability in a specific region, or your location is restricted under this policy but you believe a reasonable exception applies (such as diplomatic immunity or a corporate headquarters in a non-restricted jurisdiction), please contact:',
+      email: 'Email',
+    },
+    footer: {
+      copyright: 'All rights reserved.',
+      home: 'Home',
+      docs: 'Docs',
+      terms: 'Terms',
+      usagePolicy: 'Usage Policy',
     },
   },
 

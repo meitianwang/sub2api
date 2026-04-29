@@ -141,6 +141,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/supported-regions',
+    name: 'SupportedRegions',
+    component: () => import('@/views/SupportedRegionsView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '支持的国家和地区'
+    }
+  },
+  {
     path: '/key-usage',
     name: 'KeyUsage',
     component: () => import('@/views/KeyUsageView.vue'),
