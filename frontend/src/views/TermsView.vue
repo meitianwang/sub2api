@@ -82,6 +82,7 @@
         <div class="flex items-center gap-5">
           <router-link to="/home" class="hover:text-gray-900 dark:hover:text-white">{{ t('terms.footer.home') }}</router-link>
           <router-link to="/docs" class="hover:text-gray-900 dark:hover:text-white">{{ t('terms.footer.docs') }}</router-link>
+          <router-link to="/usage-policy" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.usagePolicy') }}</router-link>
         </div>
       </div>
     </footer>

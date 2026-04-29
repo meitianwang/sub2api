@@ -132,6 +132,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/usage-policy',
+    name: 'UsagePolicy',
+    component: () => import('@/views/UsagePolicyView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '使用政策'
+    }
+  },
+  {
     path: '/key-usage',
     name: 'KeyUsage',
     component: () => import('@/views/KeyUsageView.vue'),

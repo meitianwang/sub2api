@@ -144,6 +144,7 @@
           <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.docs') }}</a>
           <router-link v-else to="/docs" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.docs') }}</router-link>
           <router-link to="/terms" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.terms') }}</router-link>
+          <router-link to="/usage-policy" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.usagePolicy') }}</router-link>
         </div>
       </div>
     </footer>

@@ -4,6 +4,7 @@ export default {
     // Nav / shared
     docs: 'Docs',
     terms: 'Terms',
+    usagePolicy: 'Usage Policy',
     login: 'Login',
     switchToLight: 'Switch to Light Mode',
     switchToDark: 'Switch to Dark Mode',
@@ -389,6 +390,177 @@ export default {
       home: 'Home',
       docs: 'Docs',
       copyright: 'All rights reserved.',
+    },
+  },
+
+  // Usage Policy page (/usage-policy)
+  usagePolicy: {
+    title: 'Usage Policy',
+    effectiveDate: 'Effective: April 29, 2026',
+    intro: {
+      p1: 'This Usage Policy ("Acceptable Use Policy" or "AUP") applies to anyone using the AIInterface service through any means, including direct API calls and access through authorized third-party distributors or resellers. This policy operates alongside our Terms of Service and clarifies what conduct is not permitted. We update this policy as our technology evolves and as we identify new risks.',
+      p2: 'If you violate this policy, we may immediately suspend or terminate your access and reserve the right to pursue further remedies.',
+    },
+    general: {
+      title: 'General Use Standards',
+      intro: 'These standards apply to all users and all use cases.',
+      items: {
+        laws: {
+          title: 'Compliance with Laws',
+          body: 'Do not use the Service to engage in, facilitate, or encourage any activity that violates any laws applicable to you, including but not limited to the abuse, exploitation, or harm of children.',
+        },
+        criticalInfra: {
+          title: 'Critical Infrastructure',
+          body: 'Do not use the Service to harm, disrupt, or interfere with the technical systems of critical infrastructure, including telecommunications, healthcare, energy, transportation, water supply, financial services, or election infrastructure.',
+        },
+        cyberSecurity: {
+          title: 'Computer and Network Security',
+          body: 'Do not use the Service to develop, distribute, or deploy malware, or to otherwise compromise, disrupt, gain unauthorized access to, or take control of any computer system, network, or online account.',
+        },
+        weapons: {
+          title: 'Weapons and High-Impact Technologies',
+          body: 'Do not use the Service to design, develop, manufacture, or test nuclear, biological, chemical, or radiological weapons, autonomous weapons systems, military-grade cyberattack tools, or any other technology with mass-harm potential.',
+        },
+        violence: {
+          title: 'Violence and Hate',
+          body: 'Do not use the Service to incite, promote, or glorify extreme violence against individuals or groups, or to spread hateful content based on identity (race, ethnicity, religion, gender, sexual orientation, disability, etc.).',
+        },
+        privacy: {
+          title: 'Privacy and Identity',
+          body: 'Do not use the Service for stalking, harassment, bullying, or any conduct that violates the privacy of others, including but not limited to facial recognition in private or restricted areas, identity theft using leaked personal data, or non-consensual aggregation of personal information.',
+        },
+        childSafety: {
+          title: 'Child Safety',
+          body: 'Do not use the Service to create, obtain, or distribute child sexual abuse material (CSAM) in any form, or to promote or glorify the sexual exploitation or abuse of minors. This is an absolute prohibition — violators will be permanently banned, and we will report to law enforcement as required by law.',
+        },
+        psychological: {
+          title: 'Psychological and Emotional Harm',
+          body: 'Do not use the Service to automatically generate or distribute content designed to cause psychological or emotional harm, including content that encourages self-harm or suicide, or organized harassment targeted at specific individuals.',
+        },
+        misinformation: {
+          title: 'Misinformation',
+          body: 'Do not use the Service to generate or distribute, at scale, false, misleading, or deceptive content — particularly content that touches on public health, elections, or judicial matters.',
+        },
+        politics: {
+          title: 'Political Campaigning and Democratic Processes',
+          body: 'Do not use the Service for political campaigning, party advocacy, or to produce targeted content intended to manipulate voting behavior at scale (including politically biased personalization, automated lobbying chatbots, or voter suppression material).',
+        },
+        surveillance: {
+          title: 'Surveillance and Law Enforcement Misuse',
+          body: 'Do not use the Service for predictive policing, automated sentencing or detention decisions, mass surveillance, or any other law-enforcement use prohibited by applicable law or international human rights standards.',
+        },
+        fraud: {
+          title: 'Fraud and Predatory Practices',
+          intro: 'Do not use the Service to:',
+          list: {
+            fraudulent: 'Create fraudulent, deceptive, or impersonating content;',
+            predatory: 'Engage in gambling, payday lending, usurious credit, or other predatory financial activities;',
+            spam: 'Generate or distribute spam, phishing material, or telecom fraud scripts;',
+            deception: 'Engage in any other unlawful activity centered on deception.',
+          },
+        },
+        platformAbuse: {
+          title: 'Platform Abuse',
+          intro: 'Do not:',
+          list: {
+            bypass: 'Bypass, forge, or artificially circumvent the Platform\'s rate limits, quotas, or authentication;',
+            multiAccount: 'Register multiple accounts under false identities to repeatedly claim deposit promotions or trial credits;',
+            shareKey: 'Resell, share, or lend your API Key to unauthorized third parties;',
+            scrape: 'Scrape, crawl, or copy at scale the Platform\'s APIs, documentation, or interface in order to build a competing product;',
+            extract: 'Attempt to extract, replicate, or reverse engineer the weights or training data of any upstream model.',
+          },
+        },
+        sexual: {
+          title: 'Sexually Explicit Content',
+          body: 'Do not use the Service to generate sexually explicit content (whether text, images, audio, or video). Lawful uses in sexual and reproductive health education, medicine, scientific research, or art are exempt from this restriction.',
+        },
+      },
+    },
+    highRisk: {
+      title: 'High-Risk Use Cases',
+      intro: 'The following domains have significant impact on individuals and public welfare. If you use the Service in these domains, you must implement the following additional safeguards:',
+      humanInLoop: {
+        label: 'Human-in-the-loop',
+        body: 'Before any advice, recommendation, or subjective judgment generated by the model is delivered to an end user, a qualified professional in the relevant field must review the output. You and your organization remain responsible for the accuracy and appropriateness of the final result.',
+      },
+      disclosure: {
+        label: 'Disclosure',
+        body: 'If model outputs are shown directly to end users, you must clearly inform them that the content was generated with the assistance of AI. This disclosure must be provided at least at the start of each session.',
+      },
+      domainsTitle: 'High-risk domains include but are not limited to:',
+      domains: {
+        legal: {
+          label: 'Legal',
+          body: 'Legal interpretation, legal advice, or decisions with legal effect.',
+        },
+        healthcare: {
+          label: 'Healthcare',
+          body: 'Diagnosis, treatment recommendations, medication guidance, mental health interventions. General lifestyle advice (sleep, exercise, nutrition) is not in scope.',
+        },
+        insurance: {
+          label: 'Insurance',
+          body: 'Underwriting, claims decisions, policy design.',
+        },
+        financial: {
+          label: 'Financial',
+          body: 'Investment advice, loan approvals, credit assessment.',
+        },
+        employment: {
+          label: 'Employment and Housing',
+          body: 'Resume screening, hiring evaluation, tenancy review, housing-loan decisions.',
+        },
+        academic: {
+          label: 'Academic and Certification',
+          body: 'Admissions assessment, professional certification exams, accreditation of educational institutions.',
+        },
+        media: {
+          label: 'Media and Journalism',
+          body: 'Automated generation of news, commentary, or professional journalism for public release.',
+        },
+      },
+    },
+    transparency: {
+      title: 'Transparency Requirements',
+      chatbots: {
+        title: 'Chatbot Disclosure',
+        body: 'Any chatbot or interactive AI agent presented to end users must inform users that they are speaking with AI; this disclosure must be provided at least at the start of each session.',
+      },
+      agents: {
+        title: 'Agent / Autonomous Use Cases',
+        body: 'Even when you build autonomous agent systems, all clauses of this policy continue to apply. You bear responsibility for any actions an agent takes outside its sandbox or beyond its authorized scope.',
+      },
+      minors: {
+        title: 'Minors',
+        body: 'If your product is directed at minors or may be accessed by minors, you must implement appropriate age-gating and content rating mechanisms and apply heightened diligence to outputs reaching minors.',
+      },
+    },
+    upstream: {
+      title: 'Upstream Model Policies',
+      p1: 'AIInterface is a model aggregation gateway. Each upstream model you invoke through us (Anthropic Claude, OpenAI GPT, Google Gemini, etc.) has its own usage policy. Your calls must comply with the upstream provider\'s policy in addition to ours; any restrictions the upstream places on your usage (rate limits, content filters, compliance requirements) will be passed through to you.',
+      p2: 'If an upstream provider restricts the Platform\'s capabilities because of your violation of their policy, we may pass those restrictions through to you, including but not limited to suspending your access to the affected models.',
+    },
+    consequences: {
+      title: 'Consequences of Violation',
+      p1: 'If we reasonably determine that you have violated this policy, we may take any one or more of the following actions:',
+      list: {
+        warning: 'Issue a warning and require remediation within a specified period;',
+        suspend: 'Temporarily or permanently suspend your account;',
+        terminate: 'Terminate your access to the Service;',
+        refundDeny: 'Deny refund requests on the affected account (where the violation is fraudulent in nature);',
+        lawEnforcement: 'Cooperate with law enforcement and provide necessary information;',
+        damages: 'Pursue any damages caused to the Platform or third parties.',
+      },
+      p2: 'We retain discretion as to whether and how to apply the foregoing measures.',
+    },
+    revisions: {
+      title: 'Revisions',
+      p1: 'We may update this policy from time to time as new risks emerge. Material revisions will be announced in-product and take effect 30 days after publication; non-material revisions (wording polish, added examples) take effect upon publication. Continued use of the Service constitutes acceptance of the latest policy.',
+    },
+    footer: {
+      copyright: 'All rights reserved.',
+      home: 'Home',
+      docs: 'Docs',
+      terms: 'Terms',
     },
   },
 
