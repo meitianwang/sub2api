@@ -1,25 +1,34 @@
 <template>
   <AuthLayout>
-    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / reset</div>
-    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-      {{ t('auth.resetPasswordTitle') }}
-    </h1>
-    <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
-      {{ t('auth.resetPasswordHint') }}
-    </p>
-
-    <div class="mt-10">
-      <!-- Invalid Link -->
-      <div v-if="isInvalidLink">
-        <p class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400">
-          <span class="font-medium">{{ t('auth.invalidResetLink') }}</span>
-          <br />
-          <span class="text-gray-600 dark:text-gray-400">{{ t('auth.invalidResetLinkHint') }}</span>
+    <div class="space-y-6">
+      <!-- Title -->
+      <div class="text-center">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+          {{ t('auth.resetPasswordTitle') }}
+        </h2>
+        <p class="mt-1.5 text-sm text-gray-500 dark:text-dark-400">
+          {{ t('auth.resetPasswordHint') }}
         </p>
-        <div class="mt-6">
+      </div>
+
+      <!-- Invalid Link -->
+      <div v-if="isInvalidLink" class="space-y-6">
+        <div class="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800/50 dark:bg-red-900/20">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-800/50">
+              <Icon name="exclamationCircle" size="lg" class="text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-red-800 dark:text-red-200">{{ t('auth.invalidResetLink') }}</h3>
+              <p class="mt-1.5 text-sm text-red-700 dark:text-red-300">{{ t('auth.invalidResetLinkHint') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center">
           <router-link
             to="/forgot-password"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
+            class="inline-flex items-center gap-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >
             {{ t('auth.requestNewResetLink') }}
             <Icon name="arrowRight" size="sm" />
@@ -28,135 +37,151 @@
       </div>
 
       <!-- Success -->
-      <div v-else-if="isSuccess">
-        <div class="rounded-md border border-emerald-500/40 bg-emerald-50/40 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/20">
-          <p class="font-mono text-[11px] uppercase tracking-[0.15em] text-emerald-700 dark:text-emerald-500">
-            ✓ {{ t('auth.passwordResetSuccess') }}
-          </p>
-          <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            {{ t('auth.passwordResetSuccessHint') }}
-          </p>
+      <div v-else-if="isSuccess" class="space-y-6">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800/50">
+              <Icon name="checkCircle" size="lg" class="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-emerald-800 dark:text-emerald-200">{{ t('auth.passwordResetSuccess') }}</h3>
+              <p class="mt-1.5 text-sm text-emerald-700 dark:text-emerald-300">{{ t('auth.passwordResetSuccessHint') }}</p>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-6">
+        <div class="text-center">
           <router-link
             to="/login"
-            class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
+            class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-violet-500/40 active:scale-[0.99]"
           >
+            <Icon name="login" size="md" />
             {{ t('auth.signIn') }}
-            <Icon name="arrowRight" size="sm" />
           </router-link>
         </div>
       </div>
 
       <!-- Form -->
-      <form v-else @submit.prevent="handleSubmit" class="space-y-6">
+      <form v-else @submit.prevent="handleSubmit" class="space-y-5">
         <!-- Email (readonly) -->
         <div>
-          <label for="email" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
-            {{ t('auth.emailLabel') }}
-          </label>
-          <input
-            id="email"
-            :value="email"
-            type="email"
-            readonly
-            disabled
-            :class="inputClass(false)"
-          />
+          <label for="email" class="input-label">{{ t('auth.emailLabel') }}</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+            </div>
+            <input
+              id="email"
+              :value="email"
+              type="email"
+              readonly
+              disabled
+              class="input pl-11"
+            />
+          </div>
         </div>
 
         <!-- New Password -->
         <div>
-          <div class="mb-2 flex items-baseline justify-between">
-            <label for="password" class="block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
-              {{ t('auth.newPassword') }}
-            </label>
+          <label for="password" class="input-label">{{ t('auth.newPassword') }}</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+            </div>
+            <input
+              id="password"
+              v-model="formData.password"
+              :type="showPassword ? 'text' : 'password'"
+              required
+              autocomplete="new-password"
+              :disabled="isLoading"
+              class="input pl-11 pr-11"
+              :class="{ 'input-error': errors.password }"
+              :placeholder="t('auth.newPasswordPlaceholder')"
+            />
             <button
               type="button"
               @click="showPassword = !showPassword"
-              class="font-mono text-[11px] uppercase tracking-[0.1em] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
             >
-              {{ showPassword ? t('common.hide') : t('common.show') }}
+              <Icon v-if="showPassword" name="eyeOff" size="md" />
+              <Icon v-else name="eye" size="md" />
             </button>
           </div>
-          <input
-            id="password"
-            v-model="formData.password"
-            :type="showPassword ? 'text' : 'password'"
-            required
-            autocomplete="new-password"
-            :disabled="isLoading"
-            :class="inputClass(!!errors.password)"
-            :placeholder="t('auth.newPasswordPlaceholder')"
-          />
-          <p v-if="errors.password" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
-            {{ errors.password }}
-          </p>
+          <p v-if="errors.password" class="input-error-text">{{ errors.password }}</p>
         </div>
 
         <!-- Confirm Password -->
         <div>
-          <div class="mb-2 flex items-baseline justify-between">
-            <label for="confirmPassword" class="block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
-              {{ t('auth.confirmPassword') }}
-            </label>
+          <label for="confirmPassword" class="input-label">{{ t('auth.confirmPassword') }}</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+            </div>
+            <input
+              id="confirmPassword"
+              v-model="formData.confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              required
+              autocomplete="new-password"
+              :disabled="isLoading"
+              class="input pl-11 pr-11"
+              :class="{ 'input-error': errors.confirmPassword }"
+              :placeholder="t('auth.confirmPasswordPlaceholder')"
+            />
             <button
               type="button"
               @click="showConfirmPassword = !showConfirmPassword"
-              class="font-mono text-[11px] uppercase tracking-[0.1em] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
             >
-              {{ showConfirmPassword ? t('common.hide') : t('common.show') }}
+              <Icon v-if="showConfirmPassword" name="eyeOff" size="md" />
+              <Icon v-else name="eye" size="md" />
             </button>
           </div>
-          <input
-            id="confirmPassword"
-            v-model="formData.confirmPassword"
-            :type="showConfirmPassword ? 'text' : 'password'"
-            required
-            autocomplete="new-password"
-            :disabled="isLoading"
-            :class="inputClass(!!errors.confirmPassword)"
-            :placeholder="t('auth.confirmPasswordPlaceholder')"
-          />
-          <p v-if="errors.confirmPassword" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
-            {{ errors.confirmPassword }}
-          </p>
+          <p v-if="errors.confirmPassword" class="input-error-text">{{ errors.confirmPassword }}</p>
         </div>
 
         <!-- Error -->
-        <transition name="auth-fade">
-          <p
+        <transition name="fade">
+          <div
             v-if="errorMessage"
-            class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400"
+            class="rounded-xl border border-red-200 bg-red-50 p-3.5 dark:border-red-800/50 dark:bg-red-900/20"
           >
-            {{ errorMessage }}
-          </p>
+            <div class="flex items-start gap-3">
+              <Icon name="exclamationCircle" size="md" class="flex-shrink-0 text-red-500" />
+              <p class="text-sm text-red-700 dark:text-red-400">{{ errorMessage }}</p>
+            </div>
+          </div>
         </transition>
 
         <!-- Submit -->
         <button
           type="submit"
           :disabled="isLoading"
-          class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-violet-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-blue-500/30 dark:focus:ring-offset-gray-900"
         >
-          <span
+          <svg
             v-if="isLoading"
-            class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
-          ></span>
-          <span>{{ isLoading ? t('auth.resettingPassword') : t('auth.resetPassword') }}</span>
-          <Icon v-if="!isLoading" name="arrowRight" size="sm" />
+            class="-ml-1 mr-1 h-4 w-4 animate-spin text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <Icon v-else name="checkCircle" size="md" />
+          {{ isLoading ? t('auth.resettingPassword') : t('auth.resetPassword') }}
         </button>
       </form>
     </div>
 
     <!-- Footer -->
     <template #footer>
-      <p>
+      <p class="text-gray-500 dark:text-dark-400">
         {{ t('auth.rememberedPassword') }}
         <router-link
           to="/login"
-          class="font-medium text-gray-900 underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
+          class="font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
         >
           {{ t('auth.signIn') }}
         </router-link>
@@ -173,7 +198,6 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAppStore } from '@/stores'
 import { resetPassword } from '@/api/auth'
-import { inputClass } from '@/components/auth/authStyles'
 
 const { t } = useI18n()
 
@@ -268,13 +292,13 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style scoped>
-.auth-fade-enter-active,
-.auth-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
 }
-.auth-fade-enter-from,
-.auth-fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-8px);
 }
 </style>

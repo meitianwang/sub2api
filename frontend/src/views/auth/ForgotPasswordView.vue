@@ -1,29 +1,38 @@
 <template>
   <AuthLayout>
-    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / reset</div>
-    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-      {{ t('auth.forgotPasswordTitle') }}
-    </h1>
-    <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
-      {{ t('auth.forgotPasswordHint') }}
-    </p>
+    <div class="space-y-6">
+      <!-- Title -->
+      <div class="text-center">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+          {{ t('auth.forgotPasswordTitle') }}
+        </h2>
+        <p class="mt-1.5 text-sm text-gray-500 dark:text-dark-400">
+          {{ t('auth.forgotPasswordHint') }}
+        </p>
+      </div>
 
-    <div class="mt-10">
       <!-- Success State -->
-      <div v-if="isSubmitted">
-        <div class="rounded-md border border-emerald-500/40 bg-emerald-50/40 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/20">
-          <p class="font-mono text-[11px] uppercase tracking-[0.15em] text-emerald-700 dark:text-emerald-500">
-            ✓ {{ t('auth.resetEmailSent') }}
-          </p>
-          <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            {{ t('auth.resetEmailSentHint') }}
-          </p>
+      <div v-if="isSubmitted" class="space-y-6">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800/50">
+              <Icon name="checkCircle" size="lg" class="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-emerald-800 dark:text-emerald-200">
+                {{ t('auth.resetEmailSent') }}
+              </h3>
+              <p class="mt-1.5 text-sm text-emerald-700 dark:text-emerald-300">
+                {{ t('auth.resetEmailSentHint') }}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-6">
+        <div class="text-center">
           <router-link
             to="/login"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
+            class="inline-flex items-center gap-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >
             <Icon name="arrowLeft" size="sm" />
             {{ t('auth.backToLogin') }}
@@ -32,26 +41,28 @@
       </div>
 
       <!-- Form -->
-      <form v-else @submit.prevent="handleSubmit" class="space-y-6">
+      <form v-else @submit.prevent="handleSubmit" class="space-y-5">
         <!-- Email -->
         <div>
-          <label for="email" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
-            {{ t('auth.emailLabel') }}
-          </label>
-          <input
-            id="email"
-            v-model="formData.email"
-            type="email"
-            required
-            autofocus
-            autocomplete="email"
-            :disabled="isLoading"
-            :class="inputClass(!!errors.email)"
-            :placeholder="t('auth.emailPlaceholder')"
-          />
-          <p v-if="errors.email" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
-            {{ errors.email }}
-          </p>
+          <label for="email" class="input-label">{{ t('auth.emailLabel') }}</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+            </div>
+            <input
+              id="email"
+              v-model="formData.email"
+              type="email"
+              required
+              autofocus
+              autocomplete="email"
+              :disabled="isLoading"
+              class="input pl-11"
+              :class="{ 'input-error': errors.email }"
+              :placeholder="t('auth.emailPlaceholder')"
+            />
+          </div>
+          <p v-if="errors.email" class="input-error-text">{{ errors.email }}</p>
         </div>
 
         <!-- Turnstile -->
@@ -63,44 +74,50 @@
             @expire="onTurnstileExpire"
             @error="onTurnstileError"
           />
-          <p v-if="errors.turnstile" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
-            {{ errors.turnstile }}
-          </p>
+          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">{{ errors.turnstile }}</p>
         </div>
 
         <!-- Error -->
-        <transition name="auth-fade">
-          <p
+        <transition name="fade">
+          <div
             v-if="errorMessage"
-            class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400"
+            class="rounded-xl border border-red-200 bg-red-50 p-3.5 dark:border-red-800/50 dark:bg-red-900/20"
           >
-            {{ errorMessage }}
-          </p>
+            <div class="flex items-start gap-3">
+              <Icon name="exclamationCircle" size="md" class="flex-shrink-0 text-red-500" />
+              <p class="text-sm text-red-700 dark:text-red-400">{{ errorMessage }}</p>
+            </div>
+          </div>
         </transition>
 
         <!-- Submit -->
         <button
           type="submit"
           :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
-          class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-violet-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-blue-500/30 dark:focus:ring-offset-gray-900"
         >
-          <span
+          <svg
             v-if="isLoading"
-            class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
-          ></span>
-          <span>{{ isLoading ? t('auth.sendingResetLink') : t('auth.sendResetLink') }}</span>
-          <Icon v-if="!isLoading" name="arrowRight" size="sm" />
+            class="-ml-1 mr-1 h-4 w-4 animate-spin text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <Icon v-else name="mail" size="md" />
+          {{ isLoading ? t('auth.sendingResetLink') : t('auth.sendResetLink') }}
         </button>
       </form>
     </div>
 
     <!-- Footer -->
     <template #footer>
-      <p>
+      <p class="text-gray-500 dark:text-dark-400">
         {{ t('auth.rememberedPassword') }}
         <router-link
           to="/login"
-          class="font-medium text-gray-900 underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
+          class="font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
         >
           {{ t('auth.signIn') }}
         </router-link>
@@ -117,7 +134,6 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAppStore } from '@/stores'
 import { getPublicSettings, forgotPassword } from '@/api/auth'
-import { inputClass } from '@/components/auth/authStyles'
 
 const { t } = useI18n()
 
@@ -222,13 +238,13 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style scoped>
-.auth-fade-enter-active,
-.auth-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
 }
-.auth-fade-enter-from,
-.auth-fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-8px);
 }
 </style>

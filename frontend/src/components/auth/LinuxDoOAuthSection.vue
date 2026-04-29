@@ -1,16 +1,16 @@
 <template>
-  <div class="space-y-5">
+  <div class="space-y-4">
     <button
       type="button"
       :disabled="disabled"
-      class="inline-flex w-full items-center justify-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
+      class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 transition-all hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-100 dark:hover:border-dark-600 dark:hover:bg-dark-700"
       @click="startLogin"
     >
       <svg
         viewBox="0 0 16 16"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4 flex-shrink-0"
+        class="h-5 w-5 flex-shrink-0"
         aria-hidden="true"
       >
         <g>
@@ -32,9 +32,11 @@
     </button>
 
     <div class="flex items-center gap-3">
-      <div class="h-px flex-1 bg-gray-200 dark:bg-gray-800"></div>
-      <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-500 dark:text-gray-500">{{ t('auth.linuxdo.orContinue') }}</span>
-      <div class="h-px flex-1 bg-gray-200 dark:bg-gray-800"></div>
+      <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 to-gray-200 dark:via-dark-700 dark:to-dark-700"></div>
+      <span class="text-xs text-gray-500 dark:text-dark-400">
+        {{ t('auth.linuxdo.orContinue') }}
+      </span>
+      <div class="h-px flex-1 bg-gradient-to-l from-transparent via-gray-200 to-gray-200 dark:via-dark-700 dark:to-dark-700"></div>
     </div>
   </div>
 </template>

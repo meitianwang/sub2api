@@ -1,73 +1,89 @@
 <template>
   <AuthLayout>
-    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / oauth / linux.do</div>
-    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-      {{ t('auth.linuxdo.callbackTitle') }}
-    </h1>
-    <p class="mt-3 flex items-center gap-2 text-base text-gray-600 dark:text-gray-400">
-      <span
-        v-if="isProcessing"
-        class="inline-block h-3 w-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
-      ></span>
-      <span>{{ isProcessing ? t('auth.linuxdo.callbackProcessing') : t('auth.linuxdo.callbackHint') }}</span>
-    </p>
+    <div class="space-y-6">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+          {{ t('auth.linuxdo.callbackTitle') }}
+        </h2>
+        <p class="mt-1.5 text-sm text-gray-500 dark:text-dark-400">
+          {{ isProcessing ? t('auth.linuxdo.callbackProcessing') : t('auth.linuxdo.callbackHint') }}
+        </p>
+      </div>
 
-    <div class="mt-10">
-      <!-- Invitation Code Required -->
-      <transition name="auth-fade">
-        <div v-if="needsInvitation" class="space-y-6">
+      <!-- Spinner during processing -->
+      <div v-if="isProcessing" class="flex justify-center py-4">
+        <div class="relative">
+          <div class="h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600 dark:border-dark-700 dark:border-t-blue-400"></div>
+        </div>
+      </div>
+
+      <!-- Invitation Required -->
+      <transition name="fade">
+        <div v-if="needsInvitation" class="space-y-5">
           <p class="text-sm text-gray-700 dark:text-gray-300">
             {{ t('auth.linuxdo.invitationRequired') }}
           </p>
 
           <div>
-            <label for="invitation_code" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
-              {{ t('auth.invitationCodeLabel') }}
-            </label>
-            <input
-              id="invitation_code"
-              v-model="invitationCode"
-              type="text"
-              :class="inputClass(!!invitationError)"
-              :placeholder="t('auth.invitationCodePlaceholder')"
-              :disabled="isSubmitting"
-              @keyup.enter="handleSubmitInvitation"
-            />
-            <transition name="auth-fade">
-              <p v-if="invitationError" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
-                {{ invitationError }}
-              </p>
+            <label for="invitation_code" class="input-label">{{ t('auth.invitationCodeLabel') }}</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Icon name="key" size="md" class="text-gray-400 dark:text-dark-500" />
+              </div>
+              <input
+                id="invitation_code"
+                v-model="invitationCode"
+                type="text"
+                class="input pl-11"
+                :class="{ 'input-error': !!invitationError }"
+                :placeholder="t('auth.invitationCodePlaceholder')"
+                :disabled="isSubmitting"
+                @keyup.enter="handleSubmitInvitation"
+              />
+            </div>
+            <transition name="fade">
+              <p v-if="invitationError" class="input-error-text">{{ invitationError }}</p>
             </transition>
           </div>
 
           <button
-            class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-violet-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-blue-500/30 dark:focus:ring-offset-gray-900"
             :disabled="isSubmitting || !invitationCode.trim()"
             @click="handleSubmitInvitation"
           >
-            <span
+            <svg
               v-if="isSubmitting"
-              class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
-            ></span>
-            <span>{{ isSubmitting ? t('auth.linuxdo.completing') : t('auth.linuxdo.completeRegistration') }}</span>
-            <Icon v-if="!isSubmitting" name="arrowRight" size="sm" />
+              class="-ml-1 mr-1 h-4 w-4 animate-spin text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <Icon v-else name="checkCircle" size="md" />
+            {{ isSubmitting ? t('auth.linuxdo.completing') : t('auth.linuxdo.completeRegistration') }}
           </button>
         </div>
       </transition>
 
       <!-- Error -->
-      <transition name="auth-fade">
+      <transition name="fade">
         <div v-if="errorMessage" class="space-y-4">
-          <p class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400">
-            {{ errorMessage }}
-          </p>
-          <router-link
-            to="/login"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
-          >
-            <Icon name="arrowLeft" size="sm" />
-            {{ t('auth.linuxdo.backToLogin') }}
-          </router-link>
+          <div class="rounded-xl border border-red-200 bg-red-50 p-3.5 dark:border-red-800/50 dark:bg-red-900/20">
+            <div class="flex items-start gap-3">
+              <Icon name="exclamationCircle" size="md" class="flex-shrink-0 text-red-500" />
+              <p class="text-sm text-red-700 dark:text-red-400">{{ errorMessage }}</p>
+            </div>
+          </div>
+          <div class="text-center">
+            <router-link
+              to="/login"
+              class="inline-flex items-center gap-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              <Icon name="arrowLeft" size="sm" />
+              {{ t('auth.linuxdo.backToLogin') }}
+            </router-link>
+          </div>
         </div>
       </transition>
     </div>
@@ -82,7 +98,6 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { completeLinuxDoOAuthRegistration } from '@/api/auth'
-import { inputClass } from '@/components/auth/authStyles'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,13 +222,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.auth-fade-enter-active,
-.auth-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
 }
-.auth-fade-enter-from,
-.auth-fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-8px);
 }
 </style>
