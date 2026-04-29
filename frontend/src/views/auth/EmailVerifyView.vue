@@ -1,38 +1,38 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.verifyYourEmail') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ t('auth.sendCodeDesc') }}
-          <span class="font-medium text-gray-700 dark:text-gray-300">{{ email }}</span>
-        </p>
-      </div>
+    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / verify</div>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      {{ t('auth.verifyYourEmail') }}
+    </h1>
+    <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
+      {{ t('auth.sendCodeDesc') }}
+      <span class="font-mono text-gray-900 dark:text-white">{{ email }}</span>
+    </p>
 
-      <!-- No Data Warning -->
-      <div
-        v-if="!hasRegisterData"
-        class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
-      >
-        <div class="flex items-start gap-3">
-          <div class="flex-shrink-0">
-            <Icon name="exclamationCircle" size="md" class="text-amber-500" />
-          </div>
-          <div class="text-sm text-amber-700 dark:text-amber-400">
-            <p class="font-medium">{{ t('auth.sessionExpired') }}</p>
-            <p class="mt-1">{{ t('auth.sessionExpiredDesc') }}</p>
-          </div>
+    <div class="mt-10">
+      <!-- Session Expired -->
+      <div v-if="!hasRegisterData">
+        <p class="border-l-2 border-amber-500 pl-3 text-sm text-amber-700 dark:text-amber-400">
+          <span class="font-medium">{{ t('auth.sessionExpired') }}</span>
+          <br />
+          <span class="text-gray-600 dark:text-gray-400">{{ t('auth.sessionExpiredDesc') }}</span>
+        </p>
+        <div class="mt-6">
+          <router-link
+            to="/register"
+            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
+          >
+            <Icon name="arrowLeft" size="sm" />
+            {{ t('auth.backToRegistration') }}
+          </router-link>
         </div>
       </div>
 
-      <!-- Verification Form -->
-      <form v-else @submit.prevent="handleVerify" class="space-y-5">
-        <!-- Verification Code Input -->
+      <!-- Verify Form -->
+      <form v-else @submit.prevent="handleVerify" class="space-y-6">
+        <!-- Verification Code -->
         <div>
-          <label for="code" class="input-label text-center">
+          <label for="code" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
             {{ t('auth.verificationCode') }}
           </label>
           <input
@@ -44,32 +44,24 @@
             inputmode="numeric"
             maxlength="6"
             :disabled="isLoading"
-            class="input py-3 text-center font-mono text-xl tracking-[0.5em]"
-            :class="{ 'input-error': errors.code }"
+            :class="codeInputClass"
             placeholder="000000"
           />
-          <p v-if="errors.code" class="input-error-text text-center">
+          <p v-if="errors.code" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.code }}
           </p>
-          <p v-else class="input-hint text-center">{{ t('auth.verificationCodeHint') }}</p>
+          <p v-else class="mt-1.5 text-xs text-gray-500 dark:text-gray-500">{{ t('auth.verificationCodeHint') }}</p>
         </div>
 
-        <!-- Code Status -->
-        <div
+        <!-- Code Sent Notice -->
+        <p
           v-if="codeSent"
-          class="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20"
+          class="border-l-2 border-emerald-500 pl-3 text-sm text-emerald-700 dark:text-emerald-500"
         >
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0">
-              <Icon name="checkCircle" size="md" class="text-green-500" />
-            </div>
-            <p class="text-sm text-green-700 dark:text-green-400">
-              {{ t('auth.codeSentSuccess') }}
-            </p>
-          </div>
-        </div>
+          ✓ {{ t('auth.codeSentSuccess') }}
+        </p>
 
-        <!-- Turnstile Widget for Resend -->
+        <!-- Turnstile for resend -->
         <div v-if="turnstileEnabled && turnstileSiteKey && showResendTurnstile">
           <TurnstileWidget
             ref="turnstileRef"
@@ -78,72 +70,51 @@
             @expire="onTurnstileExpire"
             @error="onTurnstileError"
           />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
+          <p v-if="errors.turnstile" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.turnstile }}
           </p>
         </div>
 
-        <!-- Error Message -->
-        <transition name="fade">
-          <div
+        <!-- Error -->
+        <transition name="auth-fade">
+          <p
             v-if="errorMessage"
-            class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
+            class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400"
           >
-            <div class="flex items-start gap-3">
-              <div class="flex-shrink-0">
-                <Icon name="exclamationCircle" size="md" class="text-red-500" />
-              </div>
-              <p class="text-sm text-red-700 dark:text-red-400">
-                {{ errorMessage }}
-              </p>
-            </div>
-          </div>
+            {{ errorMessage }}
+          </p>
         </transition>
 
-        <!-- Submit Button -->
-        <button type="submit" :disabled="isLoading || !verifyCode" class="btn btn-primary w-full">
-          <svg
+        <!-- Submit -->
+        <button
+          type="submit"
+          :disabled="isLoading || !verifyCode"
+          class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
+        >
+          <span
             v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <Icon v-else name="checkCircle" size="md" class="mr-2" />
-          {{ isLoading ? t('auth.verifying') : t('auth.verifyAndCreate') }}
+            class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
+          ></span>
+          <span>{{ isLoading ? t('auth.verifying') : t('auth.verifyAndCreate') }}</span>
+          <Icon v-if="!isLoading" name="arrowRight" size="sm" />
         </button>
 
-        <!-- Resend Code -->
+        <!-- Resend -->
         <div class="text-center">
           <button
             v-if="countdown > 0"
             type="button"
             disabled
-            class="cursor-not-allowed text-sm text-gray-400 dark:text-dark-500"
+            class="cursor-not-allowed font-mono text-xs text-gray-400 dark:text-gray-600"
           >
             {{ t('auth.resendCountdown', { countdown }) }}
           </button>
           <button
             v-else
             type="button"
+            :disabled="isSendingCode || (turnstileEnabled && showResendTurnstile && !resendTurnstileToken)"
+            class="text-xs text-gray-600 underline-offset-4 hover:text-gray-900 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:text-white"
             @click="handleResendCode"
-            :disabled="
-              isSendingCode || (turnstileEnabled && showResendTurnstile && !resendTurnstileToken)
-            "
-            class="text-sm text-primary-600 transition-colors hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-400 dark:hover:text-primary-300"
           >
             <span v-if="isSendingCode">{{ t('auth.sendingCode') }}</span>
             <span v-else-if="turnstileEnabled && !showResendTurnstile">
@@ -159,7 +130,7 @@
     <template #footer>
       <button
         @click="handleBack"
-        class="flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-gray-300"
+        class="inline-flex items-center gap-1.5 text-gray-600 underline-offset-4 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white"
       >
         <Icon name="arrowLeft" size="sm" />
         {{ t('auth.backToRegistration') }}
@@ -169,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
@@ -178,6 +149,7 @@ import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { getPublicSettings, sendVerifyCode } from '@/api/auth'
 import { buildAuthErrorMessage } from '@/utils/authError'
+import { inputClass } from '@/components/auth/authStyles'
 import {
   isRegistrationEmailSuffixAllowed,
   normalizeRegistrationEmailSuffixWhitelist
@@ -185,13 +157,9 @@ import {
 
 const { t, locale } = useI18n()
 
-// ==================== Router & Stores ====================
-
 const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
-
-// ==================== State ====================
 
 const isLoading = ref<boolean>(false)
 const isSendingCode = ref<boolean>(false)
@@ -201,7 +169,6 @@ const verifyCode = ref<string>('')
 const countdown = ref<number>(0)
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
-// Registration data from sessionStorage
 const email = ref<string>('')
 const password = ref<string>('')
 const initialTurnstileToken = ref<string>('')
@@ -209,13 +176,11 @@ const promoCode = ref<string>('')
 const invitationCode = ref<string>('')
 const hasRegisterData = ref<boolean>(false)
 
-// Public settings
 const turnstileEnabled = ref<boolean>(false)
 const turnstileSiteKey = ref<string>('')
 const siteName = ref<string>('AIInterface')
 const registrationEmailSuffixWhitelist = ref<string[]>([])
 
-// Turnstile for resend
 const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const resendTurnstileToken = ref<string>('')
 const showResendTurnstile = ref<boolean>(false)
@@ -225,10 +190,11 @@ const errors = ref({
   turnstile: ''
 })
 
-// ==================== Lifecycle ====================
+const codeInputClass = computed(() => {
+  return `${inputClass(!!errors.value.code)} text-center font-mono text-xl tracking-[0.5em] py-3`
+})
 
 onMounted(async () => {
-  // Load registration data from sessionStorage
   const registerDataStr = sessionStorage.getItem('register_data')
   if (registerDataStr) {
     try {
@@ -244,7 +210,6 @@ onMounted(async () => {
     }
   }
 
-  // Load public settings
   try {
     const settings = await getPublicSettings()
     turnstileEnabled.value = settings.turnstile_enabled
@@ -257,7 +222,6 @@ onMounted(async () => {
     console.error('Failed to load public settings:', error)
   }
 
-  // Auto-send verification code if we have valid data
   if (hasRegisterData.value) {
     await sendCode()
   }
@@ -270,28 +234,20 @@ onUnmounted(() => {
   }
 })
 
-// ==================== Countdown ====================
-
 function startCountdown(seconds: number): void {
   countdown.value = seconds
 
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-  }
+  if (countdownTimer) clearInterval(countdownTimer)
 
   countdownTimer = setInterval(() => {
     if (countdown.value > 0) {
       countdown.value--
-    } else {
-      if (countdownTimer) {
-        clearInterval(countdownTimer)
-        countdownTimer = null
-      }
+    } else if (countdownTimer) {
+      clearInterval(countdownTimer)
+      countdownTimer = null
     }
   }, 1000)
 }
-
-// ==================== Turnstile Handlers ====================
 
 function onTurnstileVerify(token: string): void {
   resendTurnstileToken.value = token
@@ -308,8 +264,6 @@ function onTurnstileError(): void {
   errors.value.turnstile = t('auth.turnstileFailed')
 }
 
-// ==================== Send Code ====================
-
 async function sendCode(): Promise<void> {
   isSendingCode.value = true
   errorMessage.value = ''
@@ -323,14 +277,12 @@ async function sendCode(): Promise<void> {
 
     const response = await sendVerifyCode({
       email: email.value,
-      // 优先使用重发时新获取的 token（因为初始 token 可能已被使用）
       turnstile_token: resendTurnstileToken.value || initialTurnstileToken.value || undefined
     })
 
     codeSent.value = true
     startCountdown(response.countdown)
 
-    // Reset turnstile state（token 已使用，清除以避免重复使用）
     initialTurnstileToken.value = ''
     showResendTurnstile.value = false
     resendTurnstileToken.value = ''
@@ -338,23 +290,18 @@ async function sendCode(): Promise<void> {
     errorMessage.value = buildAuthErrorMessage(error, {
       fallback: t('auth.sendCodeFailed')
     })
-
     appStore.showError(errorMessage.value)
   } finally {
     isSendingCode.value = false
   }
 }
 
-// ==================== Handlers ====================
-
 async function handleResendCode(): Promise<void> {
-  // If turnstile is enabled and we haven't shown it yet, show it
   if (turnstileEnabled.value && !showResendTurnstile.value) {
     showResendTurnstile.value = true
     return
   }
 
-  // If turnstile is enabled but no token yet, wait
   if (turnstileEnabled.value && !resendTurnstileToken.value) {
     errors.value.turnstile = t('auth.completeVerification')
     return
@@ -382,9 +329,7 @@ function validateForm(): boolean {
 async function handleVerify(): Promise<void> {
   errorMessage.value = ''
 
-  if (!validateForm()) {
-    return
-  }
+  if (!validateForm()) return
 
   isLoading.value = true
 
@@ -395,7 +340,6 @@ async function handleVerify(): Promise<void> {
       return
     }
 
-    // Register with verification code
     await authStore.register({
       email: email.value,
       password: password.value,
@@ -405,19 +349,14 @@ async function handleVerify(): Promise<void> {
       invitation_code: invitationCode.value || undefined
     })
 
-    // Clear session data
     sessionStorage.removeItem('register_data')
 
-    // Show success toast
     appStore.showSuccess(t('auth.accountCreatedSuccess', { siteName: siteName.value }))
-
-    // Redirect to dashboard
     await router.push('/dashboard')
   } catch (error: unknown) {
     errorMessage.value = buildAuthErrorMessage(error, {
       fallback: t('auth.verifyFailed')
     })
-
     appStore.showError(errorMessage.value)
   } finally {
     isLoading.value = false
@@ -425,10 +364,7 @@ async function handleVerify(): Promise<void> {
 }
 
 function handleBack(): void {
-  // Clear session data
   sessionStorage.removeItem('register_data')
-
-  // Go back to registration
   router.push('/register')
 }
 
@@ -436,9 +372,7 @@ function buildEmailSuffixNotAllowedMessage(): string {
   const normalizedWhitelist = normalizeRegistrationEmailSuffixWhitelist(
     registrationEmailSuffixWhitelist.value
   )
-  if (normalizedWhitelist.length === 0) {
-    return t('auth.emailSuffixNotAllowed')
-  }
+  if (normalizedWhitelist.length === 0) return t('auth.emailSuffixNotAllowed')
   const separator = String(locale.value || '').toLowerCase().startsWith('zh') ? '、' : ', '
   return t('auth.emailSuffixNotAllowedWithAllowed', {
     suffixes: normalizedWhitelist.join(separator)
@@ -447,14 +381,13 @@ function buildEmailSuffixNotAllowedMessage(): string {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
+.auth-fade-enter-active,
+.auth-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.auth-fade-enter-from,
+.auth-fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-4px);
 }
 </style>

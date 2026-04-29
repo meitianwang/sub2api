@@ -150,6 +150,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/service-specific-terms',
+    name: 'ServiceTerms',
+    component: () => import('@/views/ServiceTermsView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '服务特定条款'
+    }
+  },
+  {
     path: '/key-usage',
     name: 'KeyUsage',
     component: () => import('@/views/KeyUsageView.vue'),

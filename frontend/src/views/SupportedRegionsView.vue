@@ -53,6 +53,7 @@
           <router-link to="/docs" class="hover:text-gray-900 dark:hover:text-white">{{ t('supportedRegions.footer.docs') }}</router-link>
           <router-link to="/terms" class="hover:text-gray-900 dark:hover:text-white">{{ t('supportedRegions.footer.terms') }}</router-link>
           <router-link to="/usage-policy" class="hover:text-gray-900 dark:hover:text-white">{{ t('supportedRegions.footer.usagePolicy') }}</router-link>
+          <router-link to="/service-specific-terms" class="hover:text-gray-900 dark:hover:text-white">{{ t('home.serviceTerms') }}</router-link>
         </div>
       </div>
     </footer>

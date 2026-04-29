@@ -1,63 +1,73 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.linuxdo.callbackTitle') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ isProcessing ? t('auth.linuxdo.callbackProcessing') : t('auth.linuxdo.callbackHint') }}
-        </p>
-      </div>
+    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / oauth / linux.do</div>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      {{ t('auth.linuxdo.callbackTitle') }}
+    </h1>
+    <p class="mt-3 flex items-center gap-2 text-base text-gray-600 dark:text-gray-400">
+      <span
+        v-if="isProcessing"
+        class="inline-block h-3 w-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
+      ></span>
+      <span>{{ isProcessing ? t('auth.linuxdo.callbackProcessing') : t('auth.linuxdo.callbackHint') }}</span>
+    </p>
 
-      <transition name="fade">
-        <div v-if="needsInvitation" class="space-y-4">
+    <div class="mt-10">
+      <!-- Invitation Code Required -->
+      <transition name="auth-fade">
+        <div v-if="needsInvitation" class="space-y-6">
           <p class="text-sm text-gray-700 dark:text-gray-300">
             {{ t('auth.linuxdo.invitationRequired') }}
           </p>
+
           <div>
+            <label for="invitation_code" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
+              {{ t('auth.invitationCodeLabel') }}
+            </label>
             <input
+              id="invitation_code"
               v-model="invitationCode"
               type="text"
-              class="input w-full"
+              :class="inputClass(!!invitationError)"
               :placeholder="t('auth.invitationCodePlaceholder')"
               :disabled="isSubmitting"
               @keyup.enter="handleSubmitInvitation"
             />
+            <transition name="auth-fade">
+              <p v-if="invitationError" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
+                {{ invitationError }}
+              </p>
+            </transition>
           </div>
-          <transition name="fade">
-            <p v-if="invitationError" class="text-sm text-red-600 dark:text-red-400">
-              {{ invitationError }}
-            </p>
-          </transition>
+
           <button
-            class="btn btn-primary w-full"
+            class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
             :disabled="isSubmitting || !invitationCode.trim()"
             @click="handleSubmitInvitation"
           >
-            {{ isSubmitting ? t('auth.linuxdo.completing') : t('auth.linuxdo.completeRegistration') }}
+            <span
+              v-if="isSubmitting"
+              class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
+            ></span>
+            <span>{{ isSubmitting ? t('auth.linuxdo.completing') : t('auth.linuxdo.completeRegistration') }}</span>
+            <Icon v-if="!isSubmitting" name="arrowRight" size="sm" />
           </button>
         </div>
       </transition>
 
-      <transition name="fade">
-        <div
-          v-if="errorMessage"
-          class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
-        >
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0">
-              <Icon name="exclamationCircle" size="md" class="text-red-500" />
-            </div>
-            <div class="space-y-2">
-              <p class="text-sm text-red-700 dark:text-red-400">
-                {{ errorMessage }}
-              </p>
-              <router-link to="/login" class="btn btn-primary">
-                {{ t('auth.linuxdo.backToLogin') }}
-              </router-link>
-            </div>
-          </div>
+      <!-- Error -->
+      <transition name="auth-fade">
+        <div v-if="errorMessage" class="space-y-4">
+          <p class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400">
+            {{ errorMessage }}
+          </p>
+          <router-link
+            to="/login"
+            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
+          >
+            <Icon name="arrowLeft" size="sm" />
+            {{ t('auth.linuxdo.backToLogin') }}
+          </router-link>
         </div>
       </transition>
     </div>
@@ -72,6 +82,7 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { completeLinuxDoOAuthRegistration } from '@/api/auth'
+import { inputClass } from '@/components/auth/authStyles'
 
 const route = useRoute()
 const router = useRouter()
@@ -83,7 +94,6 @@ const appStore = useAppStore()
 const isProcessing = ref(true)
 const errorMessage = ref('')
 
-// Invitation code flow state
 const needsInvitation = ref(false)
 const pendingOAuthToken = ref('')
 const invitationCode = ref('')
@@ -174,7 +184,6 @@ onMounted(async () => {
   }
 
   try {
-    // Store refresh token and expires_at (convert to timestamp) if provided
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken)
     }
@@ -198,15 +207,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
+.auth-fade-enter-active,
+.auth-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.auth-fade-enter-from,
+.auth-fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-4px);
 }
 </style>
-

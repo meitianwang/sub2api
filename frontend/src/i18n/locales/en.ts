@@ -6,6 +6,7 @@ export default {
     terms: 'Terms',
     usagePolicy: 'Usage Policy',
     supportedRegions: 'Supported Regions',
+    serviceTerms: 'Service-Specific Terms',
     login: 'Login',
     switchToLight: 'Switch to Light Mode',
     switchToDark: 'Switch to Dark Mode',
@@ -273,6 +274,8 @@ export default {
     add: 'Add',
     invalidEmail: 'Please enter a valid email address',
     optional: 'optional',
+    show: 'Show',
+    hide: 'Hide',
     selectOption: 'Select an option',
     searchPlaceholder: 'Search...',
     noOptionsFound: 'No options found',
@@ -615,6 +618,103 @@ export default {
       docs: 'Docs',
       terms: 'Terms',
       usagePolicy: 'Usage Policy',
+    },
+  },
+
+  // Service-Specific Terms page (/service-specific-terms)
+  serviceTerms: {
+    title: 'Service-Specific Terms',
+    effectiveDate: 'Effective: April 29, 2026',
+    intro: {
+      p1: 'These Service-Specific Terms supplement the general provisions of our Terms of Service with respect to particular services and features offered by AIInterface. These Service-Specific Terms, together with the Terms of Service, form the agreement between you and AIInterface.',
+      p2: 'In the event of any conflict between the Terms of Service and these Service-Specific Terms, the Service-Specific Terms control with respect to the specific service to which they apply. Capitalized terms not defined here have the meaning given in the Terms of Service.',
+    },
+    A: {
+      title: 'A. API Usage Limits',
+      intro: 'The following limits apply to all users of the Service\'s API:',
+      items: {
+        rateLimit: { label: 'Rate Limits', body: 'The Platform sets call-frequency caps per API Key, per Group, and per upstream model. Requests exceeding the cap return HTTP 429.' },
+        quota: { label: 'Quota', body: 'Your available quota is calculated automatically based on your account balance. When your balance is depleted, subsequent calls are denied until you top up.' },
+        cache: { label: 'Caching and Upstream Billing', body: 'Some upstream models (such as Anthropic Claude) support prompt caching. Cache-hit requests are billed at the upstream\'s discounted rate, with the discount passed through to you.' },
+        monitoring: { label: 'Monitoring', body: 'The Platform reserves the right to monitor API usage, including identifying anomalous patterns such as sudden concurrency spikes, evident multi-account coordination, or attempts to circumvent rate limits.' },
+      },
+    },
+    B: {
+      title: 'B. Multi-Account Routing and Failover',
+      p1: 'A core capability of the Service is to aggregate multiple upstream provider accounts behind a single model and to fail over automatically when an account becomes unavailable. You should understand the following implications:',
+      items: {
+        sharing: { label: 'Account Sharing', body: 'Your request may be served by any one of several upstream accounts the Platform schedules. This means your calls share rate limits, quota, and ban risk on the same upstream account with other users.' },
+        failover: { label: 'Failover', body: 'If an upstream account is suspended, rate-limited, or returns errors, the Platform automatically retries against an alternative account. In edge cases where all backup accounts are simultaneously unavailable, the model may be temporarily unreachable.' },
+        opacity: { label: 'Routing Opacity', body: 'You will not be informed which specific upstream account served your request; the Platform retains full discretion over routing strategy.' },
+        nonDiscrimination: { label: 'Content-Independent Routing', body: 'The Platform does not differentiate routing based on the content of your requests — your inputs and outputs do not influence which upstream account is selected.' },
+      },
+    },
+    C: {
+      title: 'C. API Key Management',
+      items: {
+        lifecycle: { label: 'Creation and Revocation', body: 'You may create multiple API Keys in the console and revoke them at any time. Revoked Keys immediately reject new requests; in-flight requests may still complete.' },
+        propagation: { label: 'Propagation Delay', body: 'Permission changes to an API Key (such as Group assignment or model whitelist) may take up to 60 seconds to propagate. Plan accordingly.' },
+        rotation: { label: 'Rotation Recommendation', body: 'You are encouraged to rotate API Keys periodically and revoke obsolete ones. If you suspect a Key has been leaked, revoke it immediately and notify the Platform.' },
+      },
+    },
+    D: {
+      title: 'D. Groups and Model Whitelists',
+      items: {
+        groupBased: { label: 'Group System', body: 'The Platform manages model access via "Groups." Your Group determines which models you may invoke and at which unit price.' },
+        denied: { label: 'Unauthorized Calls', body: 'Calls to models outside your Group\'s whitelist return HTTP 403.' },
+        adminChange: { label: 'Administrator Changes', body: 'Administrators may adjust a Group\'s model whitelist or pricing; adjustments take effect immediately for future calls but do not affect in-flight requests.' },
+      },
+    },
+    E: {
+      title: 'E. Billing and Promotional Credits',
+      items: {
+        priority: { label: 'Deduction Priority', body: 'Where your account holds both promotional credits (from redemption codes, promo codes, or campaign grants) and cash deposits, promotional credits are deducted first.' },
+        expiry: { label: 'Promotional Credit Expiry', body: 'Promotional credits may carry an expiration date; unused credits past expiry are forfeited and cannot be restored.' },
+        nonRefundable: { label: 'Promotional Credits Non-Refundable', body: 'Promotional credits are not eligible for refund. Only cash deposits are refundable per Section D ("Refund Policy") of the Terms of Service.' },
+        trial: { label: 'Trial Credits', body: 'The Platform may grant trial credits to new users. Trial credits are subject to additional restrictions (such as limited models or call counts) and are non-refundable.' },
+      },
+    },
+    F: {
+      title: 'F. Beta / Experimental Models',
+      p1: 'The Platform may designate certain models as Beta or Experimental ("Beta Models"). Beta Models are:',
+      items: {
+        asIs: 'Provided "as is," with no warranty as to availability, stability, or output quality;',
+        priceVolatile: 'Subject to price and quota changes without prior notice;',
+        sunset: 'Subject to deprecation, consolidation into the production service, or permanent removal at any time.',
+      },
+      p2: 'Your decision to invoke a Beta Model constitutes acceptance of the foregoing risks.',
+    },
+    G: {
+      title: 'G. Data Retention and Training Policy',
+      items: {
+        prompts: { label: 'Request and Response Content', body: 'The Platform does not persist your request bodies (prompts, messages, attachments) or response content by default. Only in debugging scenarios with your explicit consent will content be temporarily retained, and for as short a period as practical.' },
+        metadata: { label: 'Metadata and Usage Logs', body: 'Call metadata (timestamp, model ID, token counts, API Key fingerprint, HTTP status, error codes) is retained for at least 90 days for billing, audit, and security analysis.' },
+        account: { label: 'Account Data', body: 'Your account email, API Key fingerprints, deposit records, and order information are retained for 30 days following your voluntary account closure, during which they may be used for tax, dispute resolution, and legal compliance. After 30 days, they are anonymized or deleted.' },
+        legalHold: { label: 'Legal Hold', body: 'The retention timeline above is subject to legal obligations — if the Platform receives a lawful preservation request from law enforcement or regulators, the data in question may be retained longer.' },
+        noTraining: { label: 'No Training Use', body: 'The Platform does not use your inputs or outputs to train any model. The Platform\'s calls to upstream models are typically made via the upstream\'s zero-retention / no-training channel; upstream providers\' own training policies are determined by them and described in their respective terms.' },
+      },
+    },
+    H: {
+      title: 'H. Services Not Provided',
+      intro: 'For the avoidance of doubt, the Platform does not offer the following. If you need these capabilities, contact the upstream model provider or another service:',
+      items: {
+        finetuning: { label: 'Model Fine-tuning', body: 'Not provided. The Platform is an aggregation gateway and does not offer model training or customization.' },
+        selfHosted: { label: 'Private Deployment / Self-Hosting', body: 'Not provided. The Service is offered exclusively as a multi-tenant cloud API.' },
+        dataPartner: { label: 'Data Training Partnerships', body: 'Not provided. The Platform does not acquire or use your data for model training in any form.' },
+        formalSla: { label: 'Written SLA / Availability Compensation', body: 'No formal written SLA or availability compensation is offered at this time. We make commercially reasonable efforts to maintain high availability but do not commit to a specific availability percentage. If your use case requires a formal SLA, consider an enterprise agreement directly with the upstream provider or a self-hosted alternative.' },
+      },
+    },
+    I: {
+      title: 'I. Revisions',
+      p1: 'The Platform may update these Service-Specific Terms from time to time to reflect feature changes or new operational needs. Material changes will be announced in-product and take effect 30 days after announcement; non-material changes (wording polish, added examples) take effect upon publication. Continued use of the affected service constitutes acceptance of the latest terms.',
+    },
+    footer: {
+      copyright: 'All rights reserved.',
+      home: 'Home',
+      docs: 'Docs',
+      terms: 'Terms',
+      usagePolicy: 'Usage Policy',
+      supportedRegions: 'Supported Regions',
     },
   },
 

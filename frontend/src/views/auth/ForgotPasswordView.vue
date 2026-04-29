@@ -1,38 +1,29 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.forgotPasswordTitle') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ t('auth.forgotPasswordHint') }}
-        </p>
-      </div>
+    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / reset</div>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      {{ t('auth.forgotPasswordTitle') }}
+    </h1>
+    <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
+      {{ t('auth.forgotPasswordHint') }}
+    </p>
 
+    <div class="mt-10">
       <!-- Success State -->
-      <div v-if="isSubmitted" class="space-y-6">
-        <div class="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800/50 dark:bg-green-900/20">
-          <div class="flex flex-col items-center gap-4 text-center">
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-800/50">
-              <Icon name="checkCircle" size="lg" class="text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-green-800 dark:text-green-200">
-                {{ t('auth.resetEmailSent') }}
-              </h3>
-              <p class="mt-2 text-sm text-green-700 dark:text-green-300">
-                {{ t('auth.resetEmailSentHint') }}
-              </p>
-            </div>
-          </div>
+      <div v-if="isSubmitted">
+        <div class="rounded-md border border-emerald-500/40 bg-emerald-50/40 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/20">
+          <p class="font-mono text-[11px] uppercase tracking-[0.15em] text-emerald-700 dark:text-emerald-500">
+            ✓ {{ t('auth.resetEmailSent') }}
+          </p>
+          <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            {{ t('auth.resetEmailSentHint') }}
+          </p>
         </div>
 
-        <div class="text-center">
+        <div class="mt-6">
           <router-link
             to="/login"
-            class="inline-flex items-center gap-2 font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+            class="inline-flex items-center gap-1.5 text-sm text-gray-900 underline-offset-4 hover:underline dark:text-white"
           >
             <Icon name="arrowLeft" size="sm" />
             {{ t('auth.backToLogin') }}
@@ -40,36 +31,30 @@
         </div>
       </div>
 
-      <!-- Form State -->
-      <form v-else @submit.prevent="handleSubmit" class="space-y-5">
-        <!-- Email Input -->
+      <!-- Form -->
+      <form v-else @submit.prevent="handleSubmit" class="space-y-6">
+        <!-- Email -->
         <div>
-          <label for="email" class="input-label">
+          <label for="email" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
             {{ t('auth.emailLabel') }}
           </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
-            </div>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              required
-              autofocus
-              autocomplete="email"
-              :disabled="isLoading"
-              class="input pl-11"
-              :class="{ 'input-error': errors.email }"
-              :placeholder="t('auth.emailPlaceholder')"
-            />
-          </div>
-          <p v-if="errors.email" class="input-error-text">
+          <input
+            id="email"
+            v-model="formData.email"
+            type="email"
+            required
+            autofocus
+            autocomplete="email"
+            :disabled="isLoading"
+            :class="inputClass(!!errors.email)"
+            :placeholder="t('auth.emailPlaceholder')"
+          />
+          <p v-if="errors.email" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.email }}
           </p>
         </div>
 
-        <!-- Turnstile Widget -->
+        <!-- Turnstile -->
         <div v-if="turnstileEnabled && turnstileSiteKey">
           <TurnstileWidget
             ref="turnstileRef"
@@ -78,67 +63,44 @@
             @expire="onTurnstileExpire"
             @error="onTurnstileError"
           />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
+          <p v-if="errors.turnstile" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.turnstile }}
           </p>
         </div>
 
-        <!-- Error Message -->
-        <transition name="fade">
-          <div
+        <!-- Error -->
+        <transition name="auth-fade">
+          <p
             v-if="errorMessage"
-            class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
+            class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400"
           >
-            <div class="flex items-start gap-3">
-              <div class="flex-shrink-0">
-                <Icon name="exclamationCircle" size="md" class="text-red-500" />
-              </div>
-              <p class="text-sm text-red-700 dark:text-red-400">
-                {{ errorMessage }}
-              </p>
-            </div>
-          </div>
+            {{ errorMessage }}
+          </p>
         </transition>
 
-        <!-- Submit Button -->
+        <!-- Submit -->
         <button
           type="submit"
           :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
         >
-          <svg
+          <span
             v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <Icon v-else name="mail" size="md" class="mr-2" />
-          {{ isLoading ? t('auth.sendingResetLink') : t('auth.sendResetLink') }}
+            class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
+          ></span>
+          <span>{{ isLoading ? t('auth.sendingResetLink') : t('auth.sendResetLink') }}</span>
+          <Icon v-if="!isLoading" name="arrowRight" size="sm" />
         </button>
       </form>
     </div>
 
     <!-- Footer -->
     <template #footer>
-      <p class="text-gray-500 dark:text-dark-400">
+      <p>
         {{ t('auth.rememberedPassword') }}
         <router-link
           to="/login"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          class="font-medium text-gray-900 underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
         >
           {{ t('auth.signIn') }}
         </router-link>
@@ -155,37 +117,24 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAppStore } from '@/stores'
 import { getPublicSettings, forgotPassword } from '@/api/auth'
+import { inputClass } from '@/components/auth/authStyles'
 
 const { t } = useI18n()
 
-// ==================== Stores ====================
-
 const appStore = useAppStore()
-
-// ==================== State ====================
 
 const isLoading = ref<boolean>(false)
 const isSubmitted = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-// Public settings
 const turnstileEnabled = ref<boolean>(false)
 const turnstileSiteKey = ref<string>('')
 
-// Turnstile
 const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const turnstileToken = ref<string>('')
 
-const formData = reactive({
-  email: ''
-})
-
-const errors = reactive({
-  email: '',
-  turnstile: ''
-})
-
-// ==================== Lifecycle ====================
+const formData = reactive({ email: '' })
+const errors = reactive({ email: '', turnstile: '' })
 
 onMounted(async () => {
   try {
@@ -196,8 +145,6 @@ onMounted(async () => {
     console.error('Failed to load public settings:', error)
   }
 })
-
-// ==================== Turnstile Handlers ====================
 
 function onTurnstileVerify(token: string): void {
   turnstileToken.value = token
@@ -214,15 +161,12 @@ function onTurnstileError(): void {
   errors.turnstile = t('auth.turnstileFailed')
 }
 
-// ==================== Validation ====================
-
 function validateForm(): boolean {
   errors.email = ''
   errors.turnstile = ''
 
   let isValid = true
 
-  // Email validation
   if (!formData.email.trim()) {
     errors.email = t('auth.emailRequired')
     isValid = false
@@ -231,7 +175,6 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Turnstile validation
   if (turnstileEnabled.value && !turnstileToken.value) {
     errors.turnstile = t('auth.completeVerification')
     isValid = false
@@ -240,14 +183,10 @@ function validateForm(): boolean {
   return isValid
 }
 
-// ==================== Form Handlers ====================
-
 async function handleSubmit(): Promise<void> {
   errorMessage.value = ''
 
-  if (!validateForm()) {
-    return
-  }
+  if (!validateForm()) return
 
   isLoading.value = true
 
@@ -260,7 +199,6 @@ async function handleSubmit(): Promise<void> {
     isSubmitted.value = true
     appStore.showSuccess(t('auth.resetEmailSent'))
   } catch (error: unknown) {
-    // Reset Turnstile on error
     if (turnstileRef.value) {
       turnstileRef.value.reset()
       turnstileToken.value = ''
@@ -284,14 +222,13 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
+.auth-fade-enter-active,
+.auth-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.auth-fade-enter-from,
+.auth-fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-4px);
 }
 </style>

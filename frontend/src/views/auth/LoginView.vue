@@ -1,93 +1,83 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.welcomeBack') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ t('auth.signInToAccount') }}
-        </p>
+    <!-- Header: doc-style crumb + title -->
+    <div class="font-mono text-xs text-gray-500 dark:text-gray-500">auth / login</div>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      {{ t('auth.welcomeBack') }}
+    </h1>
+    <p class="mt-3 text-base text-gray-600 dark:text-gray-400">
+      {{ t('auth.signInToAccount') }}
+    </p>
+
+    <div class="mt-10">
+      <!-- LinuxDo OAuth -->
+      <div v-if="linuxdoOAuthEnabled && !backendModeEnabled" class="mb-8">
+        <LinuxDoOAuthSection :disabled="isLoading" />
       </div>
 
-      <!-- LinuxDo Connect OAuth 登录 -->
-      <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled && !backendModeEnabled" :disabled="isLoading" />
-
       <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="space-y-5">
-        <!-- Email Input -->
+      <form @submit.prevent="handleLogin" class="space-y-6">
+        <!-- Email -->
         <div>
-          <label for="email" class="input-label">
+          <label for="email" class="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
             {{ t('auth.emailLabel') }}
           </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
-            </div>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              required
-              autofocus
-              autocomplete="email"
-              :disabled="isLoading"
-              class="input pl-11"
-              :class="{ 'input-error': errors.email }"
-              :placeholder="t('auth.emailPlaceholder')"
-            />
-          </div>
-          <p v-if="errors.email" class="input-error-text">
+          <input
+            id="email"
+            v-model="formData.email"
+            type="email"
+            required
+            autofocus
+            autocomplete="email"
+            :disabled="isLoading"
+            :class="inputClass(!!errors.email)"
+            :placeholder="t('auth.emailPlaceholder')"
+          />
+          <p v-if="errors.email" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.email }}
           </p>
         </div>
 
-        <!-- Password Input -->
+        <!-- Password -->
         <div>
-          <label for="password" class="input-label">
-            {{ t('auth.passwordLabel') }}
-          </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
-            </div>
-            <input
-              id="password"
-              v-model="formData.password"
-              :type="showPassword ? 'text' : 'password'"
-              required
-              autocomplete="current-password"
-              :disabled="isLoading"
-              class="input pl-11 pr-11"
-              :class="{ 'input-error': errors.password }"
-              :placeholder="t('auth.passwordPlaceholder')"
-            />
+          <div class="mb-2 flex items-baseline justify-between">
+            <label for="password" class="block font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500 dark:text-gray-500">
+              {{ t('auth.passwordLabel') }}
+            </label>
             <button
               type="button"
               @click="showPassword = !showPassword"
-              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
+              class="font-mono text-[11px] uppercase tracking-[0.1em] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
             >
-              <Icon v-if="showPassword" name="eyeOff" size="md" />
-              <Icon v-else name="eye" size="md" />
+              {{ showPassword ? t('common.hide') : t('common.show') }}
             </button>
           </div>
-          <div class="mt-1 flex items-center justify-between">
-            <p v-if="errors.password" class="input-error-text">
+          <input
+            id="password"
+            v-model="formData.password"
+            :type="showPassword ? 'text' : 'password'"
+            required
+            autocomplete="current-password"
+            :disabled="isLoading"
+            :class="inputClass(!!errors.password)"
+            :placeholder="t('auth.passwordPlaceholder')"
+          />
+          <div class="mt-1.5 flex items-baseline justify-between gap-3">
+            <p v-if="errors.password" class="text-xs text-red-600 dark:text-red-400">
               {{ errors.password }}
             </p>
             <span v-else></span>
             <router-link
               v-if="passwordResetEnabled && !backendModeEnabled"
               to="/forgot-password"
-              class="text-sm font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+              class="text-xs text-gray-600 underline-offset-4 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white"
             >
               {{ t('auth.forgotPassword') }}
             </router-link>
           </div>
         </div>
 
-        <!-- Turnstile Widget -->
+        <!-- Turnstile -->
         <div v-if="turnstileEnabled && turnstileSiteKey">
           <TurnstileWidget
             ref="turnstileRef"
@@ -96,67 +86,44 @@
             @expire="onTurnstileExpire"
             @error="onTurnstileError"
           />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
+          <p v-if="errors.turnstile" class="mt-1.5 text-xs text-red-600 dark:text-red-400">
             {{ errors.turnstile }}
           </p>
         </div>
 
-        <!-- Error Message -->
-        <transition name="fade">
-          <div
+        <!-- Error -->
+        <transition name="auth-fade">
+          <p
             v-if="errorMessage"
-            class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
+            class="border-l-2 border-red-500 pl-3 text-sm text-red-600 dark:text-red-400"
           >
-            <div class="flex items-start gap-3">
-              <div class="flex-shrink-0">
-                <Icon name="exclamationCircle" size="md" class="text-red-500" />
-              </div>
-              <p class="text-sm text-red-700 dark:text-red-400">
-                {{ errorMessage }}
-              </p>
-            </div>
-          </div>
+            {{ errorMessage }}
+          </p>
         </transition>
 
-        <!-- Submit Button -->
+        <!-- Submit -->
         <button
           type="submit"
           :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(59,130,246,0.5)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none dark:bg-white dark:text-gray-900 dark:hover:shadow-[0_4px_20px_-4px_rgba(139,92,246,0.4)]"
         >
-          <svg
+          <span
             v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <Icon v-else name="login" size="md" class="mr-2" />
-          {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}
+            class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent"
+          ></span>
+          <span>{{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}</span>
+          <Icon v-if="!isLoading" name="arrowRight" size="sm" />
         </button>
       </form>
     </div>
 
     <!-- Footer -->
     <template v-if="!backendModeEnabled" #footer>
-      <p class="text-gray-500 dark:text-dark-400">
+      <p>
         {{ t('auth.dontHaveAccount') }}
         <router-link
           to="/register"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          class="font-medium text-gray-900 underline underline-offset-4 hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
         >
           {{ t('auth.signUp') }}
         </router-link>
@@ -186,34 +153,28 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { getPublicSettings, isTotp2FARequired } from '@/api/auth'
+import { inputClass } from '@/components/auth/authStyles'
 import type { TotpLoginResponse } from '@/types'
 
 const { t } = useI18n()
-
-// ==================== Router & Stores ====================
 
 const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
-// ==================== State ====================
-
 const isLoading = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const showPassword = ref<boolean>(false)
 
-// Public settings
 const turnstileEnabled = ref<boolean>(false)
 const turnstileSiteKey = ref<string>('')
 const linuxdoOAuthEnabled = ref<boolean>(false)
 const backendModeEnabled = ref<boolean>(false)
 const passwordResetEnabled = ref<boolean>(false)
 
-// Turnstile
 const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const turnstileToken = ref<string>('')
 
-// 2FA state
 const show2FAModal = ref<boolean>(false)
 const totpTempToken = ref<string>('')
 const totpUserEmailMasked = ref<string>('')
@@ -229,8 +190,6 @@ const errors = reactive({
   password: '',
   turnstile: ''
 })
-
-// ==================== Lifecycle ====================
 
 onMounted(async () => {
   const expiredFlag = sessionStorage.getItem('auth_expired')
@@ -253,8 +212,6 @@ onMounted(async () => {
   }
 })
 
-// ==================== Turnstile Handlers ====================
-
 function onTurnstileVerify(token: string): void {
   turnstileToken.value = token
   errors.turnstile = ''
@@ -270,17 +227,13 @@ function onTurnstileError(): void {
   errors.turnstile = t('auth.turnstileFailed')
 }
 
-// ==================== Validation ====================
-
 function validateForm(): boolean {
-  // Reset errors
   errors.email = ''
   errors.password = ''
   errors.turnstile = ''
 
   let isValid = true
 
-  // Email validation
   if (!formData.email.trim()) {
     errors.email = t('auth.emailRequired')
     isValid = false
@@ -289,7 +242,6 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Password validation
   if (!formData.password) {
     errors.password = t('auth.passwordRequired')
     isValid = false
@@ -298,7 +250,6 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Turnstile validation
   if (turnstileEnabled.value && !turnstileToken.value) {
     errors.turnstile = t('auth.completeVerification')
     isValid = false
@@ -307,13 +258,9 @@ function validateForm(): boolean {
   return isValid
 }
 
-// ==================== Form Handlers ====================
-
 async function handleLogin(): Promise<void> {
-  // Clear previous error
   errorMessage.value = ''
 
-  // Validate form
   if (!validateForm()) {
     return
   }
@@ -321,14 +268,12 @@ async function handleLogin(): Promise<void> {
   isLoading.value = true
 
   try {
-    // Call auth store login
     const response = await authStore.login({
       email: formData.email,
       password: formData.password,
       turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined
     })
 
-    // Check if 2FA is required
     if (isTotp2FARequired(response)) {
       const totpResponse = response as TotpLoginResponse
       totpTempToken.value = totpResponse.temp_token || ''
@@ -338,20 +283,16 @@ async function handleLogin(): Promise<void> {
       return
     }
 
-    // Show success toast
     appStore.showSuccess(t('auth.loginSuccess'))
 
-    // Redirect to dashboard or intended route
     const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
     await router.push(redirectTo)
   } catch (error: unknown) {
-    // Reset Turnstile on error
     if (turnstileRef.value) {
       turnstileRef.value.reset()
       turnstileToken.value = ''
     }
 
-    // Handle login error
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 
     if (err.response?.data?.detail) {
@@ -362,14 +303,11 @@ async function handleLogin(): Promise<void> {
       errorMessage.value = t('auth.loginFailed')
     }
 
-    // Also show error toast
     appStore.showError(errorMessage.value)
   } finally {
     isLoading.value = false
   }
 }
-
-// ==================== 2FA Handlers ====================
 
 async function handle2FAVerify(code: string): Promise<void> {
   if (totpModalRef.value) {
@@ -379,11 +317,9 @@ async function handle2FAVerify(code: string): Promise<void> {
   try {
     await authStore.login2FA(totpTempToken.value, code)
 
-    // Close modal and show success
     show2FAModal.value = false
     appStore.showSuccess(t('auth.loginSuccess'))
 
-    // Redirect to dashboard or intended route
     const redirectTo = (router.currentRoute.value.query.redirect as string) || '/dashboard'
     await router.push(redirectTo)
   } catch (error: unknown) {
@@ -405,14 +341,13 @@ function handle2FACancel(): void {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
+.auth-fade-enter-active,
+.auth-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.auth-fade-enter-from,
+.auth-fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-4px);
 }
 </style>
