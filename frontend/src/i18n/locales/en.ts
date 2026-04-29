@@ -306,7 +306,7 @@ export default {
     effectiveDate: 'Effective: April 29, 2026',
     intro: {
       welcome: 'Welcome to AIInterface ("the Platform" or "we"). These Terms of Service ("Terms") form the agreement between you and AIInterface concerning your use of the Platform\'s API gateway, model aggregation, and related tools (collectively, the "Service"). By registering an account, depositing funds, or making API calls, you acknowledge that you have read and agree to these Terms in full. If you do not agree, do not use the Service.',
-      notTargeted: 'The Service is not designed for or directed at residents of any particular country or jurisdiction. You are responsible for ensuring that your use of the Service complies with the laws of your jurisdiction. If the laws of your jurisdiction prohibit or restrict your use of the Service, you must immediately cease use. You bear sole responsibility for any consequences arising from your use of the Service in violation of local law.',
+      notTargeted: 'You are responsible for ensuring that your use of the Service complies with the laws of your jurisdiction. If the laws of your jurisdiction prohibit or restrict your use of the Service, you must immediately cease use. You bear sole responsibility for any consequences arising from your use of the Service in violation of local law.',
     },
     A: {
       title: 'A. The Service',
